@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="edu.fiu.mpact.wifilocalizer"
     android:versionCode="102"
-    android:versionName="1.0.2" >
+    android:versionName="1.0.2">
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -12,76 +12,62 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="18" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name="edu.fiu.mpact.wifilocalizer.MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name="edu.fiu.mpact.wifilocalizer.ImportMapActivity"
-            android:label="@string/title_activity_import_map"
             android:configChanges="orientation|screenSize"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
-        </activity>
+            android:label="@string/title_activity_import_map"
+            android:theme="@android:style/Theme.Light.NoTitleBar"></activity>
         <activity
             android:name="edu.fiu.mpact.wifilocalizer.ViewMapActivity"
-            android:label="@string/title_activity_view_map"
-            android:configChanges="orientation|screenSize">
-        </activity>
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_view_map"></activity>
         <activity
             android:name="edu.fiu.mpact.wifilocalizer.TrainActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_train" >
-        </activity>
+            android:label="@string/title_activity_train"></activity>
         <activity
             android:name="edu.fiu.mpact.wifilocalizer.AndroidDatabaseManager"
             android:configChanges="orientation|screenSize"
-            android:theme="@android:style/Theme.Light.NoTitleBar" />
+            android:theme="@android:style/Theme.Light.NoTitleBar"></activity>
+        <activity
+            android:name="edu.fiu.mpact.wifilocalizer.LocalizeActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_localize"></activity>
+        <activity
+            android:name="edu.fiu.mpact.wifilocalizer.MapScaleActivity"
+            android:label="@string/title_activity_map_scale"></activity>
+        <activity
+            android:name="edu.fiu.mpact.wifilocalizer.AutomaticTrainActivity"
+            android:label="@string/title_activity_automatic_train"></activity>
+        <activity
+            android:name="edu.fiu.mpact.wifilocalizer.SelectMap"
+            android:label="@string/title_activity_select_map"></activity>
+        <activity
+            android:name="edu.fiu.mpact.wifilocalizer.Info"
+            android:label="@string/title_activity_info"></activity>
 
         <provider
             android:name="edu.fiu.mpact.wifilocalizer.DataProvider"
             android:authorities="edu.fiu.mpact.wifilocalizer.DataProvider"
             android:exported="false"
-            android:multiprocess="true" >
-        </provider>
-
-        <activity
-            android:name="edu.fiu.mpact.wifilocalizer.LocalizeActivity"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_localize" >
-        </activity>
-        <activity
-            android:name="edu.fiu.mpact.wifilocalizer.MapScaleActivity"
-            android:label="@string/title_activity_map_scale" >
-        </activity>
-        <activity
-            android:name="edu.fiu.mpact.wifilocalizer.AutomaticTrainActivity"
-            android:label="@string/title_activity_automatic_train" >
-        </activity>
-        <activity
-            android:name="edu.fiu.mpact.wifilocalizer.SelectMap"
-            android:label="@string/title_activity_select_map" >
-        </activity>
-        <activity
-            android:name="edu.fiu.mpact.wifilocalizer.Info"
-            android:label="@string/title_activity_info" >
-        </activity>
+            android:multiprocess="true"></provider>
     </application>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.GET_TASKS" />
-
 </manifest>
