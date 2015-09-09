@@ -1,4 +1,4 @@
-package edu.fiu.mpact.TrainingReuProject;
+package edu.fiu.mpact.wifilocalizer;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

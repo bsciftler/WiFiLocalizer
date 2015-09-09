@@ -1,4 +1,4 @@
-package edu.fiu.mpact.TrainingReuProject;
+package edu.fiu.mpact.wifilocalizer;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -31,10 +31,10 @@ import java.util.ArrayList;
 
 /**
  * Activity Flow:
- * 
+ *
  * (1) MainActivity -> (2) ViewMapActivity -> (3a) TrainActivity -or- (3b)
  * LocalizeActivity
- * 
+ *
  * @author oychang
  *
  */

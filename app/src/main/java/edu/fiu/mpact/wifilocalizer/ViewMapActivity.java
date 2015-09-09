@@ -1,4 +1,4 @@
-package edu.fiu.mpact.TrainingReuProject;
+package edu.fiu.mpact.wifilocalizer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -65,7 +65,7 @@ import org.json.JSONObject;
  * Second activity in normal activity lifecycle. Lists each map with a
  * interactive thumbnail and gives option of adding another training session or
  * the option of starting a localization session.
- * 
+ *
  * @author oychang
  *
  */
@@ -281,7 +281,7 @@ public class ViewMapActivity extends Activity {
 			return super.onOptionsItemSelected(item);
 		}
 	}
-	
+
 	public void updateMarkers()
 	{
 		mCachedMapData = Utils.gatherLocalizationData(getContentResolver(),
@@ -373,6 +373,6 @@ public class ViewMapActivity extends Activity {
 
 
 
-	
+
 
 

@@ -1,6 +1,4 @@
-//add your package name here example: package com.example.dbm;
-package edu.fiu.mpact.TrainingReuProject;
-//all required import files
+package edu.fiu.mpact.wifilocalizer;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -51,7 +49,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
     }
 
 // all global variables
-	
+
 	//in the below line Change the text 'yourCustomSqlHelper' with your custom sqlitehelper class name.
 	//Do not change the variable name dbm
 	Database dbm;
@@ -1235,10 +1233,10 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 		 next.setOnClickListener(new OnClickListener()
 		    {
 		        @Override
-		        public void onClick(View v) 
+		        public void onClick(View v)
 		        {
-		        	
-		        //if there are no tuples to be shown toast that this the last page	
+
+		        //if there are no tuples to be shown toast that this the last page
 		            if(indexInfo.currentpage>= indexInfo.numberofpages)
 		            {
 		            	Toast.makeText(getApplicationContext(), "This is the last page", Toast.LENGTH_LONG).show();
@@ -1250,7 +1248,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 
 
 		            	for(int i=1;i<tableLayout.getChildCount();i++)
-		            	{	
+		            	{
 		            		 TableRow tableRow = (TableRow) tableLayout.getChildAt(i);
 
 
@@ -1262,7 +1260,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 		            			 LinearLayout llcolumn = (LinearLayout) tableRow.getChildAt(j);
 		            			 TextView columsView =(TextView)llcolumn.getChildAt(0);
 
-		            			 columsView.setText(""+c3.getString(j)); 
+		            			 columsView.setText(""+c3.getString(j));
 
 		            		 }
 		            		 decider=!c3.isLast();
@@ -1274,7 +1272,7 @@ public class AndroidDatabaseManager extends Activity implements OnItemClickListe
 		            		 }
 		            	}
 		            }
-		        } 
+		        }
 		    });
 
 		 }

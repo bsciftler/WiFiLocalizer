@@ -1,4 +1,4 @@
-package edu.fiu.mpact.TrainingReuProject;
+package edu.fiu.mpact.wifilocalizer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -63,7 +63,7 @@ import edu.fiu.mpact.TrainingReuProject.Utils.TrainLocation;
 
 /**
  * A lot in common with TrainActivity.java
- * 
+ *
  * @author oychang
  *
  */
