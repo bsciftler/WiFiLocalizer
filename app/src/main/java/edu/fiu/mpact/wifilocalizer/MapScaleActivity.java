@@ -1,4 +1,4 @@
-package edu.fiu.mpact.TrainingReuProject;
+package edu.fiu.mpact.wifilocalizer;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
 import uk.co.senab.photoview.PhotoViewAttacher.OnPhotoTapListener;
@@ -72,7 +72,7 @@ public class MapScaleActivity extends Activity {
 	 * Generate 2D euclidean distance between three points. The scale can be
 	 * calculated with further knowledge of the image's size. If we assume this
 	 * distance is 1-meter, we can extrapolate image size with image dimensions.
-	 * 
+	 *
 	 * @param points
 	 *            2x2 matrix of (x,y)
 	 * @return non-normalized map scale

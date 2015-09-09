@@ -1,4 +1,4 @@
-package edu.fiu.mpact.TrainingReuProject;
+package edu.fiu.mpact.wifilocalizer;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -35,7 +35,7 @@ import uk.co.senab.photoview.PhotoViewAttacher;
 /**
  * FIXME make TrainActivity and AutomaticTrainActivity extend from a common
  * class
- * 
+ *
  * @author oychang
  *
  */

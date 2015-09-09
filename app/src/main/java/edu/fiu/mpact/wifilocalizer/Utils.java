@@ -1,4 +1,4 @@
-package edu.fiu.mpact.TrainingReuProject;
+package edu.fiu.mpact.wifilocalizer;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -152,7 +152,7 @@ public class Utils {
 
 	/**
 	 * Creates a new ImageView instance associated as a child of layout.
-	 * 
+	 *
 	 * @param context
 	 *            which context to associate with ImageView...can just use
 	 *            `getApplicationContext()` or `this`
@@ -224,7 +224,7 @@ public class Utils {
 		while (cursor.moveToNext()) {
 			if (cursor.isNull(xColumn) || cursor.isNull(yColumn))
 				continue;
-			
+
 			coordsToDraw.add(new Coord(cursor.getFloat(xColumn), cursor
 					.getFloat(yColumn)));
 		}

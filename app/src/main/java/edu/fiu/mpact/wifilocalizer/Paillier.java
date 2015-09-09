@@ -4,7 +4,7 @@
  * This code is made freely available under the MIT license: http://www.opensource.org/licenses/mit-license.php
  */
 
-package edu.fiu.mpact.TrainingReuProject;
+package edu.fiu.mpact.wifilocalizer;
 
 import java.math.*;
 import java.util.*;
