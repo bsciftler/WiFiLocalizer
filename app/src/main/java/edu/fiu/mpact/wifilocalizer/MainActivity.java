@@ -78,30 +78,30 @@ public class MainActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-//		case R.id.action_add:
-//			final Intent addIntent = new Intent(this, ImportMapActivity.class);
-//			startActivityForResult(addIntent, Utils.Constants.IMPORT_ACT);
-//			return true;
-            case R.id.action_dbm:
-                final Intent dbmIntent = new Intent(this, AndroidDatabaseManager.class);
-                startActivity(dbmIntent);
-                return true;
-//		case R.id.action_selectMap:
-//			Intent myIntent = new Intent(this, SelectMap.class);
-//			startActivityForResult(myIntent, Utils.Constants.SELECT_MAP_ACT);
-//			return true;
-            case R.id.action_info:
-                Intent myIntent2 = new Intent(this, Info.class);
-                startActivityForResult(myIntent2, Utils.Constants.SELECT_MAP_ACT);
-                return true;
-            case R.id.action_syncDB:
-                syncSQLiteMySQLDB();
-                return true;
-            case R.id.action_getMetaData:
-                getMetaData();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        //		case R.id.action_add:
+        //			final Intent addIntent = new Intent(this, ImportMapActivity.class);
+        //			startActivityForResult(addIntent, Utils.Constants.IMPORT_ACT);
+        //			return true;
+        case R.id.action_dbm:
+            final Intent dbmIntent = new Intent(this, AndroidDatabaseManager.class);
+            startActivity(dbmIntent);
+            return true;
+        //		case R.id.action_selectMap:
+        //			Intent myIntent = new Intent(this, SelectMap.class);
+        //			startActivityForResult(myIntent, Utils.Constants.SELECT_MAP_ACT);
+        //			return true;
+        case R.id.action_info:
+            Intent myIntent2 = new Intent(this, Info.class);
+            startActivityForResult(myIntent2, Utils.Constants.SELECT_MAP_ACT);
+            return true;
+        case R.id.action_syncDB:
+            syncSQLiteMySQLDB();
+            return true;
+        case R.id.action_getMetaData:
+            getMetaData();
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -109,7 +109,8 @@ public class MainActivity extends Activity {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         metaPrgDialog.show();
-        client.post("http://eic15.eng.fiu.edu:80/wifiloc/getmeta.php", params, new AsyncHttpResponseHandler() {
+        client.post("http://eic15.eng.fiu.edu:80/wifiloc/getmeta.php", params, new
+                AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] response) {
                 metaPrgDialog.hide();
@@ -117,15 +118,19 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
+                    throwable) {
                 metaPrgDialog.hide();
                 if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast
+                            .LENGTH_LONG).show();
                 } else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet]",
+                    Toast.makeText(getApplicationContext(), "Something went wrong at server end",
                             Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most " +
+                            "common Error: Device might not be connected to Internet]", Toast
+                            .LENGTH_LONG).show();
                 }
             }
         });
@@ -159,14 +164,13 @@ public class MainActivity extends Activity {
                     // Insert User into SQLite DB
                     cache.add(cv);
                 }
-                if (cache.isEmpty())
-                    return;
+                if (cache.isEmpty()) return;
                 // Add readings
                 getContentResolver().delete(DataProvider.META_URI, null, null);
-                getContentResolver().bulkInsert(DataProvider.META_URI,
-                        cache.toArray(new ContentValues[]{}));
-//				// Reload the Main Activity
-//				reloadActivity();
+                getContentResolver().bulkInsert(DataProvider.META_URI, cache.toArray(new
+                        ContentValues[]{}));
+                //				// Reload the Main Activity
+                //				reloadActivity();
             } else {
                 getContentResolver().delete(DataProvider.META_URI, null, null);
             }
@@ -186,7 +190,8 @@ public class MainActivity extends Activity {
             if (controller.dbSyncCount() != 0) {
                 syncPrgDialog.show();
                 params.put("readingsJSON", jsondata);
-                client.post("http://eic15.eng.fiu.edu:80/wifiloc/insertreading.php", params, new AsyncHttpResponseHandler() {
+                client.post("http://eic15.eng.fiu.edu:80/wifiloc/insertreading.php", params, new
+                        AsyncHttpResponseHandler() {
 
                     @Override
                     public void onSuccess(int i, Header[] headers, byte[] bytes) {
@@ -194,7 +199,8 @@ public class MainActivity extends Activity {
                     }
 
                     @Override
-                    public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+                    public void onFailure(int i, Header[] headers, byte[] bytes, Throwable
+                            throwable) {
                         onFailure(i, throwable, String.valueOf(bytes));
                     }
 
@@ -206,43 +212,61 @@ public class MainActivity extends Activity {
                             Log.d("onSuccess", "" + arr.length());
                             for (int i = 0; i < arr.length(); i++) {
                                 JSONObject obj = (JSONObject) arr.get(i);
-//								Log.d("onSuccess", "id = " + obj.get("id"));
-//								Log.d("onSuccess", "status = " + obj.get("status"));
-//								Log.d("onSuccess", "datetime = " + obj.get("datetime"));
-//								Log.d("onSuccess", "mapx = " + obj.get("mapx"));
-//								Log.d("onSuccess", "mapy = " + obj.get("mapy"));
-//								Log.d("onSuccess", "rss = " + obj.get("rss"));
-//								Log.d("onSuccess", "ap_name = " + obj.get("ap_name"));
-//								Log.d("onSuccess", "mac = " + obj.get("mac"));
-//								Log.d("onSuccess", "map = " + obj.get("map"));
-                                controller.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
+                                //								Log.d("onSuccess", "id = " + obj
+                                // .get("id"));
+                                //								Log.d("onSuccess", "status = " +
+                                // obj.get("status"));
+                                //								Log.d("onSuccess", "datetime = " +
+                                // obj.get("datetime"));
+                                //								Log.d("onSuccess", "mapx = " + obj
+                                // .get("mapx"));
+                                //								Log.d("onSuccess", "mapy = " + obj
+                                // .get("mapy"));
+                                //								Log.d("onSuccess", "rss = " + obj
+                                // .get("rss"));
+                                //								Log.d("onSuccess", "ap_name = " +
+                                // obj.get("ap_name"));
+                                //								Log.d("onSuccess", "mac = " + obj
+                                // .get("mac"));
+                                //								Log.d("onSuccess", "map = " + obj
+                                // .get("map"));
+                                controller.updateSyncStatus(obj.get("id").toString(), obj.get
+                                        ("status").toString());
                             }
-                            Toast.makeText(getApplicationContext(), "DB Sync completed!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "DB Sync completed!", Toast
+                                    .LENGTH_LONG).show();
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
-                            Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Error Occured [Server's " +
+                                    "JSON" + " response might be invalid]!", Toast.LENGTH_LONG)
+                                    .show();
                             e.printStackTrace();
                         }
                     }
 
-                    public void onFailure(int statusCode, Throwable error,
-                                          String content) {
+                    public void onFailure(int statusCode, Throwable error, String content) {
                         // TODO Auto-generated method stub
                         syncPrgDialog.hide();
                         if (statusCode == 404) {
-                            Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Requested resource not " +
+                                    "found", Toast.LENGTH_LONG).show();
                         } else if (statusCode == 500) {
-                            Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Something went wrong at " +
+                                    "server end", Toast.LENGTH_LONG).show();
                         } else {
-                            Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet]", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Unexpected Error occcured! " +
+                                    "[Most common Error: Device might not be connected to " +
+                                    "Internet]", Toast.LENGTH_LONG).show();
                         }
                     }
                 });
             } else {
-                Toast.makeText(getApplicationContext(), "SQLite and Remote MySQL DBs are in Sync!", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "SQLite and Remote MySQL DBs are in " +
+                        "Sync!", Toast.LENGTH_LONG).show();
             }
         } else {
-            Toast.makeText(getApplicationContext(), "No data in SQLite DB, please do enter User name to perform Sync action", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "No data in SQLite DB, please do enter User "
+                    + "name to perform Sync action", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -251,43 +275,38 @@ public class MainActivity extends Activity {
         final ContentValues values = new ContentValues();
 
         switch (requestCode) {
-            case Utils.Constants.IMPORT_ACT:
-                if (resultCode == RESULT_OK) {
-                    values.put(Database.Maps.NAME,
-                            data.getStringExtra(Utils.Constants.MAP_NAME_EXTRA));
-                    values.put(Database.Maps.DATA,
-                            data.getStringExtra(Utils.Constants.MAP_URI_EXTRA));
-                    values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
-                    getContentResolver().insert(DataProvider.MAPS_URI, values);
+        case Utils.Constants.IMPORT_ACT:
+            if (resultCode == RESULT_OK) {
+                values.put(Database.Maps.NAME, data.getStringExtra(Utils.Constants.MAP_NAME_EXTRA));
+                values.put(Database.Maps.DATA, data.getStringExtra(Utils.Constants.MAP_URI_EXTRA));
+                values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
+                getContentResolver().insert(DataProvider.MAPS_URI, values);
 
-                }
-                break;
-            case Utils.Constants.SELECT_MAP_ACT:
+            }
+            break;
+        case Utils.Constants.SELECT_MAP_ACT:
 
-                if (resultCode == RESULT_OK) {
-                    values.put(Database.Maps.NAME, data.getStringExtra(Utils.Constants.MAP_NAME_EXTRA));
-                    values.put(Database.Maps.DATA, data.getStringExtra(Utils.Constants.MAP_URI_EXTRA));
-                    values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
-                    getContentResolver().insert(DataProvider.MAPS_URI, values);
+            if (resultCode == RESULT_OK) {
+                values.put(Database.Maps.NAME, data.getStringExtra(Utils.Constants.MAP_NAME_EXTRA));
+                values.put(Database.Maps.DATA, data.getStringExtra(Utils.Constants.MAP_URI_EXTRA));
+                values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
+                getContentResolver().insert(DataProvider.MAPS_URI, values);
 
-                }
+            }
 
-            default:
-                super.onActivityResult(requestCode, resultCode, data);
-                break;
+        default:
+            super.onActivityResult(requestCode, resultCode, data);
+            break;
         }
     }
 
     private void showAlertDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Instructions")
-                .setMessage("Hello! To begin, select a  map from the list to train.")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+        new AlertDialog.Builder(this).setTitle("Instructions").setMessage("Hello! To begin, " +
+                "select a  map from the list to train.").setPositiveButton(android.R.string.yes,
+                new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                     }
-                })
-                .setIcon(R.drawable.ic_launcher)
-                .show();
+                }).setIcon(R.drawable.ic_launcher).show();
     }
 
     private void loadMaps() {

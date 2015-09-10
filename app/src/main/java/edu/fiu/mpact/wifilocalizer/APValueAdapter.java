@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class APValueAdapter extends ArrayAdapter<Utils.APValue>{
+public class APValueAdapter extends ArrayAdapter<Utils.APValue> {
     public APValueAdapter(Context context, ArrayList<Utils.APValue> aps) {
         super(context, 0, aps);
     }
@@ -20,7 +20,8 @@ public class APValueAdapter extends ArrayAdapter<Utils.APValue>{
         Utils.APValue ap = getItem(position);
         // Check if an existing view is being reused, otherwise inflate the view
         if (convertView == null) {
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.marker_list_item, parent, false);
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.marker_list_item,
+                    parent, false);
         }
         // Lookup view for data population
         TextView libssid = (TextView) convertView.findViewById(R.id.li_marker_bssid);
