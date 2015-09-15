@@ -226,8 +226,7 @@ public class AutomaticTrainActivity extends Activity {
         for (ContentValues values : mCachedResults) {
             String[] mSelectionArgs = {String.valueOf(values.getAsFloat("mapx") - 0.0001), String
                     .valueOf(values.getAsFloat("mapx") + 0.0001), String.valueOf(values
-                    .getAsFloat("mapy") - 0.0001), String.valueOf(values.getAsFloat("mapy") + 0
-                    .0001),values.getAsString("mac")};
+                    .getAsFloat("mapy") - 0.0001), String.valueOf(values.getAsFloat("mapy") + 0.0001),values.getAsString("mac")};
             if (getContentResolver().update(DataProvider.READINGS_URI, values, "mapx>? and " +
                     "mapx<?" + " and mapy>? and mapy<? and mac=?", mSelectionArgs) == 0) {
                 valuesToInsert.add(values);
