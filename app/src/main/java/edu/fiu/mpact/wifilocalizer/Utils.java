@@ -135,6 +135,11 @@ public class Utils {
         }
     }
 
+    public static class PineAPResponse {
+        private int count;
+        private String[] results;
+    }
+
     // ************************************************************************
 
     public static int[] getImageSize(Uri uri, Context c) {
