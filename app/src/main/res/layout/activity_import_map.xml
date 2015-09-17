@@ -1,16 +1,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="${relativePackage}.${activityClass}" >
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              tools:context="${relativePackage}.${activityClass}">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_margin="15dp"
-        android:orientation="vertical" >
+        android:orientation="vertical">
 
         <ImageButton
             android:id="@+id/btn_choose_map_image"
@@ -21,14 +21,14 @@
             android:contentDescription="@string/select_image"
             android:gravity="center"
             android:onClick="startPhotoPicker"
-            android:src="@android:drawable/ic_menu_gallery" />
+            android:src="@android:drawable/ic_menu_gallery"/>
 
         <ImageView
             android:id="@+id/img_map"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:contentDescription="@string/cd_map_image"
-            android:visibility="gone" />
+            android:visibility="gone"/>
     </LinearLayout>
 
     <EditText
@@ -37,12 +37,12 @@
         android:layout_height="wrap_content"
         android:layout_margin="4dp"
         android:hint="@string/hint_map_name"
-        android:inputType="textShortMessage" />
+        android:inputType="textShortMessage"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="saveMap"
-        android:text="@string/action_save" />
+        android:text="@string/action_save"/>
 
 </LinearLayout>
