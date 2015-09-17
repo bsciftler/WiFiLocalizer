@@ -18,7 +18,7 @@ public class DataProvider extends ContentProvider {
     /**
      * This is the base string that all URIs must start as.
      */
-    public static final String AUTHORITY = "edu.fiu.mpact.TrainingReuProject.DataProvider";
+    public static final String AUTHORITY = "edu.fiu.mpact.wifilocalizer.DataProvider";
 
     /**
      * To get a Map, ec_1 would query the MAPS_URI
