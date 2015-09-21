@@ -46,9 +46,6 @@
             android:name="edu.fiu.mpact.wifilocalizer.LocalizeActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_localize"></activity>
-        <activity
-            android:name="edu.fiu.mpact.wifilocalizer.AutomaticTrainActivity"
-            android:label="@string/title_activity_automatic_train"></activity>
 
         <provider
             android:name="edu.fiu.mpact.wifilocalizer.DataProvider"
