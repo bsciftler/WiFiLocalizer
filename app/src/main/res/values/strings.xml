@@ -46,9 +46,15 @@
     <string name="action_info">Info</string>
     <string name="title_activity_info">Info</string>
 
-    <string name="info_string">1. Begin by selecting a map from the list given.
-           Open a map and start a training session by clicking Train when viewing a chosen map. \n 2. To train, find your location on the map and click it. Once you have the exact location, press the “Lock” button. Repeat this step to train multiple locations. Once you are done with training several locations, make sure you click the “Save” button at the top.
-           </string>
+    <string name="info_string">
+        * Begin by selecting a map from the list given.
+        \n* Open a map and start a training session by clicking Train when viewing a chosen map.
+        \n* To train, find your location on the map and click it. Once you have the exact location,
+        press the "Lock" button.
+        \n* Repeat this step to train multiple locations.
+        \n* Once you are done with training several locations, make sure you click the "Save" button
+        at the top.
+    </string>
     <string name="toast_not_enough_data">not enough data&#8230; add more training locations</string>
     <string name="action_sync">Sync Remote DB</string>
     <string name="action_getMetaData">Get Meta-Data</string>

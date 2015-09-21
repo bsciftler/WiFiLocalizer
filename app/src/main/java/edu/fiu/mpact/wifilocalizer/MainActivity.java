@@ -77,8 +77,7 @@ public class MainActivity extends Activity {
         //			startActivityForResult(myIntent, Utils.Constants.SELECT_MAP_ACT);
         //			return true;
         case R.id.action_info:
-            Intent myIntent2 = new Intent(this, Info.class);
-            startActivityForResult(myIntent2, Utils.Constants.SELECT_MAP_ACT);
+            Utils.buildDialog(this, R.string.info_string).show();
             return true;
         case R.id.action_syncDB:
             syncSQLiteMySQLDB();
