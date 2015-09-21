@@ -101,97 +101,6 @@ public class ViewMapActivity extends Activity {
         return true;
     }
 
-    // i broke this
-    public void exportToCsv() {
-        Uri uri = null;
-        PrintWriter file = null;
-
-        Uri queryUri;
-        Cursor cursor;
-        // Use map name for filename
-        queryUri = ContentUris.withAppendedId(DataProvider.MAPS_URI, mMapId);
-        cursor = getContentResolver().query(queryUri, null, null, null, null);
-        if (!cursor.moveToFirst()) {
-            Toast.makeText(this, getString(R.string.toast_map_id_warning), Toast.LENGTH_LONG)
-                    .show();
-            cursor.close();
-            return;
-        }
-        try {
-            final String filename = cursor.getString(cursor.getColumnIndex(Database.Maps.NAME));
-            cursor.close();
-            uri = Uri.fromFile(File.createTempFile(filename, ".csv", getExternalCacheDir()));
-        } catch (IOException e) {
-        }
-
-        try {
-            file = new PrintWriter(new File(uri.getPath()));
-        } catch (FileNotFoundException e) {
-        }
-
-        // Setup database interaction constants
-        //		final String[] sessionsProjection = { Database.Sessions.TIME,
-        //				Database.Sessions.SDK_VERSION, Database.Sessions.MANUFACTURER,
-        //				Database.Sessions.MODEL };
-        final String[] readingsProjection = {Database.Readings.DATETIME, Database.Readings.MAP_X,
-                Database.Readings.MAP_Y, Database.Readings.SIGNAL_STRENGTH, Database.Readings
-                .AP_NAME, Database.Readings.MAC};
-        final String header = TextUtils.join(",", readingsProjection);
-        file.write(header + "\n");
-
-        // For each session
-        SortedMap<Long, String> map = new TreeMap<Long, String>();
-        //		cursor = getContentResolver().query(DataProvider.SESSIONS_URI,
-        //				sessionsProjection, Database.Sessions.MAP_ID + "=?",
-        //				new String[] { Long.toString(mMapId) }, null);
-        //		while (cursor.moveToNext()) {
-        //			final long time = cursor.getLong(cursor
-        //					.getColumnIndex(Database.Sessions.TIME));
-        //			final String value = TextUtils
-        //					.join(",",
-        //							new String[] {
-        //									Long.toString(time),
-        //									Integer.toString(cursor.getInt(cursor
-        //											.getColumnIndex(Database.Sessions
-        // .SDK_VERSION))),
-        //									cursor.getString(cursor
-        //											.getColumnIndex(Database.Sessions
-        // .MANUFACTURER)),
-        //									cursor.getString(cursor
-        //											.getColumnIndex(Database.Sessions.MODEL)) });
-        //			map.put(time, value);
-        //		}
-        //		cursor.close();
-
-        // For each reading in that session
-        //long lower = 0;
-        //		final String selection = String.format("%s >= ? AND %s < ?",
-        //				Database.Readings.DATETIME, Database.Readings.DATETIME);
-
-        //for (long upper : map.keySet()) {
-        cursor = getContentResolver().query(DataProvider.READINGS_URI, readingsProjection,
-                Database.Readings.MAP_ID + "=?", new String[]{Long.toString(mMapId)}, null);
-        while (cursor.moveToNext()) {
-            //String row = map.get(upper) + ",";
-            String row = TextUtils.join(",", new String[]{Long.toString(cursor.getLong(cursor
-                    .getColumnIndex(Database.Readings.DATETIME))), Float.toString(cursor.getFloat
-                    (cursor.getColumnIndex(Database.Readings.MAP_X))), Float.toString(cursor
-                    .getFloat(cursor.getColumnIndex(Database.Readings.MAP_Y))), Integer.toString
-                    (cursor.getInt(cursor.getColumnIndex(Database.Readings.SIGNAL_STRENGTH))),
-                    cursor.getString(cursor.getColumnIndex(Database.Readings.AP_NAME)), cursor
-                    .getString(cursor.getColumnIndex(Database.Readings.MAC))});
-            file.write(row + "\n");
-        }
-        //lower = upper;
-        cursor.close();
-
-
-        // Close
-        file.close();
-        // FIXME externalize string
-        Toast.makeText(this, "Done!", Toast.LENGTH_SHORT).show();
-    }
-
     /**
      * Fork out to either training or localization activity
      */
@@ -219,9 +128,6 @@ public class ViewMapActivity extends Activity {
         //			intent = new Intent(this, AutomaticTrainActivity.class);
         //			intent.putExtra(Utils.Constants.MAP_ID_EXTRA, mMapId);
         //			startActivity(intent);
-        //			return true;
-        //		case R.id.action_export_csv:
-        //			exportToCsv();
         //			return true;
         default:
             return super.onOptionsItemSelected(item);
@@ -285,26 +191,4 @@ public class ViewMapActivity extends Activity {
         getContentResolver().delete(DataProvider.READINGS_URI, "mapx>? and mapx<? and mapy>? and " +
                 "" + "mapy<?", mSelectionArgs);
     }
-
-    public static double roundToSignificantFigures(double num, int n) {
-        if (num == 0) {
-            return 0;
-        }
-
-        final double d = Math.ceil(Math.log10(num < 0 ? -num : num));
-        final int power = n - (int) d;
-
-        final double magnitude = Math.pow(10, power);
-        final long shifted = Math.round(num * magnitude);
-        return shifted / magnitude;
-    }
-
 }
-
-
-
-
-
-
-
-
