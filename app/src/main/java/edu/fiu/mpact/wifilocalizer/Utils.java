@@ -27,16 +27,10 @@ import uk.co.senab.photoview.PhotoMarker;
 
 public class Utils {
     public final class Constants {
-        public String map = "";
-        public static final int IMPORT_PHOTO_ACT = 1;
-
         // Fully qualified project name for use in intent data passing
         // This doesn't have to actually be correct, but try to be.
         private static final String PKG = "edu.fiu.mpact.wifilocalizer";
         public static final String MAP_ID_EXTRA = PKG + ".map_id";
-
-        // Time in ms between automatic scans
-        public static final int SCAN_INTERVAL = 1000 * 30;
 
         // Shared preferences file
         public static final String PREF_FILE = "SharedHintsPreferences";
