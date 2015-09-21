@@ -15,7 +15,6 @@ import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,15 +22,6 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
-
-import org.apache.http.Header;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -292,107 +282,4 @@ public class TrainActivity extends Activity {
             }
         }
     }
-
-    public void syncSQLiteMySQLDB() {
-        //Create AsycHttpClient object
-        AsyncHttpClient client = new AsyncHttpClient();
-        RequestParams params = new RequestParams();
-        controller = Database.getInstance(getApplicationContext());
-        String jsondata = controller.composeJSONfromSQLite();
-        if (!jsondata.isEmpty()) {
-            if (controller.dbSyncCount() != 0) {
-                //syncPrgDialog.show();
-                params.put("readingsJSON", jsondata);
-                client.post("http://eic15.eng.fiu.edu:80/wifiloc/inserttestreading.php", params,
-                        new AsyncHttpResponseHandler() {
-
-                            @Override
-                            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                                onSuccess(new String(bytes));
-                            }
-
-                            @Override
-                            public void onFailure(int i, Header[] headers, byte[] bytes,
-                                                  Throwable throwable) {
-                                onFailure(i, throwable, String.valueOf(bytes));
-                            }
-
-                            public void onSuccess(String response) {
-                                Log.d("onSuccess", response);
-                                //syncPrgDialog.hide();
-                                try {
-                                    JSONArray arr = new JSONArray(response);
-                                    Log.d("onSuccess", "" + arr.length());
-                                    for (int i = 0; i < arr.length(); i++) {
-                                        JSONObject obj = (JSONObject) arr.get(i);
-                                        //								Log.d("onSuccess", "id = "
-                                        // + obj
-                                        // .get("id"));
-                                        //								Log.d("onSuccess", "status
-                                        // = " +
-                                        // obj.get("status"));
-                                        //								Log.d("onSuccess",
-                                        // "datetime = " +
-                                        // obj.get("datetime"));
-                                        //								Log.d("onSuccess", "mapx =
-                                        // " + obj
-                                        // .get("mapx"));
-                                        //								Log.d("onSuccess", "mapy =
-                                        // " + obj
-                                        // .get("mapy"));
-                                        //								Log.d("onSuccess", "rss =
-                                        // " + obj
-                                        // .get("rss"));
-                                        //								Log.d("onSuccess",
-                                        // "ap_name = " +
-                                        // obj.get("ap_name"));
-                                        //								Log.d("onSuccess", "mac =
-                                        // " + obj
-                                        // .get("mac"));
-                                        //								Log.d("onSuccess", "map =
-                                        // " + obj
-                                        // .get("map"));
-                                        controller.updateSyncStatus(obj.get("id").toString(), obj
-                                                .get("status").toString());
-                                    }
-                                    Toast.makeText(getApplicationContext(), "Thanks for " +
-                                            "training!", Toast.LENGTH_LONG).show();
-                                } catch (JSONException e) {
-                                    // TODO Auto-generated catch block
-                                    Toast.makeText(getApplicationContext(), "Error Occured " +
-                                            "[Server's JSON" + " response might be invalid]!",
-                                            Toast.LENGTH_LONG).show();
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            public void onFailure(int statusCode, Throwable error, String content) {
-                                // TODO Auto-generated method stub
-                                //syncPrgDialog.hide();
-                                if (statusCode == 404) {
-                                    Toast.makeText(getApplicationContext(), "Requested resource " +
-                                            "not " + "found", Toast.LENGTH_LONG).show();
-                                } else if (statusCode == 500) {
-                                    Toast.makeText(getApplicationContext(), "Something went wrong" +
-                                            " at " + "server end", Toast.LENGTH_LONG).show();
-                                } else {
-                                    Toast.makeText(getApplicationContext(), "Unexpected Error " +
-                                            "occcured! " +
-                                            "[Most common Error: Device might not be connected to" +
-                                            " " +
-                                            "Internet]", Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        });
-            } else {
-                Toast.makeText(getApplicationContext(), "SQLite and Remote MySQL DBs are in " +
-                        "Sync!", Toast.LENGTH_LONG).show();
-            }
-        } else {
-            Toast.makeText(getApplicationContext(), "No data in SQLite DB, please do enter User "
-                    + "name to perform Sync action", Toast.LENGTH_LONG).show();
-        }
-    }
-
-
 }
