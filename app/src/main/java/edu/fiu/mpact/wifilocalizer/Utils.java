@@ -29,16 +29,11 @@ public class Utils {
     public final class Constants {
         public String map = "";
         public static final int IMPORT_PHOTO_ACT = 1;
-        public static final int SELECT_MAP_ACT = 2;
-        // Arbitrary constant for tracking activity launching
-        public static final int IMPORT_ACT = 1;
+
         // Fully qualified project name for use in intent data passing
         // This doesn't have to actually be correct, but try to be.
         private static final String PKG = "edu.fiu.mpact.wifilocalizer";
-        public static final String MAP_NAME_EXTRA = PKG + ".map_name";
-        public static final String MAP_URI_EXTRA = PKG + ".map_data";
         public static final String MAP_ID_EXTRA = PKG + ".map_id";
-        public static final String INTERNAL_MAP_ID_EXTRA = PKG + "._map_id";
 
         // Time in ms between automatic scans
         public static final int SCAN_INTERVAL = 1000 * 30;
