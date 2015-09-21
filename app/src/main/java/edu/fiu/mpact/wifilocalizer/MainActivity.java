@@ -8,13 +8,14 @@ import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.common.collect.ImmutableList;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -298,39 +299,21 @@ public class MainActivity extends Activity {
                 }).setIcon(R.drawable.ic_launcher).show();
     }
 
+    /**
+     * Load locally available maps of the FIU engineering campus.
+     */
     private void loadMaps() {
+        final ImmutableList<Pair<String, Integer>> floors = ImmutableList.of(new Pair<String,
+                Integer>("Engineering 1st Floor", R.drawable.ec_1), new Pair<String, Integer>
+                ("Engineering 2nd Floor", R.drawable.ec_2), new Pair<String, Integer>
+                ("Engineering 3rd Floor", R.drawable.ec_3));
 
-        //preset maps
-        final ContentValues values = new ContentValues();
-        Uri image1 = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-                getResources().getResourcePackageName(R.drawable.ec_1) + '/' +
-                getResources().getResourceTypeName(R.drawable.ec_1) + '/' +
-                getResources().getResourceEntryName(R.drawable.ec_1));
-
-        Uri image2 = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-                getResources().getResourcePackageName(R.drawable.ec_2) + '/' +
-                getResources().getResourceTypeName(R.drawable.ec_2) + '/' +
-                getResources().getResourceEntryName(R.drawable.ec_2));
-
-        Uri image3 = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-                getResources().getResourcePackageName(R.drawable.ec_3) + '/' +
-                getResources().getResourceTypeName(R.drawable.ec_3) + '/' +
-                getResources().getResourceEntryName(R.drawable.ec_3));
-
-        values.put(Database.Maps.NAME, "Engineering 1st Floor");
-        values.put(Database.Maps.DATA, image1.toString());
-        values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
-        getContentResolver().insert(DataProvider.MAPS_URI, values);
-
-        values.put(Database.Maps.NAME, "Engineering 2nd Floor");
-        values.put(Database.Maps.DATA, image2.toString());
-        values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
-        getContentResolver().insert(DataProvider.MAPS_URI, values);
-
-        values.put(Database.Maps.NAME, "Engineering 3rd Floor");
-        values.put(Database.Maps.DATA, image3.toString());
-        values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
-        getContentResolver().insert(DataProvider.MAPS_URI, values);
+        for (Pair<String, Integer> floor : floors) {
+            final ContentValues values = new ContentValues();
+            values.put(Database.Maps.NAME, floor.first);
+            values.put(Database.Maps.DATA, Utils.resourceToUri(this, floor.second).toString());
+            values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
+            getContentResolver().insert(DataProvider.MAPS_URI, values);
+        }
     }
-
 }
