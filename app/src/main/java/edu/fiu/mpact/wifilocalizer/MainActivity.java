@@ -1,13 +1,9 @@
 package edu.fiu.mpact.wifilocalizer;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
@@ -30,7 +26,6 @@ import java.util.ArrayList;
 
 public class MainActivity extends Activity {
     private Database controller;
-    public static final String PREFS_NAME = "MapsPrefsFile";
     private ProgressDialog mDialog;
 
     @Override
@@ -38,22 +33,15 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        boolean mapsShown = settings.getBoolean("MapsShown", false);
-
-        if (!mapsShown) {
-            loadMaps();
-            showAlertDialog();
-
-            SharedPreferences.Editor editor = settings.edit();
-            editor.putBoolean("MapsShown", true);
-            editor.commit();
-        }
-
         // Initialize dialog boxes
         mDialog = new ProgressDialog(this);
         mDialog.setCancelable(false);
+
+        // if first run, load maps
+        if (Utils.createHintIfNeeded(this, Utils.Constants.PREF_MAIN_HINT, R.string
+                .first_welcome_message)) {
+            loadMaps();
+        }
     }
 
     @Override
@@ -288,15 +276,6 @@ public class MainActivity extends Activity {
             super.onActivityResult(requestCode, resultCode, data);
             break;
         }
-    }
-
-    private void showAlertDialog() {
-        new AlertDialog.Builder(this).setTitle("Instructions").setMessage("Hello! To begin, " +
-                "select a  map from the list to train.").setPositiveButton(android.R.string.yes,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
-                }).setIcon(R.drawable.ic_launcher).show();
     }
 
     /**

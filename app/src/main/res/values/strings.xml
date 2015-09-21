@@ -59,6 +59,8 @@
     <string name="action_sync">Sync Remote DB</string>
     <string name="action_getMetaData">Get Meta-Data</string>
 
+    <string name="dont_show_hints">Do not show more hints</string>
+    <string name="first_welcome_message">Hello! To begin, select a map from the list to train.</string>
     <string name="sync_in_progress">Syncing SQLite Data with Remote MySQL DB. Please wait&#8230;</string>
     <string name="retrieve_in_progress">Retrieving metadata from Remote DB. Please wait&#8230;</string>
 
