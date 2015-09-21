@@ -47,9 +47,6 @@
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_localize"></activity>
         <activity
-            android:name="edu.fiu.mpact.wifilocalizer.MapScaleActivity"
-            android:label="@string/title_activity_map_scale"></activity>
-        <activity
             android:name="edu.fiu.mpact.wifilocalizer.AutomaticTrainActivity"
             android:label="@string/title_activity_automatic_train"></activity>
 
