@@ -48,15 +48,12 @@ public class TrainActivity extends Activity {
     private float[] mImgLocation = new float[2];
     private PhotoViewAttacher mAttacher;
     private RelativeLayout mRelative;
-    private Database controller;
 
     private WifiManager mWifiManager;
     private int scanNum = 0;
     private HashSet bssidSet;
 
-
-    private PhotoMarker mrk;
-    private ImageView selMrk;
+    private ProgressDialog mPrgBarDialog;
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -130,8 +127,6 @@ public class TrainActivity extends Activity {
             mAttacher.addData(mrk);
         }
     };
-    private ProgressDialog mPrgBarDialog;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,7 +164,6 @@ public class TrainActivity extends Activity {
         mPrgBarDialog.setProgressStyle(mPrgBarDialog.STYLE_HORIZONTAL);
         mPrgBarDialog.setProgress(0);
         mPrgBarDialog.setMax(8);
-
 
         mRelative = (RelativeLayout) findViewById(R.id.image_map_container);
 
@@ -255,6 +249,7 @@ public class TrainActivity extends Activity {
                 cancelled = false;
                 scanRequested = true;
             }
+            return true;
         default:
             return super.onOptionsItemSelected(item);
         }
@@ -262,11 +257,9 @@ public class TrainActivity extends Activity {
 
     private void saveTraining() {
         if (mCachedResults.isEmpty()) return;
-        // Add readings
 
         getContentResolver().bulkInsert(DataProvider.READINGS_URI, mCachedResults.toArray(new
                 ContentValues[]{}));
-
     }
 
     private void onDelete(float x, float y) {
