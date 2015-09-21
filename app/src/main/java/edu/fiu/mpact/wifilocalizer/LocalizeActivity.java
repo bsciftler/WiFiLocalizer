@@ -71,7 +71,6 @@ public class LocalizeActivity extends Activity {
     protected Map<TrainLocation, ArrayList<APValue>> mCachedMapData = null;
     protected Map<TrainLocation, ArrayList<APValue>> mFileData = null;
     protected LocalizationEuclideanDistance mAlgo = null;
-    public static final String PREFS_NAME = "MyPrefsFile3";
 
     private WifiManager mWifiManager;
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -209,16 +208,7 @@ public class LocalizeActivity extends Activity {
         pk = new PublicKey();
         Paillier.keyGen(sk, pk);
 
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        boolean dialogShown = settings.getBoolean("dialogShown3", false);
-
-        if (!dialogShown) {
-            showAlertDialog();
-
-            SharedPreferences.Editor editor = settings.edit();
-            editor.putBoolean("dialogShown3", true);
-            editor.commit();
-        }
+        Utils.createHintIfNeeded(this, Utils.Constants.PREF_LOCALIZE_HINT, R.string.hint_localize);
 
         try {
             mFileData = loadFileData(mMapId);
@@ -433,19 +423,6 @@ public class LocalizeActivity extends Activity {
                 }
             }
         });
-    }
-
-    private void showAlertDialog() {
-        new AlertDialog.Builder(this).setTitle("Instructions").setMessage("Find your current " +
-                "location by clicking Localize. " +
-                "Automatically" +
-                " find your location by turning on Auto-Localize. With this, " +
-                "you can move to different" +
-                " locations and the red dot will follow your movement.").setPositiveButton
-                (android.R.string.yes, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-            }
-        }).setIcon(R.drawable.ic_launcher).show();
     }
 
     private Map<TrainLocation, ArrayList<APValue>> loadFileData(long mapId) throws IOException {
