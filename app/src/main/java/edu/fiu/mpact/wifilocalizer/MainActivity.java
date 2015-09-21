@@ -53,18 +53,10 @@ public class MainActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        //		case R.id.action_add:
-        //			final Intent addIntent = new Intent(this, ImportMapActivity.class);
-        //			startActivityForResult(addIntent, Utils.Constants.IMPORT_ACT);
-        //			return true;
         case R.id.action_dbm:
             final Intent dbmIntent = new Intent(this, AndroidDatabaseManager.class);
             startActivity(dbmIntent);
             return true;
-        //		case R.id.action_selectMap:
-        //			Intent myIntent = new Intent(this, SelectMap.class);
-        //			startActivityForResult(myIntent, Utils.Constants.SELECT_MAP_ACT);
-        //			return true;
         case R.id.action_info:
             Utils.buildDialog(this, R.string.info_string).show();
             return true;
@@ -245,36 +237,6 @@ public class MainActivity extends Activity {
         } else {
             Toast.makeText(getApplicationContext(), "No data in SQLite DB, please do enter User "
                     + "name to perform Sync action", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        final ContentValues values = new ContentValues();
-
-        switch (requestCode) {
-        case Utils.Constants.IMPORT_ACT:
-            if (resultCode == RESULT_OK) {
-                values.put(Database.Maps.NAME, data.getStringExtra(Utils.Constants.MAP_NAME_EXTRA));
-                values.put(Database.Maps.DATA, data.getStringExtra(Utils.Constants.MAP_URI_EXTRA));
-                values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
-                getContentResolver().insert(DataProvider.MAPS_URI, values);
-
-            }
-            break;
-        case Utils.Constants.SELECT_MAP_ACT:
-
-            if (resultCode == RESULT_OK) {
-                values.put(Database.Maps.NAME, data.getStringExtra(Utils.Constants.MAP_NAME_EXTRA));
-                values.put(Database.Maps.DATA, data.getStringExtra(Utils.Constants.MAP_URI_EXTRA));
-                values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
-                getContentResolver().insert(DataProvider.MAPS_URI, values);
-
-            }
-
-        default:
-            super.onActivityResult(requestCode, resultCode, data);
-            break;
         }
     }
 

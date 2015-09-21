@@ -31,11 +31,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="edu.fiu.mpact.wifilocalizer.ImportMapActivity"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_import_map"
-            android:theme="@android:style/Theme.Light.NoTitleBar"></activity>
-        <activity
             android:name="edu.fiu.mpact.wifilocalizer.ViewMapActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_view_map"></activity>
@@ -57,9 +52,6 @@
         <activity
             android:name="edu.fiu.mpact.wifilocalizer.AutomaticTrainActivity"
             android:label="@string/title_activity_automatic_train"></activity>
-        <activity
-            android:name="edu.fiu.mpact.wifilocalizer.SelectMap"
-            android:label="@string/title_activity_select_map"></activity>
 
         <provider
             android:name="edu.fiu.mpact.wifilocalizer.DataProvider"
