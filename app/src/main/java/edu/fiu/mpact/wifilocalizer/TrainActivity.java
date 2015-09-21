@@ -53,14 +53,14 @@ public class TrainActivity extends Activity {
     private boolean markerPlaced = false;
     private LinkedList<ContentValues> mCachedResults;
     private LinkedList<ContentValues> tempCachedResults;
-    private boolean cancelled = false, scanRequested = false;
+    private boolean cancelled = false;
+    private boolean scanRequested = false;
 
     private ImageView mImg;
     private float[] mImgLocation = new float[2];
     private PhotoViewAttacher mAttacher;
     private RelativeLayout mRelative;
     private Database controller;
-
 
     private WifiManager mWifiManager;
     public static final String PREFS_NAME = "MyPrefsFile2";

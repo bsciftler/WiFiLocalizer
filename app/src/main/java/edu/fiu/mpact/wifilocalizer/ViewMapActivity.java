@@ -46,7 +46,6 @@ public class ViewMapActivity extends Activity {
     private RelativeLayout mRelative;
     private ImageView mImageView;
     private PhotoViewAttacher mAttacher;
-    public static final String PREFS_NAME = "MyPrefsFile";
     private ImageView selMrk;
     private TextView mTextView;
     private ListView mListView;
@@ -93,17 +92,7 @@ public class ViewMapActivity extends Activity {
         aparray = new ArrayList<>();
         updateMarkers();
 
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        boolean dialogShown = settings.getBoolean("dialogShown", false);
-
-        if (!dialogShown) {
-            showAlertDialog();
-
-            SharedPreferences.Editor editor = settings.edit();
-            editor.putBoolean("dialogShown", true);
-            editor.commit();
-        }
-
+        Utils.createHintIfNeeded(this, Utils.Constants.PREF_VIEW_HINT, R.string.hint_view_act);
     }
 
     @Override
@@ -295,15 +284,6 @@ public class ViewMapActivity extends Activity {
                 .valueOf(y - 0.0001), String.valueOf(y + 0.0001)};
         getContentResolver().delete(DataProvider.READINGS_URI, "mapx>? and mapx<? and mapy>? and " +
                 "" + "mapy<?", mSelectionArgs);
-    }
-
-    private void showAlertDialog() {
-        new AlertDialog.Builder(this).setTitle("Instructions").setMessage("Click \"Train\" at " +
-                "the" + " top to start your train session.").setPositiveButton(android.R.string
-                .yes, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-            }
-        }).setIcon(R.drawable.ic_launcher).show();
     }
 
     public static double roundToSignificantFigures(double num, int n) {
