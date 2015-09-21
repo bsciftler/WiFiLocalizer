@@ -3,6 +3,7 @@ package edu.fiu.mpact.wifilocalizer;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,9 +12,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupMenu;
@@ -52,6 +56,31 @@ public class ViewMapActivity extends Activity {
     private Map<Utils.TrainLocation, ArrayList<Utils.APValue>> mCachedMapData;
     private ArrayList<Utils.APValue> aparray;
     private Database controller;
+
+    public class APValueAdapter extends ArrayAdapter<Utils.APValue> {
+        public APValueAdapter(Context context, ArrayList<Utils.APValue> aps) {
+            super(context, 0, aps);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            // Get the data item for this position
+            Utils.APValue ap = getItem(position);
+            // Check if an existing view is being reused, otherwise inflate the view
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.marker_list_item,
+                        parent, false);
+            }
+            // Lookup view for data population
+            TextView libssid = (TextView) convertView.findViewById(R.id.li_marker_bssid);
+            TextView lirssi = (TextView) convertView.findViewById(R.id.li_marker_rssi);
+            // Populate the data into the template view using the data object
+            libssid.setText(ap.mBssid);
+            lirssi.setText(String.valueOf(ap.mRssi));
+            // Return the completed view to render on screen
+            return convertView;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
