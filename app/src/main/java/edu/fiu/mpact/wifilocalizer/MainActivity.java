@@ -27,20 +27,10 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 
-/**
- * Activity Flow:
- * <p/>
- * (1) MainActivity -> (2) ViewMapActivity -> (3a) TrainActivity -or- (3b)
- * LocalizeActivity
- *
- * @author oychang
- */
 public class MainActivity extends Activity {
-
-    private ProgressDialog syncPrgDialog, metaPrgDialog;
     private Database controller;
     public static final String PREFS_NAME = "MapsPrefsFile";
-    // preset images
+    private ProgressDialog mDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,14 +49,10 @@ public class MainActivity extends Activity {
             editor.putBoolean("MapsShown", true);
             editor.commit();
         }
-        syncPrgDialog = new ProgressDialog(this);
-        syncPrgDialog.setMessage("Synching SQLite Data with Remote MySQL DB. Please wait...");
-        syncPrgDialog.setCancelable(false);
 
-        metaPrgDialog = new ProgressDialog(this);
-        metaPrgDialog.setMessage("Retrieving Meta-Data from Remote DB. Please wait...");
-        metaPrgDialog.setCancelable(false);
-
+        // Initialize dialog boxes
+        mDialog = new ProgressDialog(this);
+        mDialog.setCancelable(false);
     }
 
     @Override
@@ -108,19 +94,22 @@ public class MainActivity extends Activity {
     public void getMetaData() {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
-        metaPrgDialog.show();
+
+        mDialog.setMessage(getString(R.string.retrieve_in_progress));
+        mDialog.show();
+
         client.post("http://eic15.eng.fiu.edu:80/wifiloc/getmeta.php", params, new
                 AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] response) {
-                metaPrgDialog.hide();
+                mDialog.hide();
                 updateSQLite(new String(response));
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
                     throwable) {
-                metaPrgDialog.hide();
+                mDialog.hide();
                 if (statusCode == 404) {
                     Toast.makeText(getApplicationContext(), "Requested resource not found", Toast
                             .LENGTH_LONG).show();
@@ -188,7 +177,9 @@ public class MainActivity extends Activity {
         String jsondata = controller.composeJSONfromSQLite();
         if (!jsondata.isEmpty()) {
             if (controller.dbSyncCount() != 0) {
-                syncPrgDialog.show();
+                mDialog.setMessage(getString(R.string.sync_in_progress));
+                mDialog.show();
+
                 params.put("readingsJSON", jsondata);
                 client.post("http://eic15.eng.fiu.edu:80/wifiloc/insertreading.php", params, new
                         AsyncHttpResponseHandler() {
@@ -205,8 +196,8 @@ public class MainActivity extends Activity {
                     }
 
                     public void onSuccess(String response) {
-                        Log.d("onSuccess", response);
-                        syncPrgDialog.hide();
+                        mDialog.hide();
+
                         try {
                             JSONArray arr = new JSONArray(response);
                             Log.d("onSuccess", "" + arr.length());
@@ -245,8 +236,7 @@ public class MainActivity extends Activity {
                     }
 
                     public void onFailure(int statusCode, Throwable error, String content) {
-                        // TODO Auto-generated method stub
-                        syncPrgDialog.hide();
+                        mDialog.hide();
                         if (statusCode == 404) {
                             Toast.makeText(getApplicationContext(), "Requested resource not " +
                                     "found", Toast.LENGTH_LONG).show();
