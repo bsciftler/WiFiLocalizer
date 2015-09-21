@@ -42,11 +42,61 @@ public class Utils {
 
         // Time in ms between automatic scans
         public static final int SCAN_INTERVAL = 1000 * 30;
+
+        // Shared preferences file
+        public static final String PREF_FILE = "SharedHintsPreferences";
+        // Unique keys to address the hint boxes
+        public static final String PREF_HIDE_ALL_HINTS = "hint0";
+        public static final String PREF_MAIN_HINT = "hint1";
+        public static final String PREF_VIEW_HINT = "hint2";
+        public static final String PREF_LOCALIZE_HINT = "hint3";
+    }
+
+    /**
+     * @param context
+     * @param key
+     * @param res
+     * @return the value of the preference
+     */
+    public static boolean createHintIfNeeded(Context context, String key, int res) {
+        final SharedPreferences prefs = context.getSharedPreferences(Constants.PREF_FILE, Context
+                .MODE_PRIVATE);
+
+        // Check if we've already bugged about this
+        if (prefs.getBoolean(key, false)) {
+            return false;
+        } else if (prefs.getBoolean(Constants.PREF_HIDE_ALL_HINTS, false)) {
+            return true;
+        }
+
+        // http://stackoverflow.com/a/9763836/1832800
+
+        final View checkBoxView = View.inflate(context, R.layout.checkbox_dialog, null);
+        final CheckBox box = (CheckBox) checkBoxView.findViewById(R.id.checkbox);
+        box.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                setSharedPreference(prefs, Constants.PREF_HIDE_ALL_HINTS, isChecked);
+            }
+        });
+        box.setText(R.string.dont_show_hints);
+        buildDialog(context, res).setView(checkBoxView).setIcon(R.drawable.ic_launcher).show();
+
+        // Mark down this dialog as shown
+        setSharedPreference(prefs, key, true);
+
+        return true;
     }
 
     public static AlertDialog.Builder buildDialog(Context context, int res) {
         final AlertDialog.Builder dialog = new AlertDialog.Builder(context);
         return dialog.setPositiveButton(android.R.string.yes, null).setMessage(res);
+    }
+
+    public static void setSharedPreference(SharedPreferences prefs, String key, boolean value) {
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(key, value);
+        editor.apply();
     }
 
     public static Uri resourceToUri(Context context, int resID) {
