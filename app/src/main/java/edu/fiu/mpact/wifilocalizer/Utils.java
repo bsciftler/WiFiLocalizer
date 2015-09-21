@@ -39,6 +39,7 @@ public class Utils {
         public static final String PREF_MAIN_HINT = "hint1";
         public static final String PREF_VIEW_HINT = "hint2";
         public static final String PREF_LOCALIZE_HINT = "hint3";
+        public static final String PREF_TRAIN_HINT = "hint4";
     }
 
     /**
