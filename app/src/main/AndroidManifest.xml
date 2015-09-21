@@ -60,9 +60,6 @@
         <activity
             android:name="edu.fiu.mpact.wifilocalizer.SelectMap"
             android:label="@string/title_activity_select_map"></activity>
-        <activity
-            android:name="edu.fiu.mpact.wifilocalizer.Info"
-            android:label="@string/title_activity_info"></activity>
 
         <provider
             android:name="edu.fiu.mpact.wifilocalizer.DataProvider"

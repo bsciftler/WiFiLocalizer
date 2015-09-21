@@ -1,11 +1,16 @@
 package edu.fiu.mpact.wifilocalizer;
 
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
@@ -37,6 +42,11 @@ public class Utils {
 
         // Time in ms between automatic scans
         public static final int SCAN_INTERVAL = 1000 * 30;
+    }
+
+    public static AlertDialog.Builder buildDialog(Context context, int res) {
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+        return dialog.setPositiveButton(android.R.string.yes, null).setMessage(res);
     }
 
     // ***********************************************************************
