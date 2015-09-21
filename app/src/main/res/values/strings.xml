@@ -67,6 +67,13 @@
         With this, you can move to different locations and the red dot will follow your
         movement.
     </string>
+    <string name="hint_train">
+        Find where you are on the map and click on your location.
+        You can change where you placed your X by clicking elsewhere.
+        When you are sure of where your X is placed (your exact location), click the "Lock" button.
+        You can train multiple spots, one after another after locking.
+        Make sure to "Save" above at the end.
+    </string>
     <string name="first_welcome_message">Hello! To begin, select a map from the list to train.</string>
     <string name="sync_in_progress">Syncing SQLite Data with Remote MySQL DB. Please wait&#8230;</string>
     <string name="retrieve_in_progress">Retrieving metadata from Remote DB. Please wait&#8230;</string>

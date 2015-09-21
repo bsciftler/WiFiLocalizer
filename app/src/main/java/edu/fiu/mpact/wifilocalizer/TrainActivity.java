@@ -2,7 +2,6 @@ package edu.fiu.mpact.wifilocalizer;
 
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
@@ -11,7 +10,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
@@ -63,7 +61,6 @@ public class TrainActivity extends Activity {
     private Database controller;
 
     private WifiManager mWifiManager;
-    public static final String PREFS_NAME = "MyPrefsFile2";
     private int scanNum = 0;
     private HashSet bssidSet;
 
@@ -229,22 +226,12 @@ public class TrainActivity extends Activity {
         }
         mAttacher.addData(mrkrs);
 
-
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         registerReceiver(mReceiver, filter);
 
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        boolean dialogShown = settings.getBoolean("dialogShown2", false);
-
-        if (!dialogShown) {
-            showAlertDialog();
-
-            SharedPreferences.Editor editor = settings.edit();
-            editor.putBoolean("dialogShown2", true);
-            editor.commit();
-        }
+        Utils.createHintIfNeeded(this, Utils.Constants.PREF_TRAIN_HINT, R.string.hint_train);
     }
 
     @Override
@@ -304,20 +291,6 @@ public class TrainActivity extends Activity {
                 iter.remove();
             }
         }
-    }
-
-    private void showAlertDialog() {
-        new AlertDialog.Builder(this).setTitle("Instructions").setMessage("Find where you are on " +
-                "the map and click on your location. You can change where" +
-                " you placed your X by clicking elsewhere. When you are sure of where your X is " +
-                "placed (your exact location), click the " +
-                "\"Lock \" button. You can train multiple spots, one after another after locking." +
-                " Make" +
-                " sure to \"Save\" above at the end.").setPositiveButton(android.R.string.yes,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
-                }).setIcon(R.drawable.ic_launcher).show();
     }
 
     public void syncSQLiteMySQLDB() {
