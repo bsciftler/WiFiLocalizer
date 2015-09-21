@@ -25,7 +25,7 @@ import java.util.ArrayList;
 
 
 public class MainActivity extends Activity {
-    private Database controller;
+    private Database mController;
     private ProgressDialog mDialog;
 
     @Override
@@ -147,10 +147,10 @@ public class MainActivity extends Activity {
     public void syncSQLiteMySQLDB() {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
-        controller = Database.getInstance(getApplicationContext());
-        String jsondata = controller.composeJSONfromSQLite();
+        mController = Database.getInstance(getApplicationContext());
+        String jsondata = mController.composeJSONfromSQLite();
         if (!jsondata.isEmpty()) {
-            if (controller.dbSyncCount() != 0) {
+            if (mController.dbSyncCount() != 0) {
                 mDialog.setMessage(getString(R.string.sync_in_progress));
                 mDialog.show();
 
@@ -177,7 +177,7 @@ public class MainActivity extends Activity {
                             Log.d("onSuccess", "" + arr.length());
                             for (int i = 0; i < arr.length(); i++) {
                                 JSONObject obj = (JSONObject) arr.get(i);
-                                controller.updateSyncStatus(obj.get("id").toString(), obj.get
+                                mController.updateSyncStatus(obj.get("id").toString(), obj.get
                                         ("status").toString());
                             }
                             Toast.makeText(getApplicationContext(), "DB Sync completed!", Toast
@@ -219,10 +219,9 @@ public class MainActivity extends Activity {
      * Load locally available maps of the FIU engineering campus.
      */
     private void loadMaps() {
-        final ImmutableList<Pair<String, Integer>> floors = ImmutableList.of(new Pair<String,
-                Integer>("Engineering 1st Floor", R.drawable.ec_1), new Pair<String, Integer>
-                ("Engineering 2nd Floor", R.drawable.ec_2), new Pair<String, Integer>
-                ("Engineering 3rd Floor", R.drawable.ec_3));
+        final ImmutableList<Pair<String, Integer>> floors = ImmutableList.of(new Pair<>
+                ("Engineering 1st Floor", R.drawable.ec_1), new Pair<>("Engineering 2nd Floor", R
+                .drawable.ec_2), new Pair<>("Engineering 3rd Floor", R.drawable.ec_3));
 
         for (Pair<String, Integer> floor : floors) {
             final ContentValues values = new ContentValues();
