@@ -23,13 +23,11 @@ import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.util.Set;
 
 import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
@@ -37,39 +35,61 @@ import uk.co.senab.photoview.PhotoViewAttacher.OnPhotoTapListener;
 
 public class TrainActivity extends Activity {
     private long mMapId;
+    private int mScanNum = 0;
+    private final int SCAN_PASSES = 8;
 
-    private boolean markerPlaced = false;
-    private LinkedList<ContentValues> mCachedResults;
-    private LinkedList<ContentValues> tempCachedResults;
-    private boolean cancelled = false;
-    private boolean scanRequested = false;
+    /**
+     * true iff we've placed a marker but haven't saved it yet...still in buffer
+     **/
+    private boolean mIsMarkerPlaced = false;
+    /**
+     * TODO
+     **/
+    private boolean mIsCancelled = false;
+    /**
+     * TODO
+     **/
+    private boolean mIsScanRequested = false;
 
-    private ImageView mImg;
     private float[] mImgLocation = new float[2];
     private PhotoViewAttacher mAttacher;
     private RelativeLayout mRelative;
 
-    private WifiManager mWifiManager;
-    private int scanNum = 0;
-    private HashSet bssidSet;
+    /**
+     * All unique access point BSSIDs (aka MAC) for this session.
+     **/
+    private Set<String> mBssidSet = new HashSet<>();
+    /**
+     * TODO
+     **/
+    private Deque<ContentValues> mCachedResults = new ArrayDeque<>();
+    /**
+     * TODO
+     **/
+    private Deque<ContentValues> mTempCachedResults = new ArrayDeque<>();
 
     private ProgressDialog mPrgBarDialog;
+    private WifiManager mWifiManager;
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            System.out.println("sr = " + scanRequested + " can = " + cancelled);
-            if (!scanRequested) return;
-            if (cancelled) {
-                scanRequested = false;
-                cancelled = false;
+            if (!mIsScanRequested) {
+                return;
+            } else if (mIsCancelled) {
+                mIsScanRequested = false;
+                mIsCancelled = false;
                 return;
             }
+
             final List<ScanResult> results = mWifiManager.getScanResults();
             for (ScanResult result : results) {
-                if (bssidSet.contains(result.BSSID)) continue;
-                bssidSet.add(result.BSSID);
-                ContentValues values = new ContentValues();
+                if (mBssidSet.contains(result.BSSID)) {
+                    continue;
+                }
+                mBssidSet.add(result.BSSID);
+
+                final ContentValues values = new ContentValues();
                 values.put(Database.Readings.DATETIME, System.currentTimeMillis());
                 values.put(Database.Readings.MAP_X, mImgLocation[0]);
                 values.put(Database.Readings.MAP_Y, mImgLocation[1]);
@@ -78,25 +98,21 @@ public class TrainActivity extends Activity {
                 values.put(Database.Readings.MAC, result.BSSID);
                 values.put(Database.Readings.MAP_ID, mMapId);
                 values.put(Database.Readings.UPDATE_STATUS, 0);
-
-                tempCachedResults.add(values);
+                mTempCachedResults.add(values);
             }
 
-            System.out.println(bssidSet.size());
-            scanNum++;
-            mPrgBarDialog.setProgress(scanNum);
-            if (scanNum < 8) {
+            mScanNum++;
+            mPrgBarDialog.setProgress(mScanNum);
+            if (mScanNum < SCAN_PASSES) {
                 mWifiManager.startScan();
                 return;
             }
-            scanRequested = false;
-            scanNum = 0;
+            mIsScanRequested = false;
+            mScanNum = 0;
             mPrgBarDialog.hide();
-            Toast.makeText(getApplicationContext(), "If you are done training locations, please "
-                    + "don't forget to SAVE above!", Toast.LENGTH_LONG).show();
 
-            mCachedResults.addAll(tempCachedResults);
-            tempCachedResults.clear();
+            mCachedResults.addAll(mTempCachedResults);
+            mTempCachedResults.clear();
 
             mAttacher.removeLastMarkerAdded();
             final PhotoMarker mrk = Utils.createNewMarker(getApplicationContext(), mRelative,
@@ -104,7 +120,7 @@ public class TrainActivity extends Activity {
             mrk.marker.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    PopupMenu popup = new PopupMenu(TrainActivity.this, mrk.marker);
+                    final PopupMenu popup = new PopupMenu(TrainActivity.this, mrk.marker);
                     popup.getMenuInflater().inflate(R.menu.marker, popup.getMenu());
                     popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         @Override
@@ -112,7 +128,14 @@ public class TrainActivity extends Activity {
                             switch (item.getItemId()) {
                             case R.id.popup_delete_marker:
                                 mrk.marker.setVisibility(View.GONE);
-                                onDelete(mrk.x, mrk.y);
+
+                                for (ContentValues val : mCachedResults) {
+                                    float cachex = val.getAsFloat(Database.Readings.MAP_X);
+                                    float cachey = val.getAsFloat(Database.Readings.MAP_Y);
+                                    if (cachex == mrk.x && cachey == mrk.y) {
+                                        mCachedResults.remove(val);
+                                    }
+                                }
                                 return true;
                             default:
                                 return true;
@@ -134,40 +157,11 @@ public class TrainActivity extends Activity {
         setContentView(R.layout.activity_train);
 
         mMapId = getIntent().getExtras().getLong(Utils.Constants.MAP_ID_EXTRA);
-
-        mCachedResults = new LinkedList<>();
-        tempCachedResults = new LinkedList<>();
-
-        mPrgBarDialog = new ProgressDialog(this);
-        mPrgBarDialog.setTitle(getString(R.string.dialog_scanning_title));
-        mPrgBarDialog.setMessage(getString(R.string.dialog_scanning_description));
-        mPrgBarDialog.setCancelable(true);
-        mPrgBarDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface
-                .OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                cancelled = true;
-                scanNum = 0;
-                mPrgBarDialog.setProgress(0);
-                tempCachedResults.clear();
-                markerPlaced = true;
-                dialog.dismiss();
-            }
-        });
-        mPrgBarDialog.setCanceledOnTouchOutside(false);
-        mPrgBarDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                cancelled = true;
-            }
-        });
-        mPrgBarDialog.setProgressStyle(mPrgBarDialog.STYLE_HORIZONTAL);
-        mPrgBarDialog.setProgress(0);
-        mPrgBarDialog.setMax(8);
-
         mRelative = (RelativeLayout) findViewById(R.id.image_map_container);
+        setupProgressBarDialog();
 
-        mImg = (ImageView) findViewById(R.id.image_map);
+        // Get map URI or die trying
+        final Uri img;
         final Cursor cursor = getContentResolver().query(ContentUris.withAppendedId(DataProvider
                 .MAPS_URI, mMapId), null, null, null, null);
         if (!cursor.moveToFirst()) {
@@ -176,45 +170,48 @@ public class TrainActivity extends Activity {
             cursor.close();
             finish();
             return;
+        } else {
+            img = Uri.parse(cursor.getString(cursor.getColumnIndex(Database.Maps.DATA)));
+            cursor.close();
         }
-        final Uri img = Uri.parse(cursor.getString(cursor.getColumnIndex(Database.Maps.DATA)));
-        cursor.close();
 
-        bssidSet = new HashSet();
-
+        //  Setup PhotoViewAttacher and listeners
         final int[] imgSize = Utils.getImageSize(img, getApplicationContext());
-        mImg.setImageURI(img);
-        mAttacher = new PhotoViewAttacher(mImg, imgSize);
+        ImageView imageView = (ImageView) findViewById(R.id.image_map);
+        imageView.setImageURI(img);
+        mAttacher = new PhotoViewAttacher(imageView, imgSize);
         mAttacher.setOnPhotoTapListener(new OnPhotoTapListener() {
             @Override
             public void onPhotoTap(View view, float x, float y) {
-
                 mImgLocation[0] = x * imgSize[0];
                 mImgLocation[1] = y * imgSize[1];
 
-                if (markerPlaced) mAttacher.removeLastMarkerAdded();
-                PhotoMarker tmpmrk = Utils.createNewMarker(getApplicationContext(), mRelative,
-                        mImgLocation[0], mImgLocation[1]);
-                mAttacher.addData(tmpmrk);
-                markerPlaced = true;
+                // FIXME document
+                if (mIsMarkerPlaced) {
+                    mAttacher.removeLastMarkerAdded();
+                }
+                mAttacher.addData(Utils.createNewMarker(getApplicationContext(), mRelative,
+                        mImgLocation[0], mImgLocation[1]));
+                mIsMarkerPlaced = true;
             }
         });
 
-        Map<Utils.TrainLocation, ArrayList<Utils.APValue>> mCachedMapData = Utils
-                .gatherLocalizationData(getContentResolver(), mMapId);
-        Deque<PhotoMarker> mrkrs = Utils.generateMarkers(mCachedMapData, getApplicationContext(),
-                mRelative);
+        // Get data in Readings table for previously trained points and draw them on the map
+        final Deque<PhotoMarker> mrkrs = Utils.generateMarkers(Utils.gatherLocalizationData
+                (getContentResolver(), mMapId), getApplicationContext(), mRelative);
         for (PhotoMarker mrk : mrkrs) {
             mrk.marker.setAlpha(0.8f);
             mrk.marker.setImageResource(R.drawable.grey_x);
         }
         mAttacher.addData(mrkrs);
 
+        // Setup WiFi manager and callbacks
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         registerReceiver(mReceiver, filter);
 
+        // Create hint if first time running
         Utils.createHintIfNeeded(this, Utils.Constants.PREF_TRAIN_HINT, R.string.hint_train);
     }
 
@@ -238,41 +235,70 @@ public class TrainActivity extends Activity {
             saveTraining();
             setResult(RESULT_OK);
             finish();
+
             return true;
         case R.id.action_lock:
-            if (markerPlaced) {
-                bssidSet = new HashSet();
-                markerPlaced = false;
+            if (mIsMarkerPlaced) {
+                mBssidSet.clear();
+                mIsMarkerPlaced = false;
                 mPrgBarDialog.setProgress(0);
                 mPrgBarDialog.show();
                 mWifiManager.startScan();
-                cancelled = false;
-                scanRequested = true;
+                mIsCancelled = false;
+                mIsScanRequested = true;
             }
+
             return true;
         default:
             return super.onOptionsItemSelected(item);
         }
     }
 
+    private void setupProgressBarDialog() {
+        if (mPrgBarDialog != null) {
+            return;
+        }
+
+        mPrgBarDialog = new ProgressDialog(this);
+        mPrgBarDialog.setTitle(R.string.dialog_scanning_title);
+        mPrgBarDialog.setMessage(getString(R.string.dialog_scanning_description));
+        mPrgBarDialog.setCancelable(true);
+        mPrgBarDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                mIsCancelled = true;
+            }
+        });
+        mPrgBarDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string.no),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mTempCachedResults.clear();
+
+                        mIsCancelled = true;
+
+                        mScanNum = 0;
+                        mPrgBarDialog.setProgress(0);
+
+                        mIsMarkerPlaced = true;
+                        dialog.dismiss();
+                    }
+                });
+        mPrgBarDialog.setCanceledOnTouchOutside(false);
+        mPrgBarDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        mPrgBarDialog.setProgress(0);
+        mPrgBarDialog.setMax(SCAN_PASSES);
+    }
+
+    /**
+     * Bulk insert contents of mCachedResults into Readings table iff data was collected.
+     */
     private void saveTraining() {
-        if (mCachedResults.isEmpty()) return;
+        if (mCachedResults.isEmpty()) {
+            return;
+        }
 
         getContentResolver().bulkInsert(DataProvider.READINGS_URI, mCachedResults.toArray(new
                 ContentValues[]{}));
-    }
-
-    private void onDelete(float x, float y) {
-        float cachex, cachey;
-        ContentValues val;
-        ListIterator<ContentValues> iter = mCachedResults.listIterator();
-        while (iter.hasNext()) {
-            val = iter.next();
-            cachex = val.getAsFloat(Database.Readings.MAP_X);
-            cachey = val.getAsFloat(Database.Readings.MAP_Y);
-            if (cachex == x && cachey == y) {
-                iter.remove();
-            }
-        }
     }
 }
