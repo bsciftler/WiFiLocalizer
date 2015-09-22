@@ -1,14 +1,11 @@
 package edu.fiu.mpact.wifilocalizer;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
