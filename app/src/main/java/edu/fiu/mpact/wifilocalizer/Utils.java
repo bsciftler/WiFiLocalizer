@@ -15,11 +15,11 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import java.math.BigInteger;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,10 +43,14 @@ public class Utils {
     }
 
     /**
-     * @param context
-     * @param key
-     * @param res
-     * @return the value of the preference
+     * Create hint dialogs with an optional checkbox to hide all. If the box has already been
+     * shown once or the user has opted to not receive hints, we will not show. The method does
+     * call the .show() method of the dialog.
+     *
+     * @param context context of the running activity
+     * @param key     the SharedPreferences key of the boolean setting to check
+     * @param res     the resource id of the hint string if
+     * @return the value of the preference given by key
      */
     public static boolean createHintIfNeeded(Context context, String key, int res) {
         final SharedPreferences prefs = context.getSharedPreferences(Constants.PREF_FILE, Context
@@ -60,7 +64,6 @@ public class Utils {
         }
 
         // http://stackoverflow.com/a/9763836/1832800
-
         final View checkBoxView = View.inflate(context, R.layout.checkbox_dialog, null);
         final CheckBox box = (CheckBox) checkBoxView.findViewById(R.id.checkbox);
         box.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -137,12 +140,6 @@ public class Utils {
 
     public static class Coord {
         public float mX, mY;
-        public int mRssi = -1;
-
-        public Coord(float x, float y, int rssi) {
-            this(x, y);
-            mRssi = rssi;
-        }
 
         public Coord(float x, float y) {
             mX = x;
@@ -182,30 +179,20 @@ public class Utils {
         }
     }
 
-    public static class EncAPValue {
-        public String mBssid;
-        public BigInteger mRssi;
-
-        public EncAPValue(String bssid, BigInteger rssi) {
-            mBssid = bssid;
-            mRssi = rssi;
-        }
-    }
-
-    public static class PineAPResponse {
-        private int count;
-        private String[] results;
-    }
-
     // ************************************************************************
 
-    public static int[] getImageSize(Uri uri, Context c) {
+    /**
+     * Returns a pair of (width, height) representing the dimensions of an image. Right now just
+     * assumes all images are the same size as R.drawable.ec_1
+     *
+     * @param _ unused
+     * @param c any context to give to BitmapFactory.decodeResource
+     * @return the pair of pixel width x height
+     */
+    public static int[] getImageSize(Uri _, Context c) {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        //BitmapFactory.decodeFile(uri.getPath(), options);
-
         BitmapFactory.decodeResource(c.getResources(), R.drawable.ec_1, options);
-
 
         return new int[]{options.outWidth, options.outHeight};
     }
@@ -213,8 +200,7 @@ public class Utils {
     /**
      * Creates a new ImageView instance associated as a child of layout.
      *
-     * @param context which context to associate with ImageView...can just use
-     *                `getApplicationContext()` or `this`
+     * @param context which context to associate with ImageView
      * @param layout  parent layout
      * @return view with image resource set to a drawable
      */
@@ -241,64 +227,40 @@ public class Utils {
 
     public static Deque<PhotoMarker> generateMarkers(Deque<Coord> coordsToDraw, Context context,
                                                      RelativeLayout wrapper) {
-        final Deque<PhotoMarker> data = new LinkedList<PhotoMarker>();
-        final Set<Coord> points = new HashSet<Coord>();
+        final Deque<PhotoMarker> data = new ArrayDeque<>();
+        final Set<Coord> points = new HashSet<>();
 
         for (Coord tmpCoord : coordsToDraw) {
             if (!points.contains(tmpCoord)) {
                 points.add(tmpCoord);
-                PhotoMarker toAdd = createNewMarker(context, wrapper, tmpCoord.mX, tmpCoord.mY);
-                data.add(toAdd);
+                data.add(createNewMarker(context, wrapper, tmpCoord.mX, tmpCoord.mY));
             }
         }
 
         return data;
     }
 
-    /**
-     * Gather (x,y) points we have samples for in this map.
-     */
-    public static Deque<PhotoMarker> gatherSamples(ContentResolver cr, Context context,
-                                                   RelativeLayout wrapper, long mapId) {
-        // Get cursor into readings table
-        // FIXME find out if possible to do a SQL DISTINCT query...
-        final Cursor cursor = cr.query(DataProvider.READINGS_URI, new String[]{Database.Readings
-                .MAP_X, Database.Readings.MAP_Y}, Database.Readings.MAP_ID + "=?", new
-                String[]{Long.toString(mapId)}, null);
-
-        // For readability, store these as local constants
-        final int xColumn = cursor.getColumnIndex(Database.Readings.MAP_X);
-        final int yColumn = cursor.getColumnIndex(Database.Readings.MAP_Y);
-
-        // Load all the APs into our storage set
-        final Deque<Coord> coordsToDraw = new LinkedList<Coord>();
-        while (cursor.moveToNext()) {
-            if (cursor.isNull(xColumn) || cursor.isNull(yColumn)) continue;
-
-            coordsToDraw.add(new Coord(cursor.getFloat(xColumn), cursor.getFloat(yColumn)));
-        }
-        cursor.close();
-
-        return generateMarkers(coordsToDraw, context, wrapper);
-    }
-
     public static Deque<PhotoMarker> generateMarkers(Map<TrainLocation, ArrayList<APValue>>
                                                              coordsToDraw, Context context,
                                                      RelativeLayout wrapper) {
-        return generateMarkers(new LinkedList<Coord>(coordsToDraw.keySet()), context, wrapper);
+        return generateMarkers(new ArrayDeque<Coord>(coordsToDraw.keySet()), context, wrapper);
     }
 
-    public static HashSet<String> gatherMetaMacs(ContentResolver cr) {
-        HashSet<String> asdf = new HashSet<>();
+    public static Set<String> gatherMetaMacs(ContentResolver cr) {
+        final Set<String> macs = new HashSet<>();
+
         final Cursor cursor = cr.query(DataProvider.META_URI, null, null, null, null);
         final int macColumn = cursor.getColumnIndex(Database.Meta.MAC);
         while (cursor.moveToNext()) {
-            if (cursor.isNull(macColumn)) continue;
-            asdf.add(cursor.getString(macColumn));
+            if (cursor.isNull(macColumn)) {
+                continue;
+            }
+
+            macs.add(cursor.getString(macColumn));
         }
         cursor.close();
-        System.out.println("gathermetamacs size = " + asdf.size());
-        return asdf;
+
+        return macs;
     }
 
     public static Map<TrainLocation, ArrayList<APValue>> gatherLocalizationData(ContentResolver
@@ -316,53 +278,26 @@ public class Utils {
         final int rssiColumn = cursor.getColumnIndex(Database.Readings.SIGNAL_STRENGTH);
 
         // Cache results of cursor result in a more convenient data structure
-        final Map<TrainLocation, ArrayList<APValue>> data = new HashMap<TrainLocation,
-                ArrayList<APValue>>();
-        int j = 0;
-        int i = 0;
+        final Map<TrainLocation, ArrayList<APValue>> data = new HashMap<>();
         while (cursor.moveToNext()) {
-            if (cursor.isNull(xColumn) || cursor.isNull(yColumn)) continue;
+            if (cursor.isNull(xColumn) || cursor.isNull(yColumn)) {
+                continue;
+            }
 
-
-            TrainLocation loc = new TrainLocation(cursor.getFloat(xColumn), cursor.getFloat
+            final TrainLocation loc = new TrainLocation(cursor.getFloat(xColumn), cursor.getFloat
                     (yColumn));
-            //Log.d("x and y", cursor.getFloat(xColumn) + " " + cursor.getFloat(yColumn));
-
-            APValue ap = new APValue(cursor.getString(bssidColumn), cursor.getInt(rssiColumn));
-            //Log.d("x and y of AP", cursor.getString(bssidColumn) + " " + cursor.getFloat
-            // (rssiColumn));
-
-
+            final APValue ap = new APValue(cursor.getString(bssidColumn), cursor.getInt
+                    (rssiColumn));
             if (data.containsKey(loc)) {
                 data.get(loc).add(ap);
-                j++;
             } else {
-                ArrayList<APValue> new_ = new ArrayList<APValue>();
+                ArrayList<APValue> new_ = new ArrayList<>();
                 new_.add(ap);
                 data.put(loc, new_);
             }
-
-            //Log.d("CURSOR", i + "");
-            i++;
         }
         cursor.close();
-        //Log.d("TOTAL IN IF: ", " " + j);
 
         return data;
     }
-
-    private static Map<TrainLocation, ArrayList<APValue>> gatherFileData(long mapId) {
-
-
-        return null;
-
-    }
-
-
-    //	public static int[] getImageSize(Drawable image) {
-    //		int iHeight = image.getIntrinsicHeight();
-    //		int iWidth = image.getIntrinsicWidth();
-    //		return new int[] {iWidth , iHeight  };
-    //	}
-
 }
