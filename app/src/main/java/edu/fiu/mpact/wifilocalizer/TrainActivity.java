@@ -110,7 +110,7 @@ public class TrainActivity extends Activity {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
                             switch (item.getItemId()) {
-                            case R.id.action_delete_cmenu:
+                            case R.id.popup_delete_marker:
                                 mrk.marker.setVisibility(View.GONE);
                                 onDelete(mrk.x, mrk.y);
                                 return true;
