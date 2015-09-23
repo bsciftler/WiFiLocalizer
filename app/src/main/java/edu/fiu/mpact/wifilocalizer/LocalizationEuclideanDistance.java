@@ -270,7 +270,7 @@ public class LocalizationEuclideanDistance {
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
         ArrayList<APValue> resultAPVs = new ArrayList<>();
-        HashSet<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
+        Set<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
 
         ArrayList<String> matches = new ArrayList<>();
         for (ScanResult res : results) {
@@ -493,7 +493,7 @@ public class LocalizationEuclideanDistance {
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
         ArrayList<APValue> resultAPVs = new ArrayList<>();
-        HashSet<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
+        Set<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
 
         final long starttime = System.currentTimeMillis();
         // local sums
