@@ -99,7 +99,7 @@ public class LocalizeActivity extends Activity {
             //
             //			System.out.println(realresults.size());
             System.out.println(results.size());
-            if (auto == true) mWifiManager.startScan();
+            if (auto) mWifiManager.startScan();
             switch (opt) {
             case 1:
                 mAlgo.localize(results);

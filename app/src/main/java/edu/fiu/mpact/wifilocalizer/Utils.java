@@ -101,6 +101,8 @@ public class Utils {
 
     // ***********************************************************************
 
+    // TODO: replace these with pairs and triplets
+
     public static class EncTrainDistMatchPair {
         public TrainLocation trainLocation;
         public BigInteger dist;
