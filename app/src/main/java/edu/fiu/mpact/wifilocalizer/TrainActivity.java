@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
@@ -33,7 +34,8 @@ import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
 import uk.co.senab.photoview.PhotoViewAttacher.OnPhotoTapListener;
 
-public class TrainActivity extends Activity {
+public class TrainActivity extends Activity implements SharedPreferences
+        .OnSharedPreferenceChangeListener {
     private long mMapId;
     private int mScanNum = 0;
     private final int SCAN_PASSES = 8;
@@ -151,6 +153,10 @@ public class TrainActivity extends Activity {
         }
     };
 
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        //        TODO
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -248,6 +254,9 @@ public class TrainActivity extends Activity {
                 mIsScanRequested = true;
             }
 
+            return true;
+        case R.id.action_options:
+            startActivity(new Intent(this, SettingsActivity.class));
             return true;
         default:
             return super.onOptionsItemSelected(item);
