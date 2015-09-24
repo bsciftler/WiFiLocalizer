@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,7 +12,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.view.Menu;
@@ -24,11 +22,7 @@ import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
@@ -36,89 +30,47 @@ import uk.co.senab.photoview.PhotoViewAttacher.OnPhotoTapListener;
 
 public class TrainActivity extends Activity implements SharedPreferences
         .OnSharedPreferenceChangeListener {
-    private long mMapId;
-    private int mScanNum = 0;
-    private final int SCAN_PASSES = 8;
-
-    /**
-     * true iff we've placed a marker but haven't saved it yet...still in buffer
-     **/
     private boolean mIsMarkerPlaced = false;
-    /**
-     * TODO
-     **/
-    private boolean mIsCancelled = false;
-    /**
-     * TODO
-     **/
-    private boolean mIsScanRequested = false;
+    private boolean mSaveScanData = false;
+    private int mScanNum = 0;
+    private int mStashSize = 0;
+    private long mMapId;
+    private enum COLLECTION_MODES {CONTINUOUS, PASSES, SAMPLES};
 
     private float[] mImgLocation = new float[2];
     private PhotoViewAttacher mAttacher;
     private RelativeLayout mRelative;
-
-    /**
-     * All unique access point BSSIDs (aka MAC) for this session.
-     **/
-    private Set<String> mBssidSet = new HashSet<>();
-    /**
-     * TODO
-     **/
-    private Deque<ContentValues> mCachedResults = new ArrayDeque<>();
-    /**
-     * TODO
-     **/
-    private Deque<ContentValues> mTempCachedResults = new ArrayDeque<>();
-
     private ProgressDialog mPrgBarDialog;
     private WifiManager mWifiManager;
+    private ScanResultBuffer mDataBuffer;
+
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (!mIsScanRequested) {
-                return;
-            } else if (mIsCancelled) {
-                mIsScanRequested = false;
-                mIsCancelled = false;
+            if (!mSaveScanData) {
                 return;
             }
 
-            final List<ScanResult> results = mWifiManager.getScanResults();
-            for (ScanResult result : results) {
-                if (mBssidSet.contains(result.BSSID)) {
-                    continue;
-                }
-                mBssidSet.add(result.BSSID);
+            final int newRows = mDataBuffer.stashScanResults(mWifiManager.getScanResults(),
+                    mImgLocation);
+            final boolean keepCapturing = updateProgressDialog(newRows);
 
-                final ContentValues values = new ContentValues();
-                values.put(Database.Readings.DATETIME, System.currentTimeMillis());
-                values.put(Database.Readings.MAP_X, mImgLocation[0]);
-                values.put(Database.Readings.MAP_Y, mImgLocation[1]);
-                values.put(Database.Readings.SIGNAL_STRENGTH, result.level);
-                values.put(Database.Readings.AP_NAME, result.SSID);
-                values.put(Database.Readings.MAC, result.BSSID);
-                values.put(Database.Readings.MAP_ID, mMapId);
-                values.put(Database.Readings.UPDATE_STATUS, 0);
-                mTempCachedResults.add(values);
-            }
-
-            mScanNum++;
-            mPrgBarDialog.setProgress(mScanNum);
-            if (mScanNum < SCAN_PASSES) {
+            if (keepCapturing) {
                 mWifiManager.startScan();
                 return;
+            } else {
+                resetProgressDialog();
+                mDataBuffer.saveStash();
             }
-            mIsScanRequested = false;
-            mScanNum = 0;
-            mPrgBarDialog.hide();
 
-            mCachedResults.addAll(mTempCachedResults);
-            mTempCachedResults.clear();
-
+            // Remove the temporary marker
             mAttacher.removeLastMarkerAdded();
+            mIsMarkerPlaced = false;
+            // In the same location, place a permanent marker
             final PhotoMarker mrk = Utils.createNewMarker(getApplicationContext(), mRelative,
                     mImgLocation[0], mImgLocation[1], R.drawable.red_x);
+            // Create a popup that will allow deletion of the marker from the map
             mrk.marker.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
@@ -129,26 +81,23 @@ public class TrainActivity extends Activity implements SharedPreferences
                         public boolean onMenuItemClick(MenuItem item) {
                             switch (item.getItemId()) {
                             case R.id.popup_delete_marker:
+                                // Make the marker invisible. Since the data is gone from the
+                                // buffer, we won't end up saving or seeing this point.
                                 mrk.marker.setVisibility(View.GONE);
-
-                                for (ContentValues val : mCachedResults) {
-                                    float cachex = val.getAsFloat(Database.Readings.MAP_X);
-                                    float cachey = val.getAsFloat(Database.Readings.MAP_Y);
-                                    if (cachex == mrk.x && cachey == mrk.y) {
-                                        mCachedResults.remove(val);
-                                    }
-                                }
+                                mDataBuffer.removeByCoordinate(mrk.x, mrk.y);
                                 return true;
                             default:
-                                return true;
+                                return false;
                             }
                         }
                     });
+
                     popup.show();
                     return true;
                 }
             });
 
+            // Show the new marker
             mAttacher.addData(mrk);
         }
     };
@@ -156,6 +105,8 @@ public class TrainActivity extends Activity implements SharedPreferences
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         //        TODO
     }
+
+    // ***********************************************************************
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,7 +134,8 @@ public class TrainActivity extends Activity implements SharedPreferences
 
         //  Setup PhotoViewAttacher and listeners
         final int[] imgSize = Utils.getImageSize(img, getApplicationContext());
-        ImageView imageView = (ImageView) findViewById(R.id.image_map);
+        final ImageView imageView = (ImageView) findViewById(R.id.image_map);
+        // FIXME this is incredibly slow
         imageView.setImageURI(img);
         mAttacher = new PhotoViewAttacher(imageView, imgSize);
         mAttacher.setOnPhotoTapListener(new OnPhotoTapListener() {
@@ -192,7 +144,8 @@ public class TrainActivity extends Activity implements SharedPreferences
                 mImgLocation[0] = x * imgSize[0];
                 mImgLocation[1] = y * imgSize[1];
 
-                // FIXME document
+                // If we've already placed a marker without locking it down,
+                // remove that old marker and replace with this one
                 if (mIsMarkerPlaced) {
                     mAttacher.removeLastMarkerAdded();
                 }
@@ -217,8 +170,21 @@ public class TrainActivity extends Activity implements SharedPreferences
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         registerReceiver(mReceiver, filter);
 
+        // Setup buffer to stash and to keep results
+        mDataBuffer = new ScanResultBuffer(mMapId);
+
         // Create hint if first time running
         Utils.createHintIfNeeded(this, Utils.Constants.PREF_TRAIN_HINT, R.string.hint_train);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override
@@ -227,6 +193,8 @@ public class TrainActivity extends Activity implements SharedPreferences
         unregisterReceiver(mReceiver);
         mPrgBarDialog.dismiss();
     }
+
+    // ***********************************************************************
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -238,20 +206,14 @@ public class TrainActivity extends Activity implements SharedPreferences
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
         case R.id.action_save:
-            saveTraining();
+            mDataBuffer.saveTrainingToDatabase(getContentResolver());
             setResult(RESULT_OK);
             finish();
 
             return true;
         case R.id.action_lock:
             if (mIsMarkerPlaced) {
-                mBssidSet.clear();
-                mIsMarkerPlaced = false;
-                mPrgBarDialog.setProgress(0);
-                mPrgBarDialog.show();
                 mWifiManager.startScan();
-                mIsCancelled = false;
-                mIsScanRequested = true;
             }
 
             return true;
@@ -263,11 +225,12 @@ public class TrainActivity extends Activity implements SharedPreferences
         }
     }
 
-    private void setupProgressBarDialog() {
-        if (mPrgBarDialog != null) {
-            return;
-        }
+    private void resetProgressDialog() {
+//        TODO
+        return;
+    }
 
+    private void setupProgressBarDialog() {
         mPrgBarDialog = new ProgressDialog(this);
         mPrgBarDialog.setTitle(R.string.dialog_scanning_title);
         mPrgBarDialog.setMessage(getString(R.string.dialog_scanning_description));
@@ -275,39 +238,23 @@ public class TrainActivity extends Activity implements SharedPreferences
         mPrgBarDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
-                mIsCancelled = true;
+                mSaveScanData = false;
             }
         });
         mPrgBarDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string.no),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mTempCachedResults.clear();
-
-                        mIsCancelled = true;
-
-                        mScanNum = 0;
-                        mPrgBarDialog.setProgress(0);
-
-                        mIsMarkerPlaced = true;
-                        dialog.dismiss();
+                        //                        TODO
                     }
                 });
         mPrgBarDialog.setCanceledOnTouchOutside(false);
         mPrgBarDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        mPrgBarDialog.setProgress(0);
-        mPrgBarDialog.setMax(SCAN_PASSES);
+        resetProgressDialog();
     }
 
-    /**
-     * Bulk insert contents of mCachedResults into Readings table iff data was collected.
-     */
-    private void saveTraining() {
-        if (mCachedResults.isEmpty()) {
-            return;
-        }
-
-        getContentResolver().bulkInsert(DataProvider.READINGS_URI, mCachedResults.toArray(new
-                ContentValues[]{}));
+    protected boolean updateProgressDialog(int n) {
+//        TODO
+        return false;
     }
 }
