@@ -111,34 +111,6 @@ public class Database extends SQLiteOpenHelper {
         return mInstance;
     }
 
-    //	public static class Sessions {
-    //		public static final String TABLE_NAME = "Sessions";
-    //		public static final String ID = "_id";
-    //		public static final String TIME = "session_datetime";
-    //		public static final String MAP_ID = "map_id";
-    //		public static final String SDK_VERSION = "sdk";
-    //		public static final String MANUFACTURER = "maker";
-    //		public static final String MODEL = "model";
-    //
-    //		private static final String ID_COLUMN = ID
-    //				+ " INTEGER PRIMARY KEY AUTOINCREMENT";
-    //		private static final String TIME_COLUMN = TIME + " INTEGER NOT NULL";
-    //		private static final String SDK_VERSION_COLUMN = SDK_VERSION
-    //				+ " INTEGER NOT NULL";
-    //		private static final String MANUFACTURER_COLUMN = MANUFACTURER
-    //				+ " TEXT NOT NULL";
-    //		private static final String MODEL_COLUMN = MODEL + " TEXT NOT NULL";
-    //		private static final String MAP_ID_COLUMN = MAP_ID
-    //				+ " INTEGER NOT NULL";
-    //		private static final String MAP_ID_FOREIGN_COLUMN = generateForeignKeyColumn(
-    //				MAP_ID, Maps.TABLE_NAME, Maps.ID);
-    //
-    //		private static final String SCHEMA = generateSchema(TABLE_NAME,
-    //				ID_COLUMN, TIME_COLUMN, SDK_VERSION_COLUMN,
-    //				MANUFACTURER_COLUMN, MODEL_COLUMN, MAP_ID_COLUMN,
-    //				MAP_ID_FOREIGN_COLUMN);
-    //	}
-
     // ***********************************************************************
 
     public Database(Context context) {
