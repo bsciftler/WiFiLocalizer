@@ -22,7 +22,7 @@ public class ScanResultBuffer {
     }
 
     public int removeByCoordinate(float x, float y) {
-        final int removed = ((Deque) mToCommit.remove(new float[] {x, y})).size();
+        final int removed = ((Deque) mToCommit.remove(new float[]{x, y})).size();
         return removed;
     }
 
@@ -45,7 +45,7 @@ public class ScanResultBuffer {
         return rowsInserted;
     }
 
-    public ContentValues srToCv(ScanResult result, float[] loc, long time) {
+    private ContentValues srToCv(ScanResult result, float[] loc, long time) {
         final ContentValues values = new ContentValues();
         values.put(Database.Readings.DATETIME, System.currentTimeMillis());
         values.put(Database.Readings.MAP_X, loc[0]);
@@ -85,9 +85,11 @@ public class ScanResultBuffer {
      * @return numnber of newly inserted rows
      */
     public int saveTrainingToDatabase(ContentResolver resolver) {
-        final ContentValues[] TEMPLATE = new ContentValues[0];
-        final ContentValues[] valuesToInsert = mToCommit.values().toArray(TEMPLATE);
-
-        return resolver.bulkInsert(DataProvider.READINGS_URI, valuesToInsert);
+        int inserted = 0;
+        for (Deque<ContentValues> value : mToCommit.values()) {
+            inserted += resolver.bulkInsert(DataProvider.READINGS_URI, value.toArray(new
+                    ContentValues[]{}));
+        }
+        return inserted;
     }
 }
