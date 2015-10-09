@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableSet;
 
 
 public class SettingsActivity extends PreferenceActivity {
+    public enum COLLECTION_MODES {CONTINUOUS, PASSES, SAMPLES};
     protected static final ImmutableSet<String> MODE_OPTIONS = ImmutableSet.of
             ("pref_continuous_toggle", "pref_passes_toggle", "pref_samples_toggle");
 
