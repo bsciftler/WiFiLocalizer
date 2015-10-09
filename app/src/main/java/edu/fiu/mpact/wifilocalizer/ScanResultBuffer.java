@@ -8,22 +8,31 @@ import org.javatuples.Triplet;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ScanResultBuffer {
     protected final long mMapId;
-    private final Map<float[], Deque<ContentValues>> mToCommit = new HashMap<>();
     private final Deque<Triplet<List<ScanResult>, float[], Long>> mStash = new ArrayDeque<>();
+    private Deque<ContentValues> mToCommit = new ArrayDeque<>();
 
     public ScanResultBuffer(long mapId) {
         mMapId = mapId;
     }
 
     public int removeByCoordinate(float x, float y) {
-        final int removed = ((Deque) mToCommit.remove(new float[]{x, y})).size();
-        return removed;
+        final Deque<ContentValues> commitCopy = new ArrayDeque<>(mToCommit.size());
+
+        for (ContentValues values : mToCommit) {
+            if (values.getAsFloat(Database.Readings.MAP_X) != x && values.getAsFloat(Database
+                    .Readings.MAP_Y) != y) {
+                commitCopy.add(values);
+            }
+        }
+
+        final int diff = mToCommit.size() - commitCopy.size();
+        mToCommit = commitCopy;
+
+        return diff;
     }
 
     public void clearStash() {
@@ -62,19 +71,11 @@ public class ScanResultBuffer {
     public int insertScanResults(List<ScanResult> results, float[] location, long time) {
         int rowsInserted = 0;
 
-        final Deque<ContentValues> deque;
-        if (mToCommit.containsKey(location)) {
-            deque = mToCommit.get(location);
-        } else {
-            deque = new ArrayDeque<>();
-        }
-
         for (ScanResult result : results) {
-            deque.add(srToCv(result, location, time));
+            mToCommit.add(srToCv(result, location, time));
             rowsInserted++;
         }
 
-        mToCommit.put(location, deque);
         return rowsInserted;
     }
 
@@ -85,11 +86,7 @@ public class ScanResultBuffer {
      * @return numnber of newly inserted rows
      */
     public int saveTrainingToDatabase(ContentResolver resolver) {
-        int inserted = 0;
-        for (Deque<ContentValues> value : mToCommit.values()) {
-            inserted += resolver.bulkInsert(DataProvider.READINGS_URI, value.toArray(new
-                    ContentValues[]{}));
-        }
-        return inserted;
+        return resolver.bulkInsert(DataProvider.READINGS_URI, mToCommit.toArray(new
+                ContentValues[]{}));
     }
 }
