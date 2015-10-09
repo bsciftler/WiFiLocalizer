@@ -41,33 +41,14 @@ public class Database extends SQLiteOpenHelper {
                 DATE_ADDED_COLUMN, DATA_COLUMN);
     }
 
-    public static class Scale {
-        public static final String TABLE_NAME = "Scale";
-        public static final String ID = "_id";
-        public static final String MAP_SCALE = "map_scale";
-
-        private static final String ID_COLUMN = ID + " INTEGER PRIMARY KEY";
-        private static final String MAP_SCALE_COLUMN = MAP_SCALE + " FLOAT";
-        private static final String ID_FOREIGN_COLUMN = generateForeignKeyColumn(ID, Maps
-                .TABLE_NAME, Maps.ID);
-
-        private static final String SCHEMA = generateSchema(TABLE_NAME, ID_COLUMN,
-                MAP_SCALE_COLUMN, ID_FOREIGN_COLUMN);
-    }
-
     public static class Meta {
         public static final String TABLE_NAME = "Meta";
         public static final String ID = "_id";
-        //		public static final String MAP_X = "mapx";
-        //		public static final String MAP_Y = "mapy";
         public static final String MAC = "mac";
 
         private static final String ID_COLUMN = ID + " INTEGER PRIMARY KEY";
-        //private static final String MAP_X_COLUMN = MAP_X + " FLOAT";
-        //private static final String MAP_Y_COLUMN = MAP_Y + " FLOAT";
         private static final String MAC_COLUMN = MAC + " TEXT_NOT NULL";
-        //		private static final String SCHEMA = generateSchema(TABLE_NAME,
-        //				ID_COLUMN, MAP_X_COLUMN, MAP_Y_COLUMN);
+
         private static final String SCHEMA = generateSchema(TABLE_NAME, ID_COLUMN, MAC_COLUMN);
     }
 
@@ -82,7 +63,6 @@ public class Database extends SQLiteOpenHelper {
         public static final String MAC = "mac";
         public static final String MAP_ID = "map";
         public static final String UPDATE_STATUS = "up_status";
-        //		public static final String SESSION_ID = "session";
 
         private static final String ID_COLUMN = ID + " INTEGER PRIMARY KEY AUTOINCREMENT";
         private static final String DATETIME_COLUMN = DATETIME + " INTEGER NOT NULL";
@@ -93,8 +73,6 @@ public class Database extends SQLiteOpenHelper {
         private static final String MAC_COLUMN = MAC + " TEXT NOT NULL";
         private static final String MAP_ID_COLUMN = MAP_ID + " INTEGER NOT NULL";
         private static final String UPDATE_STATUS_COLUMN = UPDATE_STATUS + " INTEGER NOT NULL";
-        //		private static final String SESSION_ID_COLUMN = SESSION_ID
-        //				+ " INTEGER";
         private static final String MAP_ID_FOREIGN_COLUMN = generateForeignKeyColumn(MAP_ID, Maps
                 .TABLE_NAME, Maps.ID);
 
@@ -165,7 +143,7 @@ public class Database extends SQLiteOpenHelper {
 
     public String composeJSONfromSQLite() {
         ArrayList<ContentValues> wordList;
-        wordList = new ArrayList<ContentValues>();
+        wordList = new ArrayList<>();
         String selectQuery = "SELECT  * FROM Readings where up_status = 0";
         SQLiteDatabase database = this.getWritableDatabase();
         Cursor cursor = database.rawQuery(selectQuery, null);
@@ -187,28 +165,22 @@ public class Database extends SQLiteOpenHelper {
                 wordList.add(cv);
             } while (cursor.moveToNext());
         }
+        cursor.close();
+
         database.close();
         Gson gson = new GsonBuilder().create();
         //Use GSON to serialize Array List to JSON
         return gson.toJson(wordList);
     }
 
-    public String getSyncStatus() {
-        String msg = null;
-        if (this.dbSyncCount() == 0) {
-            msg = "SQLite and Remote MySQL DBs are in Sync!";
-        } else {
-            msg = "DB Sync needed\n";
-        }
-        return msg;
-    }
-
     public int dbSyncCount() {
-        int count = 0;
         String selectQuery = "SELECT  * FROM Readings where up_status = 0";
         SQLiteDatabase database = this.getWritableDatabase();
+
         Cursor cursor = database.rawQuery(selectQuery, null);
-        count = cursor.getCount();
+        final int count = cursor.getCount();
+        cursor.close();
+
         database.close();
         return count;
     }
@@ -227,20 +199,19 @@ public class Database extends SQLiteOpenHelper {
 
 
     // this is for databasemanager
-    public ArrayList<Cursor> getData(String Query) {
+    public ArrayList<Cursor> getData(String maxQuery) {
         //get writable database
         SQLiteDatabase sqlDB = this.getWritableDatabase();
         String[] columns = new String[]{"mesage"};
         //an array list of cursor to save three cursors ec_1 has results from the query
         //other cursor stores error message if any errors are triggered
-        ArrayList<Cursor> alc = new ArrayList<Cursor>(2);
+        ArrayList<Cursor> alc = new ArrayList<>(2);
         MatrixCursor Cursor2 = new MatrixCursor(columns);
         alc.add(null);
         alc.add(null);
 
 
         try {
-            String maxQuery = Query;
             //execute the query results will be save in Cursor c
             Cursor c = sqlDB.rawQuery(maxQuery, null);
 
@@ -275,8 +246,5 @@ public class Database extends SQLiteOpenHelper {
             alc.set(1, Cursor2);
             return alc;
         }
-
-
     }
-
 }
