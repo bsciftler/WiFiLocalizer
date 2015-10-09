@@ -82,6 +82,21 @@ public class Database extends SQLiteOpenHelper {
                 MAP_ID_FOREIGN_COLUMN);
     }
 
+    public static class Scale {
+        public static final String TABLE_NAME = "Scale";
+        public static final String ID = "_id";
+        public static final String MAP_SCALE = "map_scale";
+
+        private static final String ID_COLUMN = ID + " INTEGER PRIMARY KEY";
+        private static final String MAP_SCALE_COLUMN = MAP_SCALE + " FLOAT";
+        private static final String ID_FOREIGN_COLUMN = generateForeignKeyColumn(ID, Maps
+                .TABLE_NAME, Maps.ID);
+
+        private static final String SCHEMA = generateSchema(TABLE_NAME, ID_COLUMN,
+                MAP_SCALE_COLUMN, ID_FOREIGN_COLUMN);
+    }
+
+
     public static Database getInstance(Context ctx) {
         if (mInstance == null) {
             mInstance = new Database(ctx.getApplicationContext());
