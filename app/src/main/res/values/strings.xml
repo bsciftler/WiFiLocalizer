@@ -11,8 +11,6 @@
     <string name="action_save">Save</string>
     <string name="action_settings">Settings</string>
     <string name="action_export_csv">Export Data to CSV</string>
-    <string name="dialog_scanning_title">Scanning Wi-Fi Acess Points</string>
-    <string name="dialog_scanning_description">Please do not move device&#8230;</string>
     <string name="btn_localize">Localize</string>
     <string name="btn_start_automatic_train">Start Automatic Gathering</string>
     <string name="btn_end_automatic_train">End Automatic Gathering</string>
@@ -46,6 +44,11 @@
     <string name="switch_localize">Auto-Localize</string>
     <string name="action_info">Info</string>
     <string name="title_activity_settings">Settings</string>
+
+    <string name="dialog_scanning_title">Scanning Wi-Fi Acess Points&#8230;</string>
+    <string name="dialog_save">Save</string>
+    <string name="dialog_scanning_description">Please do not move device&#8230;</string>
+    <string name="dialog_scanning_continuous_message">Have %d readings&#8230;</string>
 
     <string name="info_string">
         * Begin by selecting a map from the list given.
