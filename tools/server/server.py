@@ -14,6 +14,10 @@ tailq = Queue(maxsize=30)
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path != '/':
+            # send an HTTP 204, NO CONTENT
+            self.send_response(204)
+            return
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
