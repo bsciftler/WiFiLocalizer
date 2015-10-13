@@ -4,7 +4,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.net.wifi.ScanResult;
 
-import org.javatuples.Triplet;
+import org.javatuples.Quartet;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -12,8 +12,10 @@ import java.util.List;
 
 public class ScanResultBuffer {
     protected final long mMapId;
-    private final Deque<Triplet<List<ScanResult>, float[], Long>> mStash = new ArrayDeque<>();
+    private final Deque<Quartet<List<ScanResult>, float[], Long, Utils.PineappleResponse>> mStash
+            = new ArrayDeque<>();
     private Deque<ContentValues> mToCommit = new ArrayDeque<>();
+    private Deque<ContentValues> mProbesToCommit = new ArrayDeque<>();
 
     public ScanResultBuffer(long mapId) {
         mMapId = mapId;
@@ -39,16 +41,19 @@ public class ScanResultBuffer {
         mStash.clear();
     }
 
-    public int stashScanResults(List<ScanResult> resultsToStash, float[] loc) {
-        mStash.add(new Triplet<>(resultsToStash, loc, System.currentTimeMillis()));
+    public int stashScanResults(List<ScanResult> resultsToStash, float[] loc, Utils
+            .PineappleResponse response) {
+        mStash.add(new Quartet<>(resultsToStash, loc, System.currentTimeMillis(), response));
+
         return resultsToStash.size();
     }
 
     public int saveStash() {
         int rowsInserted = 0;
 
-        for (Triplet<List<ScanResult>, float[], Long> t : mStash) {
+        for (Quartet<List<ScanResult>, float[], Long, Utils.PineappleResponse> t : mStash) {
             rowsInserted += insertScanResults(t.getValue0(), t.getValue1(), t.getValue2());
+            insertProbeResults(t.getValue1(), t.getValue3());
         }
 
         return rowsInserted;
@@ -73,6 +78,27 @@ public class ScanResultBuffer {
 
         for (ScanResult result : results) {
             mToCommit.add(srToCv(result, location, time));
+            rowsInserted++;
+        }
+
+        return rowsInserted;
+    }
+
+    public int insertProbeResults(float[] location, Utils.PineappleResponse response) {
+        if (response == null)
+            return 0;
+
+        int rowsInserted = 0;
+
+        for (String[] s : response.getData()) {
+            final ContentValues values = new ContentValues();
+            values.put(Database.Probes.MAP_X, location[0]);
+            values.put(Database.Probes.MAP_Y, location[1]);
+            values.put(Database.Probes.SIGNAL_STRENGTH, s[0]);
+            values.put(Database.Probes.FINGERPRINT, s[1]);
+            values.put(Database.Probes.MAP_ID, mMapId);
+            mProbesToCommit.add(values);
+
             rowsInserted++;
         }
 

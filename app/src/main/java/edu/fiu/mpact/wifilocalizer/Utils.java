@@ -43,6 +43,8 @@ public class Utils {
 
         public static final String PINEAPPLE_URL = "http://172.16.42.1";
         public static final String PINEAPPLE_SCRAPER_PORT = "8000";
+        public static final String PINEAPPLE_SERVER_URL = PINEAPPLE_URL + ":" +
+                PINEAPPLE_SCRAPER_PORT;
     }
 
     /**
@@ -185,14 +187,26 @@ public class Utils {
     }
 
     public class PineappleResponse {
-        private int count = 0;
-        private String[] results;
+        public int count = 0;
+        public String[] results;
 
         PineappleResponse() {
         }
 
-        // TODO
-        public void parse() {}
+        public String[] parse(String s) {
+            final String[] split = s.split(" ", 2);
+            return new String[]{split[0], split[1]};
+        }
+
+        public String[][] getData() {
+            String[][] ret = new String[results.length][];
+
+            for (int i = 0; i < ret.length; i++) {
+                ret[i] = parse(results[i]);
+            }
+
+            return ret;
+        }
     }
 
     // ************************************************************************

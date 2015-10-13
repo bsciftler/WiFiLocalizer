@@ -34,6 +34,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Deque;
 import java.util.Locale;
 
+import edu.fiu.mpact.wifilocalizer.Utils.PineappleResponse;
 import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
 import uk.co.senab.photoview.PhotoViewAttacher.OnPhotoTapListener;
@@ -45,6 +46,7 @@ public class TrainActivity extends Activity {
     private SettingsActivity.COLLECTION_MODES mMode = SettingsActivity.COLLECTION_MODES.CONTINUOUS;
     private int mModePasses = -1;
     private int mCurrentCollectionCount = 0;
+    private PineappleResponse mPineappleData = null;
 
     private float[] mImgLocation = new float[2];
     private PhotoViewAttacher mAttacher;
@@ -57,17 +59,22 @@ public class TrainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (!mSaveScanData) {
-                Log.i("mReceiver", "not saving scan data");
                 return;
             }
-            Log.i("mReceiver", "saving scan data");
 
+            if (mPineappleData != null)
+                Toast.makeText(getApplicationContext(), "got " + mPineappleData.count + " " +
+                        "results", Toast.LENGTH_SHORT).show();
+            else
+                Toast.makeText(getApplicationContext(), "got no pineapple results", Toast
+                        .LENGTH_SHORT).show();
             final int newRows = mDataBuffer.stashScanResults(mWifiManager.getScanResults(),
-                    mImgLocation);
+                    mImgLocation, mPineappleData);
             final boolean keepCapturing = updateProgressDialog(newRows);
 
             if (keepCapturing) {
                 mWifiManager.startScan();
+                sendPineappleGet();
                 return;
             }
 
@@ -190,6 +197,7 @@ public class TrainActivity extends Activity {
 
                 mSaveScanData = true;
                 mWifiManager.startScan();
+                sendPineappleGet();
             }
             return true;
         case R.id.action_options:
@@ -333,27 +341,31 @@ public class TrainActivity extends Activity {
 
     // ***********************************************************************
 
-    public void collect(View view) {
-        final String url = Utils.Constants.PINEAPPLE_URL + ":" + Utils.Constants.PINEAPPLE_SCRAPER_PORT;
+    public void sendPineappleGet() {
+        mPineappleData = null;
 
-        new AsyncHttpClient().get(url, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                try {
-                    final String response = new String(responseBody, "UTF8");
-                    Utils.PineappleResponse data = new Gson().fromJson(response, Utils.PineappleResponse.class);
+        new AsyncHttpClient().get(Utils.Constants.PINEAPPLE_SERVER_URL, new
+                        AsyncHttpResponseHandler() {
 
-                    // TODO
-                } catch (UnsupportedEncodingException e) {
-                    Log.e("PineDebug", "response had a weird encoding; headers = " + headers);
-                    return;
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                        try {
+                            mPineappleData = new Gson().fromJson(new String(responseBody, "UTF8")
+                                    , PineappleResponse.class);
+                        } catch (UnsupportedEncodingException e) {
+                            // intentionally blank
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
+                                          Throwable error) {
+                        // intentionally blank
+                    }
                 }
-            }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
-                Toast.makeText(getApplicationContext(), "Get failed with HTTP Code " + statusCode, Toast.LENGTH_LONG).show();
-            }
-        });
+        );
+
+
     }
 }
