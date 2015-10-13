@@ -33,6 +33,8 @@ public class DataProvider extends ContentProvider {
             .Readings.TABLE_NAME);
     public static final Uri SCALE_URI = Uri.parse("content://" + AUTHORITY + "/" + Database.Scale
             .TABLE_NAME);
+    public static final Uri PROBES_URI = Uri.parse("content://" + AUTHORITY + "/" + Database
+            .Probes.TABLE_NAME);
 
     /**
      * Constant for all Maps.
@@ -81,6 +83,13 @@ public class DataProvider extends ContentProvider {
     public static final String SCALE_ID_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" +
             Database.Scale.TABLE_NAME;
 
+    public static final int PROBES = 9;
+    public static final String PROBES_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + Database
+            .Probes.TABLE_NAME;
+    public static final int PROBES_ID = 10;
+    public static final String PROBES_ID_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" +
+            Database.Probes.TABLE_NAME;
+
     /**
      * Setup the UriMatcher to actually use our URIs and constants.
      */
@@ -98,6 +107,8 @@ public class DataProvider extends ContentProvider {
         mMatcher.addURI(AUTHORITY, Database.Readings.TABLE_NAME + "/#", READINGS_ID);
         mMatcher.addURI(AUTHORITY, Database.Scale.TABLE_NAME, SCALE);
         mMatcher.addURI(AUTHORITY, Database.Scale.TABLE_NAME + "/#", SCALE_ID);
+        mMatcher.addURI(AUTHORITY, Database.Scale.TABLE_NAME, PROBES);
+        mMatcher.addURI(AUTHORITY, Database.Scale.TABLE_NAME + "/#", PROBES_ID);
     }
 
     private Database mDb;
@@ -151,6 +162,13 @@ public class DataProvider extends ContentProvider {
         case SCALE_ID:
             queryBuilder.setTables(Database.Scale.TABLE_NAME);
             queryBuilder.appendWhere(Database.Scale.ID + "=" + uri.getLastPathSegment());
+            break;
+        case PROBES:
+            queryBuilder.setTables(Database.Probes.TABLE_NAME);
+            break;
+        case PROBES_ID:
+            queryBuilder.setTables(Database.Probes.TABLE_NAME);
+            queryBuilder.appendWhere(Database.Probes.ID + "=" + uri.getLastPathSegment());
             break;
         default:
             throw new IllegalArgumentException("Unmatchable URI " + uri);
@@ -233,6 +251,18 @@ public class DataProvider extends ContentProvider {
             else numRows = mDb.getWritableDatabase().delete(Database.Scale.TABLE_NAME, selection +
                     " and " + Database.Scale.ID + "=" + id, selectionArgs);
             break;
+        case PROBES:
+            numRows = mDb.getWritableDatabase().delete(Database.Probes.TABLE_NAME, selection,
+                    selectionArgs);
+            break;
+        case PROBES_ID:
+            id = uri.getLastPathSegment();
+            if (TextUtils.isEmpty(selection))
+                numRows = mDb.getWritableDatabase().delete(Database.Probes.TABLE_NAME, Database
+                        .Probes.ID + "=" + id, null);
+            else numRows = mDb.getWritableDatabase().delete(Database.Probes.TABLE_NAME, selection +
+                    " and " + Database.Probes.ID + "=" + id, selectionArgs);
+            break;
         default:
             throw new IllegalArgumentException("Unmatchable URI " + uri);
         }
@@ -263,6 +293,10 @@ public class DataProvider extends ContentProvider {
         case SCALE:
             return SCALE_TYPE;
         case SCALE_ID:
+            return SCALE_ID_TYPE;
+        case PROBES:
+            return SCALE_TYPE;
+        case PROBES_ID:
             return SCALE_ID_TYPE;
         default:
             return null;
@@ -295,6 +329,11 @@ public class DataProvider extends ContentProvider {
         case SCALE_ID:
             rowId = mDb.getWritableDatabase().insert(Database.Scale.TABLE_NAME, null, values);
             uri = ContentUris.withAppendedId(SCALE_URI, rowId);
+            break;
+        case PROBES:
+        case PROBES_ID:
+            rowId = mDb.getWritableDatabase().insert(Database.Probes.TABLE_NAME, null, values);
+            uri = ContentUris.withAppendedId(PROBES_URI, rowId);
             break;
         default:
             throw new IllegalArgumentException("Unmatchable URI " + uri);
@@ -413,6 +452,19 @@ public class DataProvider extends ContentProvider {
             else
                 numRows = mDb.getWritableDatabase().update(Database.Scale.TABLE_NAME, values,
                         Database.Scale.ID + "=" + id + " and " + selection, selectionArgs);
+            break;
+        case PROBES:
+            numRows = mDb.getWritableDatabase().update(Database.Probes.TABLE_NAME, values,
+                    selection, selectionArgs);
+            break;
+        case PROBES_ID:
+            id = uri.getLastPathSegment();
+            if (TextUtils.isEmpty(selection))
+                numRows = mDb.getWritableDatabase().update(Database.Probes.TABLE_NAME, values,
+                        Database.Probes.ID + "=" + id, null);
+            else
+                numRows = mDb.getWritableDatabase().update(Database.Probes.TABLE_NAME, values,
+                        Database.Probes.ID + "=" + id + " and " + selection, selectionArgs);
             break;
         default:
             throw new IllegalArgumentException("Unmatchable URI " + uri);

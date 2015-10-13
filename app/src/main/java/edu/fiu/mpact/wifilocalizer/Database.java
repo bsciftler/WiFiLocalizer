@@ -20,10 +20,12 @@ public class Database extends SQLiteOpenHelper {
     private static Database mInstance = null;
 
     protected static final String DB_NAME = "LocalizationData.db";
-    protected static final int DB_VERSION = 4;
+    protected static final int DB_VERSION = 5;
 
-    public static final String[] TABLES = {Maps.TABLE_NAME, Readings.TABLE_NAME, Meta.TABLE_NAME};
-    private static final String[] SCHEMAS = {Maps.SCHEMA, Readings.SCHEMA, Meta.SCHEMA};
+    public static final String[] TABLES = {Maps.TABLE_NAME, Readings.TABLE_NAME, Meta.TABLE_NAME,
+            Probes.TABLE_NAME};
+    private static final String[] SCHEMAS = {Maps.SCHEMA, Readings.SCHEMA, Meta.SCHEMA, Probes
+            .SCHEMA};
 
     public static class Maps {
         public static final String TABLE_NAME = "Maps";
@@ -94,6 +96,25 @@ public class Database extends SQLiteOpenHelper {
 
         private static final String SCHEMA = generateSchema(TABLE_NAME, ID_COLUMN,
                 MAP_SCALE_COLUMN, ID_FOREIGN_COLUMN);
+    }
+
+    public static class Probes {
+        public static final String TABLE_NAME = "Probes";
+        public static final String ID = "_id";
+        public static final String MAP_X = "mapx";
+        public static final String MAP_Y = "mapy";
+        public static final String SIGNAL_STRENGTH = "rss";
+        public static final String AP_NAME = "ap_name";
+
+        private static final String ID_COLUMN = ID + " INTEGER PRIMARY KEY";
+        private static final String MAP_X_COLUMN = MAP_X + " FLOAT";
+        private static final String MAP_Y_COLUMN = MAP_Y + " FLOAT";
+        private static final String SIGNAL_STRENGTH_COLUMN = SIGNAL_STRENGTH + " INTEGER NOT NULL";
+        private static final String AP_NAME_COLUMN = AP_NAME + " TEXT";
+
+        private static final String SCHEMA = generateSchema(TABLE_NAME, ID_COLUMN,
+                MAP_X_COLUMN, MAP_Y_COLUMN, SIGNAL_STRENGTH_COLUMN,
+                AP_NAME_COLUMN);
     }
 
 
