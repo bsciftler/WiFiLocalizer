@@ -40,6 +40,9 @@ public class Utils {
         public static final String PREF_VIEW_HINT = "hint2";
         public static final String PREF_LOCALIZE_HINT = "hint3";
         public static final String PREF_TRAIN_HINT = "hint4";
+
+        public static final String PINEAPPLE_URL = "http://172.16.42.1";
+        public static final String PINEAPPLE_SCRAPER_PORT = "8000";
     }
 
     /**
@@ -178,6 +181,14 @@ public class Utils {
         public APValue(String bssid, int rssi) {
             mBssid = bssid;
             mRssi = rssi;
+        }
+    }
+
+    public class PineappleResponse {
+        private int count = 0;
+        private String[] results;
+
+        PineappleResponse() {
         }
     }
 
