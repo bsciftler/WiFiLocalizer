@@ -97,10 +97,9 @@ public class TrainActivity extends Activity {
         final Uri img;
         final Cursor cursor = getContentResolver().query(ContentUris.withAppendedId(DataProvider
                 .MAPS_URI, mapId), null, null, null, null);
-        if (!cursor.moveToFirst()) {
+        if (cursor == null || !cursor.moveToFirst()) {
             Toast.makeText(this, getResources().getText(R.string.toast_map_id_warning), Toast
                     .LENGTH_LONG).show();
-            cursor.close();
             finish();
             return;
         } else {
