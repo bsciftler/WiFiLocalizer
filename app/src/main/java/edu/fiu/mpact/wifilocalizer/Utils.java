@@ -190,6 +190,9 @@ public class Utils {
 
         PineappleResponse() {
         }
+
+        // TODO
+        public void parse() {}
     }
 
     // ************************************************************************
