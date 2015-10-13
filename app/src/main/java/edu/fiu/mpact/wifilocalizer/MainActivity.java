@@ -38,6 +38,7 @@ public class MainActivity extends Activity {
         mDialog.setCancelable(false);
 
         // if first run, load maps
+        // fixme bug on db upgrade
         if (Utils.createHintIfNeeded(this, Utils.Constants.PREF_MAIN_HINT, R.string
                 .first_welcome_message)) {
             loadMaps();

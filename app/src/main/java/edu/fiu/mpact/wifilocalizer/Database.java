@@ -105,16 +105,20 @@ public class Database extends SQLiteOpenHelper {
         public static final String MAP_Y = "mapy";
         public static final String SIGNAL_STRENGTH = "rss";
         public static final String FINGERPRINT = "fingerp";
+        public static final String MAP_ID = "map";
 
         private static final String ID_COLUMN = ID + " INTEGER PRIMARY KEY";
         private static final String MAP_X_COLUMN = MAP_X + " FLOAT";
         private static final String MAP_Y_COLUMN = MAP_Y + " FLOAT";
         private static final String SIGNAL_STRENGTH_COLUMN = SIGNAL_STRENGTH + " INTEGER NOT NULL";
         private static final String FINGERPRINT_COLUMN = FINGERPRINT + " TEXT";
+        private static final String MAP_ID_COLUMN = MAP_ID + " INTEGER NOT NULL";
+        private static final String MAP_ID_FOREIGN_COLUMN = generateForeignKeyColumn(MAP_ID, Maps
+                .TABLE_NAME, Maps.ID);
 
         private static final String SCHEMA = generateSchema(TABLE_NAME, ID_COLUMN,
                 MAP_X_COLUMN, MAP_Y_COLUMN, SIGNAL_STRENGTH_COLUMN,
-                FINGERPRINT_COLUMN);
+                FINGERPRINT_COLUMN, MAP_ID_COLUMN, MAP_ID_FOREIGN_COLUMN);
     }
 
 
