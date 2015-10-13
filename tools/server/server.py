@@ -44,9 +44,18 @@ def tailf(fn):
 
     while True:
         line = p.stdout.readline().rstrip()
+        line = parse_line(line)
         tailq.put(line)
         if not line:
             break
+
+
+def parse_line(line):
+    segments = line.split(' Probe Request ')
+
+    rssi = segments[0].split(' ')[-4]
+    fingerprint = segments[1]
+    return rssi + ' ' + fingerprint
 
 
 def server(path, port=80):
