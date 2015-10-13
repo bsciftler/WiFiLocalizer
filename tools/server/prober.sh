@@ -8,7 +8,7 @@ airmon-ng start wlan0;
 # Start tcpdump monitoring and save to file
 DATE=$(date +"%Y%m%d%H%M")
 tcpdump -s0 -i wlan0mon -l 'type mgt subtype probe-req' > "$DATE.log" &
-./server.py > /dev/null
+./server.py "$DATE.log" > /dev/null
 
 logger '=================================='
 logger 'PROBE REQUEST CAPTURE STARTUP DONE'
