@@ -56,7 +56,7 @@ public class ScanResultBuffer {
 
     private ContentValues srToCv(ScanResult result, float[] loc, long time) {
         final ContentValues values = new ContentValues();
-        values.put(Database.Readings.DATETIME, System.currentTimeMillis());
+        values.put(Database.Readings.DATETIME, time);
         values.put(Database.Readings.MAP_X, loc[0]);
         values.put(Database.Readings.MAP_Y, loc[1]);
         values.put(Database.Readings.SIGNAL_STRENGTH, result.level);
@@ -83,7 +83,7 @@ public class ScanResultBuffer {
      * Bulk insert contents of mCachedResults into Readings table.
      *
      * @param resolver ContentResolver to use to save
-     * @return numnber of newly inserted rows
+     * @return number of newly inserted rows
      */
     public int saveTrainingToDatabase(ContentResolver resolver) {
         return resolver.bulkInsert(DataProvider.READINGS_URI, mToCommit.toArray(new
