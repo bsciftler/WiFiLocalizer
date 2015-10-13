@@ -24,6 +24,13 @@ import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+
+import org.apache.http.Header;
+
+import java.io.UnsupportedEncodingException;
 import java.util.Deque;
 import java.util.Locale;
 
@@ -72,43 +79,6 @@ public class TrainActivity extends Activity {
             addPermanentMarker();
         }
     };
-
-    private void addPermanentMarker() {
-        // Remove the temporary marker
-        mAttacher.removeLastMarkerAdded();
-        mIsMarkerPlaced = false;
-        // In the same location, place a permanent marker
-        final PhotoMarker mrk = Utils.createNewMarker(getApplicationContext(), mRelative,
-                mImgLocation[0], mImgLocation[1], R.drawable.red_x);
-        // Create a popup that will allow deletion of the marker from the map
-        mrk.marker.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                final PopupMenu popup = new PopupMenu(TrainActivity.this, mrk.marker);
-                popup.getMenuInflater().inflate(R.menu.marker, popup.getMenu());
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        switch (item.getItemId()) {
-                        case R.id.popup_delete_marker:
-                            // Make the marker invisible. Since the data is gone from the
-                            // buffer, we won't end up saving or seeing this point.
-                            mrk.marker.setVisibility(View.GONE);
-                            final int removed = mDataBuffer.removeByCoordinate(mrk.x, mrk.y);
-                            Log.i("onLongClick", "removed " + removed + " contentvalues");
-                            return true;
-                        default:
-                            return false;
-                        }
-                    }
-                });
-
-                popup.show();
-                return true;
-            }
-        });
-        mAttacher.addData(mrk);
-    }
 
     // ***********************************************************************
 
@@ -231,6 +201,8 @@ public class TrainActivity extends Activity {
         }
     }
 
+    // ***********************************************************************
+
     protected boolean updateProgressDialog(int newRows) {
         switch (mMode) {
         case CONTINUOUS:
@@ -321,5 +293,68 @@ public class TrainActivity extends Activity {
             });
             break;
         }
+    }
+
+    private void addPermanentMarker() {
+        // Remove the temporary marker
+        mAttacher.removeLastMarkerAdded();
+        mIsMarkerPlaced = false;
+        // In the same location, place a permanent marker
+        final PhotoMarker mrk = Utils.createNewMarker(getApplicationContext(), mRelative,
+                mImgLocation[0], mImgLocation[1], R.drawable.red_x);
+        // Create a popup that will allow deletion of the marker from the map
+        mrk.marker.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                final PopupMenu popup = new PopupMenu(TrainActivity.this, mrk.marker);
+                popup.getMenuInflater().inflate(R.menu.marker, popup.getMenu());
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()) {
+                        case R.id.popup_delete_marker:
+                            // Make the marker invisible. Since the data is gone from the
+                            // buffer, we won't end up saving or seeing this point.
+                            mrk.marker.setVisibility(View.GONE);
+                            final int removed = mDataBuffer.removeByCoordinate(mrk.x, mrk.y);
+                            Log.i("onLongClick", "removed " + removed + " contentvalues");
+                            return true;
+                        default:
+                            return false;
+                        }
+                    }
+                });
+
+                popup.show();
+                return true;
+            }
+        });
+        mAttacher.addData(mrk);
+    }
+
+    // ***********************************************************************
+
+    public void collect(View view) {
+        final String url = Utils.Constants.PINEAPPLE_URL + ":" + Utils.Constants.PINEAPPLE_SCRAPER_PORT;
+
+        new AsyncHttpClient().get(url, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                try {
+                    final String response = new String(responseBody, "UTF8");
+                    Utils.PineappleResponse data = new Gson().fromJson(response, Utils.PineappleResponse.class);
+
+                    // TODO
+                } catch (UnsupportedEncodingException e) {
+                    Log.e("PineDebug", "response had a weird encoding; headers = " + headers);
+                    return;
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
+                Toast.makeText(getApplicationContext(), "Get failed with HTTP Code " + statusCode, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
