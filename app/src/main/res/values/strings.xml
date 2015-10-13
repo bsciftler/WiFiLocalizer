@@ -81,5 +81,6 @@
     <string name="first_welcome_message">Hello! To begin, select a map from the list to train.</string>
     <string name="sync_in_progress">Syncing SQLite Data with Remote MySQL DB. Please wait&#8230;</string>
     <string name="retrieve_in_progress">Retrieving metadata from Remote DB. Please wait&#8230;</string>
+    <string name="title_activity_pineapple_debug">PineappleDebug</string>
 
 </resources>

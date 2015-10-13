@@ -1,60 +1,68 @@
-<manifest package="edu.fiu.mpact.wifilocalizer"
-          xmlns:android="http://schemas.android.com/apk/res/android"
-          android:versionCode="102"
-          android:versionName="1.0.2">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="edu.fiu.mpact.wifilocalizer"
+    android:versionCode="102"
+    android:versionName="1.0.2" >
 
     <uses-sdk
         android:minSdkVersion="14"
-        android:targetSdkVersion="22"/>
+        android:targetSdkVersion="22" />
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.GET_TASKS"/>
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme" >
         <activity
-            android:name="edu.fiu.mpact.wifilocalizer.MainActivity"
-            android:label="@string/app_name">
+            android:name=".MainActivity"
+            android:label="@string/app_name" >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name="edu.fiu.mpact.wifilocalizer.ViewMapActivity"
+            android:name=".ViewMapActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_view_map"/>
+            android:label="@string/title_activity_view_map" />
         <activity
-            android:name="edu.fiu.mpact.wifilocalizer.TrainActivity"
+            android:name=".TrainActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_train"/>
+            android:label="@string/title_activity_train" />
         <activity
-            android:name="edu.fiu.mpact.wifilocalizer.AndroidDatabaseManager"
+            android:name=".AndroidDatabaseManager"
             android:configChanges="orientation|screenSize"
-            android:theme="@android:style/Theme.Light.NoTitleBar"/>
+            android:theme="@android:style/Theme.Light.NoTitleBar" />
         <activity
-            android:name="edu.fiu.mpact.wifilocalizer.LocalizeActivity"
+            android:name=".LocalizeActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_localize"/>
+            android:label="@string/title_activity_localize" />
         <activity
-            android:name="edu.fiu.mpact.wifilocalizer.SettingsActivity"
+            android:name=".SettingsActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_settings"/>
+            android:label="@string/title_activity_settings" />
+        <activity
+            android:name=".PineappleDebug"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_pineapple_debug" >
+        </activity>
 
         <provider
-            android:name="edu.fiu.mpact.wifilocalizer.DataProvider"
+            android:name=".DataProvider"
             android:authorities="edu.fiu.mpact.wifilocalizer.DataProvider"
             android:exported="false"
-            android:multiprocess="true"/>
+            android:multiprocess="true" />
     </application>
+
 </manifest>
