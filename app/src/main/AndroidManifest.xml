@@ -52,11 +52,6 @@
             android:name=".SettingsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_settings" />
-        <activity
-            android:name=".PineappleDebug"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_pineapple_debug" >
-        </activity>
 
         <provider
             android:name=".DataProvider"

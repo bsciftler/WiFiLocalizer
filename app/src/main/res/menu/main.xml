@@ -25,10 +25,4 @@
         android:showAsAction="ifRoom"
         android:title="@string/action_getMetaData"/>
 
-    <item
-        android:id="@+id/action_pinedebug"
-        android:showAsAction="ifRoom"
-        android:title="WiFi Pineapple Debug"
-        />
-
 </menu>
