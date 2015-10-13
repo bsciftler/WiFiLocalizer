@@ -66,9 +66,6 @@ public class MainActivity extends Activity {
         case R.id.action_getMetaData:
             getMetaData();
             return true;
-        case R.id.action_pinedebug:
-            startActivity(new Intent(this, PineappleDebug.class));
-            return true;
         default:
             return super.onOptionsItemSelected(item);
         }
