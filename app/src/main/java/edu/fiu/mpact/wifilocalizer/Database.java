@@ -192,15 +192,14 @@ public class Database extends SQLiteOpenHelper {
         return new GsonBuilder().create().toJson(wordList);
     }
 
-    // todo need to fix id stuff
     public void updateSyncStatus(String id, String status) {
         Log.d("updateSyncStatus", "id = " + id + " status = " + status);
-        SQLiteDatabase database = this.getWritableDatabase();
-        String updateQuery = "Update Readings set up_status = " + Integer.valueOf(status) + " " +
-                "where _id=" + Integer.valueOf(id);
-        Log.d("query", updateQuery);
-        database.execSQL(updateQuery);
-        database.close();
+
+        final ContentValues values = new ContentValues();
+        values.put("up_status", status);
+
+        getWritableDatabase().update(Readings.TABLE_NAME, values, Readings.ID_COLUMN + "=?",
+                new String[] {id});
     }
 
     // this is for databasemanager

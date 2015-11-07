@@ -1,6 +1,5 @@
 package edu.fiu.mpact.wifilocalizer;
 
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -39,22 +38,20 @@ import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
 import uk.co.senab.photoview.PhotoViewAttacher.OnPhotoTapListener;
 
+
 public class TrainActivity extends Activity {
     private boolean mIsMarkerPlaced = false;
     private boolean mSaveScanData = false;
-
     private SettingsActivity.COLLECTION_MODES mMode = SettingsActivity.COLLECTION_MODES.CONTINUOUS;
     private int mModePasses = -1;
     private int mCurrentCollectionCount = 0;
     private PineappleResponse mPineappleData = null;
-
     private float[] mImgLocation = new float[2];
     private PhotoViewAttacher mAttacher;
     private RelativeLayout mRelative;
     private ProgressDialog mPrgBarDialog;
     private WifiManager mWifiManager;
     private ScanResultBuffer mDataBuffer;
-
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -346,26 +343,23 @@ public class TrainActivity extends Activity {
 
         new AsyncHttpClient().get(Utils.Constants.PINEAPPLE_SERVER_URL, new
                         AsyncHttpResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                                try {
+                                    mPineappleData = new Gson().fromJson(new String(responseBody, "UTF8")
+                                            , PineappleResponse.class);
+                                } catch (UnsupportedEncodingException e) {
+                                    // intentionally blank
+                                }
+                            }
 
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                        try {
-                            mPineappleData = new Gson().fromJson(new String(responseBody, "UTF8")
-                                    , PineappleResponse.class);
-                        } catch (UnsupportedEncodingException e) {
-                            // intentionally blank
+                            @Override
+                            public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
+                                                  Throwable error) {
+                                // intentionally blank
+                            }
                         }
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
-                                          Throwable error) {
-                        // intentionally blank
-                    }
-                }
 
         );
-
-
     }
 }
