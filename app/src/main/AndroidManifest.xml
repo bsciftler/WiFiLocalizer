@@ -41,7 +41,7 @@
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_train" />
         <activity
-            android:name=".AndroidDatabaseManager"
+            android:name=".DatabaseManagerActivity"
             android:configChanges="orientation|screenSize"
             android:theme="@android:style/Theme.Light.NoTitleBar" />
         <activity
