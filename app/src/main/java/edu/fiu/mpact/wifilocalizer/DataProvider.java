@@ -11,7 +11,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 
 public class DataProvider extends ContentProvider {
@@ -62,8 +61,8 @@ public class DataProvider extends ContentProvider {
         mMatcher.addURI(AUTHORITY, Database.Readings.TABLE_NAME + "/#", READINGS_ID);
         mMatcher.addURI(AUTHORITY, Database.Scale.TABLE_NAME, SCALE);
         mMatcher.addURI(AUTHORITY, Database.Scale.TABLE_NAME + "/#", SCALE_ID);
-        mMatcher.addURI(AUTHORITY, Database.Scale.TABLE_NAME, PROBES);
-        mMatcher.addURI(AUTHORITY, Database.Scale.TABLE_NAME + "/#", PROBES_ID);
+        mMatcher.addURI(AUTHORITY, Database.Probes.TABLE_NAME, PROBES);
+        mMatcher.addURI(AUTHORITY, Database.Probes.TABLE_NAME + "/#", PROBES_ID);
     }
 
     private Database mDb;
@@ -222,9 +221,9 @@ public class DataProvider extends ContentProvider {
         case SCALE_ID:
             return SCALE_ID_TYPE;
         case PROBES:
-            return SCALE_TYPE;
+            return PROBES_TYPE;
         case PROBES_ID:
-            return SCALE_ID_TYPE;
+            return PROBES_ID_TYPE;
         default:
             return null;
         }
