@@ -10,9 +10,12 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 
 
+@SuppressWarnings("ConstantConditions")
 public class DataProvider extends ContentProvider {
     /**
      * This is the base string that all URIs must start as.
@@ -23,34 +26,29 @@ public class DataProvider extends ContentProvider {
     public static final Uri READINGS_URI = Uri.parse("content://" + AUTHORITY + "/" + Database.Readings.TABLE_NAME);
     public static final Uri SCALE_URI = Uri.parse("content://" + AUTHORITY + "/" + Database.Scale.TABLE_NAME);
     public static final Uri PROBES_URI = Uri.parse("content://" + AUTHORITY + "/" + Database.Probes.TABLE_NAME);
-
     public static final int MAPS = 1; // id for all getting all maps
     public static final String MAPS_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + Database.Maps.TABLE_NAME;
     public static final int MAPS_ID = 2; // id for a *single* map by its ID
     public static final String MAPS_ID_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + Database.Maps.TABLE_NAME;
-
     public static final int META = 3;
     public static final String META_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + Database.Meta.TABLE_NAME;
     public static final int META_ID = 4;
     public static final String META_ID_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + Database.Meta.TABLE_NAME;
-
     public static final int READINGS = 5;
     public static final String READINGS_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + Database.Readings.TABLE_NAME;
     public static final int READINGS_ID = 6;
     public static final String READINGS_ID_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + Database.Readings.TABLE_NAME;
-
     public static final int SCALE = 7;
     public static final String SCALE_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + Database.Scale.TABLE_NAME;
     public static final int SCALE_ID = 8;
     public static final String SCALE_ID_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + Database.Scale.TABLE_NAME;
-
     public static final int PROBES = 9;
     public static final String PROBES_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + Database.Probes.TABLE_NAME;
     public static final int PROBES_ID = 10;
     public static final String PROBES_ID_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + Database.Probes.TABLE_NAME;
-
     // match URIs to their constants
     private static final UriMatcher mMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+
     static {
         mMatcher.addURI(AUTHORITY, Database.Maps.TABLE_NAME, MAPS);
         mMatcher.addURI(AUTHORITY, Database.Maps.TABLE_NAME + "/#", MAPS_ID);
@@ -76,8 +74,8 @@ public class DataProvider extends ContentProvider {
     // ***********************************************************************
 
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
-                        String sortOrder) {
+    public Cursor query(@NonNull Uri uri, String[] projection, String selection,
+                        String[] selectionArgs, String sortOrder) {
         final SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 
         switch (mMatcher.match(uri)) {
@@ -128,9 +126,10 @@ public class DataProvider extends ContentProvider {
     }
 
     @Override
-    public int delete(Uri uri, String selection, String[] selectionArgs) {
-        int numRows = 0;
-        String id = null;
+    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
+        int numRows;
+        String id;
+
         switch (mMatcher.match(uri)) {
         case MAPS:
             numRows = mDb.getWritableDatabase().delete(Database.Maps.TABLE_NAME, selection,
@@ -202,7 +201,7 @@ public class DataProvider extends ContentProvider {
     }
 
     @Override
-    public String getType(Uri uri) {
+    public String getType(@NonNull Uri uri) {
         switch (mMatcher.match(uri)) {
         case MAPS:
             return MAPS_TYPE;
@@ -230,8 +229,8 @@ public class DataProvider extends ContentProvider {
     }
 
     @Override
-    public Uri insert(Uri uri, ContentValues values) {
-        Uri ret = null;
+    public Uri insert(@NonNull Uri uri, ContentValues values) {
+        Uri ret;
         long rowId;
 
         switch (mMatcher.match(uri)) {
@@ -264,7 +263,7 @@ public class DataProvider extends ContentProvider {
     }
 
     @Override
-    public int bulkInsert(Uri uri, ContentValues[] values) {
+    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
         int rows;
         final SQLiteDatabase db = mDb.getWritableDatabase();
 
@@ -281,6 +280,7 @@ public class DataProvider extends ContentProvider {
 
                 db.setTransactionSuccessful();
             } catch (SQLException e) {
+                Log.w("bulkInsert", "failed to insert row at row #" + rows);
             } finally {
                 db.endTransaction();
             }
@@ -299,6 +299,7 @@ public class DataProvider extends ContentProvider {
 
                 db.setTransactionSuccessful();
             } catch (SQLException e) {
+                Log.w("bulkInsert", "failed to insert row at row #" + rows);
             } finally {
                 db.endTransaction();
             }
@@ -311,9 +312,9 @@ public class DataProvider extends ContentProvider {
     }
 
     @Override
-    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        int numRows = 0;
-        String id = null;
+    public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        int numRows;
+        String id;
 
         switch (mMatcher.match(uri)) {
         case MAPS:
