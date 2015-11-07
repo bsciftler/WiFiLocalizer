@@ -26,7 +26,7 @@ import java.util.ArrayList;
 
 
 public class MainActivity extends Activity {
-    private Database mController;
+    private Database mDb;
     private ProgressDialog mDialog;
 
     @Override
@@ -37,6 +37,8 @@ public class MainActivity extends Activity {
         // Create textless dialog object
         mDialog = new ProgressDialog(this);
         mDialog.setCancelable(false);
+
+        mDb = new Database(this);
 
         // Show welcome message if first run
         Utils.createHintIfNeeded(this, Utils.Constants.PREF_MAIN_HINT, R.string.first_welcome_message);
@@ -62,7 +64,7 @@ public class MainActivity extends Activity {
             Utils.buildDialog(this, R.string.info_string).show();
             return true;
         case R.id.action_syncDB:
-            syncSQLiteMySQLDB();
+            syncDatabase();
             return true;
         case R.id.action_getMetaData:
             getMetaData();
@@ -72,14 +74,15 @@ public class MainActivity extends Activity {
         }
     }
 
+    /**
+     * Attempt to retrieve metadata from internet source. Will update db if successfully retrieved.
+     */
     private void getMetaData() {
-        AsyncHttpClient client = new AsyncHttpClient();
-        RequestParams params = new RequestParams();
-
         mDialog.setMessage(getString(R.string.retrieve_in_progress));
         mDialog.show();
 
-        client.post("http://eic15.eng.fiu.edu:80/wifiloc/getmeta.php", params, new AsyncHttpResponseHandler() {
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.post(Utils.Constants.METADATA_URL, new RequestParams(), new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] response) {
                 mDialog.hide();
@@ -89,114 +92,87 @@ public class MainActivity extends Activity {
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
                 mDialog.hide();
-                if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
-                } else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! Check internet connection.", Toast.LENGTH_LONG).show();
-                }
+                Toast.makeText(getApplicationContext(), "Couldn't update metadata", Toast.LENGTH_SHORT).show();
+                Log.e("metadataUpdate", "couldn't update; http code = " + statusCode);
             }
         });
     }
 
+    /**
+     * Update metadata database with new mac addresses.
+     *
+     * @param response a valid JSON array
+     */
     public void updateSQLite(String response) {
-        ArrayList<ContentValues> cache = new ArrayList<>();
+        final ArrayList<ContentValues> toInsert = new ArrayList<>();
+
         try {
-            System.out.println(response);
             JSONArray arr = new JSONArray(response);
-            System.out.println(arr.length());
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject obj = (JSONObject) arr.get(i);
 
-            if (arr.length() != 0) {
-                // Loop through each array element, get JSON object which has userid and username
-                for (int i = 0; i < arr.length(); i++) {
-                    // Get JSON object
-                    JSONObject obj = (JSONObject) arr.get(i);
-                    //System.out.println(obj.get("mapx"));
-                    //System.out.println(obj.get("mapy"));
-                    System.out.println(obj.get("mac"));
+                ContentValues cv = new ContentValues();
+                cv.put("mac", obj.get("mac").toString());
 
-                    ContentValues cv = new ContentValues();
-                    // Add userID extracted from Object
-                    //cv.put("mapx", Float.valueOf(obj.get("mapx").toString()));
-                    cv.put("mac", obj.get("mac").toString());
-                    // Add userName extracted from Object
-                    //cv.put("mapy", Float.valueOf(obj.get("mapy").toString()));
-                    // Insert User into SQLite DB
-                    cache.add(cv);
-                }
-                if (cache.isEmpty()) return;
-                // Add readings
-                getContentResolver().delete(DataProvider.META_URI, null, null);
-                getContentResolver().bulkInsert(DataProvider.META_URI, cache.toArray(new ContentValues[] {}));
-            } else {
-                getContentResolver().delete(DataProvider.META_URI, null, null);
+                toInsert.add(cv);
             }
+
+            if (toInsert.isEmpty()) return;
+            getContentResolver().delete(DataProvider.META_URI, null, null);
+            getContentResolver().bulkInsert(DataProvider.META_URI,
+                    toInsert.toArray(new ContentValues[arr.length()]));
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e("metadataUpdate", "malformed JSON");
         }
     }
 
-    public void syncSQLiteMySQLDB() {
-        AsyncHttpClient client = new AsyncHttpClient();
-        RequestParams params = new RequestParams();
-        mController = Database.getInstance(getApplicationContext());
-        String jsondata = mController.composeJSONfromSQLite();
-        if (!jsondata.isEmpty()) {
-            if (mController.dbSyncCount() != 0) {
-                mDialog.setMessage(getString(R.string.sync_in_progress));
-                mDialog.show();
-
-                params.put("readingsJSON", jsondata);
-                client.post("http://eic15.eng.fiu.edu:80/wifiloc/insertreading.php", params, new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                        onSuccess(new String(bytes));
-                    }
-
-                    @Override
-                    public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
-                        onFailure(i, throwable, String.valueOf(bytes));
-                    }
-
-                    public void onSuccess(String response) {
-                        mDialog.hide();
-
-                        try {
-                            JSONArray arr = new JSONArray(response);
-                            Log.d("onSuccess", "" + arr.length());
-                            for (int i = 0; i < arr.length(); i++) {
-                                JSONObject obj = (JSONObject) arr.get(i);
-                                mController.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
-                            }
-                            Toast.makeText(getApplicationContext(), "DB Sync completed!", Toast.LENGTH_LONG).show();
-                        } catch (JSONException e) {
-                            Toast.makeText(getApplicationContext(), "Error Occured [Server's " +
-                                    "JSON" + " response might be invalid]!", Toast.LENGTH_LONG).show();
-                            e.printStackTrace();
-                        }
-                    }
-
-                    @SuppressWarnings("unused")
-                    public void onFailure(int statusCode, Throwable error, String content) {
-                        mDialog.hide();
-                        if (statusCode == 404) {
-                            Toast.makeText(getApplicationContext(), "Requested resource not " + "found", Toast.LENGTH_LONG).show();
-                        } else if (statusCode == 500) {
-                            Toast.makeText(getApplicationContext(), "Something went wrong at " + "server end", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Unexpected Error occcured! " +
-                                    "[Most common Error: Device might not be connected to " +
-                                    "Internet]", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-            } else {
-                Toast.makeText(getApplicationContext(), "SQLite and Remote MySQL DBs are in " + "Sync!", Toast.LENGTH_LONG).show();
-            }
-        } else {
-            Toast.makeText(getApplicationContext(), "No data in SQLite DB, please do enter User " + "name to perform Sync action", Toast.LENGTH_LONG).show();
+    /**
+     * Uploads Readings table to remote database and then waits for a response. Then mark
+     * the readings returned in the response as uploaded.
+     */
+    private void syncDatabase() {
+        final Cursor cursor = mDb.getNonUploadedReadings();
+        if (cursor.getCount() == 0) {
+            Toast.makeText(this, "Already synced!", Toast.LENGTH_LONG).show();
+            cursor.close();
+            return;
         }
+
+        mDialog.setMessage(getString(R.string.sync_in_progress));
+        mDialog.show();
+
+        final RequestParams params = new RequestParams();
+        params.put("readingsJSON", mDb.readingsCursorToJson(cursor));
+        cursor.close();
+
+        final AsyncHttpClient client = new AsyncHttpClient();
+        client.post(Utils.Constants.INSERT_URL, params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] bytes) {
+                mDialog.hide();
+
+                try {
+                    JSONArray arr = new JSONArray(new String(bytes));
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject obj = (JSONObject) arr.get(i);
+                        mDb.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
+                    }
+
+                    Toast.makeText(getApplicationContext(), "Sync complete!", Toast.LENGTH_LONG).show();
+                } catch (JSONException e) {
+                    Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
+                    Log.e("syncUpdate", "couldn't update");
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
+                mDialog.hide();
+
+                Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
+                Log.e("syncUpdate", "couldn't update; http code = " + statusCode);
+            }
+        });
     }
 
     /**

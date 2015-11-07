@@ -45,6 +45,9 @@ public class Utils {
         public static final String PINEAPPLE_SCRAPER_PORT = "8000";
         public static final String PINEAPPLE_SERVER_URL = PINEAPPLE_URL + ":" +
                 PINEAPPLE_SCRAPER_PORT;
+
+        public static final String METADATA_URL = "http://eic15.eng.fiu.edu/wifiloc/getmeta.php";
+        public static final String INSERT_URL = "http://eic15.eng.fiu.edu/wifiloc/insertreading.php";
     }
 
     /**
