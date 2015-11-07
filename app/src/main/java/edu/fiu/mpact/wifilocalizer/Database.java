@@ -79,6 +79,7 @@ public class Database extends SQLiteOpenHelper {
     }
 
 
+    @SuppressWarnings("unused")
     public static class Scale {
         public static final String TABLE_NAME = "Scale";
         public static final String ID = "_id";
@@ -202,10 +203,9 @@ public class Database extends SQLiteOpenHelper {
                 new String[] {id});
     }
 
-    // this is for databasemanager
+    // todo refactor
     public ArrayList<Cursor> getData(String maxQuery) {
-        //get writable database
-        SQLiteDatabase sqlDB = this.getWritableDatabase();
+        SQLiteDatabase sqlDB = getWritableDatabase();
         String[] columns = new String[] {"mesage"};
         //an array list of cursor to save three cursors ec_1 has results from the query
         //other cursor stores error message if any errors are triggered
