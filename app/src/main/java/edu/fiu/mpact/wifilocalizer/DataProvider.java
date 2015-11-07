@@ -345,12 +345,14 @@ public class DataProvider extends ContentProvider {
 
     @Override
     public int bulkInsert(Uri uri, ContentValues[] values) {
+        int rows;
+        final SQLiteDatabase db = mDb.getWritableDatabase();
+
         switch (mMatcher.match(uri)) {
         case READINGS:
-            int rows = 0;
-            final SQLiteDatabase db = mDb.getWritableDatabase();
-
+            rows = 0;
             db.beginTransaction();
+
             try {
                 for (ContentValues value : values) {
                     final long rowId = db.insertOrThrow(Database.Readings.TABLE_NAME, null, value);
@@ -366,26 +368,23 @@ public class DataProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(uri, null);
             return rows;
         case META:
-            int rows2 = 0;
-            final SQLiteDatabase db2 = mDb.getWritableDatabase();
-            Log.d("bulkinsert", "before try");
-            db2.beginTransaction();
+            rows = 0;
+            db.beginTransaction();
+
             try {
-                Log.d("bulkinsert", "in try");
                 for (ContentValues value : values) {
-                    Log.d("bulkinsert", "in for");
-                    final long rowId = db2.insertOrThrow(Database.Meta.TABLE_NAME, null, value);
-                    if (rowId != -1) rows2++;
+                    final long rowId = db.insertOrThrow(Database.Meta.TABLE_NAME, null, value);
+                    if (rowId != -1) rows++;
                 }
 
-                db2.setTransactionSuccessful();
+                db.setTransactionSuccessful();
             } catch (SQLException e) {
             } finally {
-                db2.endTransaction();
+                db.endTransaction();
             }
 
             getContext().getContentResolver().notifyChange(uri, null);
-            return rows2;
+            return rows;
         default:
             return super.bulkInsert(uri, values);
         }
