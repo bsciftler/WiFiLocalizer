@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
@@ -33,16 +34,15 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize dialog boxes
+        // Create textless dialog object
         mDialog = new ProgressDialog(this);
         mDialog.setCancelable(false);
 
-        // if first run, load maps
-        // fixme bug on db upgrade
-        if (Utils.createHintIfNeeded(this, Utils.Constants.PREF_MAIN_HINT, R.string
-                .first_welcome_message)) {
-            loadMaps();
-        }
+        // Show welcome message if first run
+        Utils.createHintIfNeeded(this, Utils.Constants.PREF_MAIN_HINT, R.string.first_welcome_message);
+
+        // Initialize to EC maps if there are no maps
+        if (noMaps()) loadDefaultMaps();
     }
 
     @Override
@@ -55,7 +55,7 @@ public class MainActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
         case R.id.action_dbm:
-            final Intent dbmIntent = new Intent(this, AndroidDatabaseManager.class);
+            final Intent dbmIntent = new Intent(this, DatabaseManagerActivity.class);
             startActivity(dbmIntent);
             return true;
         case R.id.action_info:
@@ -72,15 +72,14 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void getMetaData() {
+    private void getMetaData() {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
 
         mDialog.setMessage(getString(R.string.retrieve_in_progress));
         mDialog.show();
 
-        client.post("http://eic15.eng.fiu.edu:80/wifiloc/getmeta.php", params, new
-                AsyncHttpResponseHandler() {
+        client.post("http://eic15.eng.fiu.edu:80/wifiloc/getmeta.php", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] response) {
                 mDialog.hide();
@@ -88,23 +87,17 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                    throwable) {
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
                 mDialog.hide();
                 if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast
-                            .LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
                 } else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong at server end",
-                            Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most " +
-                            "common Error: Device might not be connected to Internet]", Toast
-                            .LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! Check internet connection.", Toast.LENGTH_LONG).show();
                 }
             }
         });
-
     }
 
     public void updateSQLite(String response) {
@@ -135,8 +128,7 @@ public class MainActivity extends Activity {
                 if (cache.isEmpty()) return;
                 // Add readings
                 getContentResolver().delete(DataProvider.META_URI, null, null);
-                getContentResolver().bulkInsert(DataProvider.META_URI, cache.toArray(new
-                        ContentValues[]{}));
+                getContentResolver().bulkInsert(DataProvider.META_URI, cache.toArray(new ContentValues[] {}));
             } else {
                 getContentResolver().delete(DataProvider.META_URI, null, null);
             }
@@ -156,17 +148,14 @@ public class MainActivity extends Activity {
                 mDialog.show();
 
                 params.put("readingsJSON", jsondata);
-                client.post("http://eic15.eng.fiu.edu:80/wifiloc/insertreading.php", params, new
-                        AsyncHttpResponseHandler() {
-
+                client.post("http://eic15.eng.fiu.edu:80/wifiloc/insertreading.php", params, new AsyncHttpResponseHandler() {
                     @Override
                     public void onSuccess(int i, Header[] headers, byte[] bytes) {
                         onSuccess(new String(bytes));
                     }
 
                     @Override
-                    public void onFailure(int i, Header[] headers, byte[] bytes, Throwable
-                            throwable) {
+                    public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
                         onFailure(i, throwable, String.valueOf(bytes));
                     }
 
@@ -178,27 +167,23 @@ public class MainActivity extends Activity {
                             Log.d("onSuccess", "" + arr.length());
                             for (int i = 0; i < arr.length(); i++) {
                                 JSONObject obj = (JSONObject) arr.get(i);
-                                mController.updateSyncStatus(obj.get("id").toString(), obj.get
-                                        ("status").toString());
+                                mController.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
                             }
-                            Toast.makeText(getApplicationContext(), "DB Sync completed!", Toast
-                                    .LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "DB Sync completed!", Toast.LENGTH_LONG).show();
                         } catch (JSONException e) {
                             Toast.makeText(getApplicationContext(), "Error Occured [Server's " +
-                                    "JSON" + " response might be invalid]!", Toast.LENGTH_LONG)
-                                    .show();
+                                    "JSON" + " response might be invalid]!", Toast.LENGTH_LONG).show();
                             e.printStackTrace();
                         }
                     }
 
+                    @SuppressWarnings("unused")
                     public void onFailure(int statusCode, Throwable error, String content) {
                         mDialog.hide();
                         if (statusCode == 404) {
-                            Toast.makeText(getApplicationContext(), "Requested resource not " +
-                                    "found", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Requested resource not " + "found", Toast.LENGTH_LONG).show();
                         } else if (statusCode == 500) {
-                            Toast.makeText(getApplicationContext(), "Something went wrong at " +
-                                    "server end", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Something went wrong at " + "server end", Toast.LENGTH_LONG).show();
                         } else {
                             Toast.makeText(getApplicationContext(), "Unexpected Error occcured! " +
                                     "[Most common Error: Device might not be connected to " +
@@ -207,22 +192,36 @@ public class MainActivity extends Activity {
                     }
                 });
             } else {
-                Toast.makeText(getApplicationContext(), "SQLite and Remote MySQL DBs are in " +
-                        "Sync!", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "SQLite and Remote MySQL DBs are in " + "Sync!", Toast.LENGTH_LONG).show();
             }
         } else {
-            Toast.makeText(getApplicationContext(), "No data in SQLite DB, please do enter User "
-                    + "name to perform Sync action", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "No data in SQLite DB, please do enter User " + "name to perform Sync action", Toast.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * Check the number of maps in the Maps database.
+     *
+     * @return true if zero maps or query was null, false otherwise
+     */
+    private boolean noMaps() {
+        final Cursor cursor = getContentResolver().query(DataProvider.MAPS_URI,
+                new String[] {Database.Maps.ID}, null, null, null);
+        if (cursor == null) return true;
+
+        final boolean ret = cursor.getCount() == 0;
+        cursor.close();
+        return ret;
     }
 
     /**
      * Load locally available maps of the FIU engineering campus.
      */
-    private void loadMaps() {
-        final ImmutableList<Pair<String, Integer>> floors = ImmutableList.of(new Pair<>
-                ("Engineering 1st Floor", R.drawable.ec_1), new Pair<>("Engineering 2nd Floor", R
-                .drawable.ec_2), new Pair<>("Engineering 3rd Floor", R.drawable.ec_3));
+    private void loadDefaultMaps() {
+        final ImmutableList<Pair<String, Integer>> floors = ImmutableList.of(
+                new Pair<>("Engineering 1st Floor", R.drawable.ec_1),
+                new Pair<>("Engineering 2nd Floor", R.drawable.ec_2),
+                new Pair<>("Engineering 3rd Floor", R.drawable.ec_3));
 
         for (Pair<String, Integer> floor : floors) {
             final ContentValues values = new ContentValues();
