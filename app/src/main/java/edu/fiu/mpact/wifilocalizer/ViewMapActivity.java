@@ -1,16 +1,12 @@
 package edu.fiu.mpact.wifilocalizer;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ContentUris;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,18 +21,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
+
 
 /**
  * Second activity in normal activity lifecycle. Lists each map with a
@@ -57,6 +48,7 @@ public class ViewMapActivity extends Activity {
     private ArrayList<Utils.APValue> aparray;
     private Database controller;
 
+
     public class APValueAdapter extends ArrayAdapter<Utils.APValue> {
         public APValueAdapter(Context context, ArrayList<Utils.APValue> aps) {
             super(context, 0, aps);
@@ -68,8 +60,7 @@ public class ViewMapActivity extends Activity {
             Utils.APValue ap = getItem(position);
             // Check if an existing view is being reused, otherwise inflate the view
             if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.marker_list_item,
-                        parent, false);
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.marker_list_item, parent, false);
             }
             // Lookup view for data population
             TextView libssid = (TextView) convertView.findViewById(R.id.li_marker_bssid);
@@ -95,8 +86,7 @@ public class ViewMapActivity extends Activity {
         final Uri queryUri = ContentUris.withAppendedId(DataProvider.MAPS_URI, mMapId);
         final Cursor cursor = getContentResolver().query(queryUri, null, null, null, null);
         if (!cursor.moveToFirst()) {
-            Toast.makeText(this, getString(R.string.toast_map_id_warning), Toast.LENGTH_LONG)
-                    .show();
+            Toast.makeText(this, getString(R.string.toast_map_id_warning), Toast.LENGTH_LONG).show();
             cursor.close();
             finish();
             return;
@@ -110,8 +100,7 @@ public class ViewMapActivity extends Activity {
         mImageView.setImageURI(mapUri);
         // mAttacher = new PhotoViewAttacher(mImageView);
 
-        mAttacher = new PhotoViewAttacher(mImageView, Utils.getImageSize(mapUri,
-                getApplicationContext()));
+        mAttacher = new PhotoViewAttacher(mImageView, Utils.getImageSize(mapUri, getApplicationContext()));
 
         // gathersamples is buggy
 
@@ -155,8 +144,7 @@ public class ViewMapActivity extends Activity {
 
     public void updateMarkers() {
         mCachedMapData = Utils.gatherLocalizationData(getContentResolver(), mMapId);
-        Deque<PhotoMarker> mrkrs = Utils.generateMarkers(mCachedMapData, getApplicationContext(),
-                mRelative);
+        Deque<PhotoMarker> mrkrs = Utils.generateMarkers(mCachedMapData, getApplicationContext(), mRelative);
         for (final PhotoMarker mrk : mrkrs) {
             mrk.marker.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
@@ -205,8 +193,7 @@ public class ViewMapActivity extends Activity {
     }
 
     private void onDelete(float x, float y) {
-        String[] mSelectionArgs = {String.valueOf(x - 0.0001), String.valueOf(x + 0.0001), String
-                .valueOf(y - 0.0001), String.valueOf(y + 0.0001)};
+        String[] mSelectionArgs = {String.valueOf(x - 0.0001), String.valueOf(x + 0.0001), String.valueOf(y - 0.0001), String.valueOf(y + 0.0001)};
         getContentResolver().delete(DataProvider.READINGS_URI, "mapx>? and mapx<? and mapy>? and " +
                 "" + "mapy<?", mSelectionArgs);
     }
