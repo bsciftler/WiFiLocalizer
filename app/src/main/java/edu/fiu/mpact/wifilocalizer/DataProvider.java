@@ -237,22 +237,22 @@ public class DataProvider extends ContentProvider {
         case MAPS:
         case MAPS_ID:
             rowId = mDb.getWritableDatabase().insert(Database.Maps.TABLE_NAME, null, values);
-            uri = ContentUris.withAppendedId(MAPS_URI, rowId);
+            ret = ContentUris.withAppendedId(MAPS_URI, rowId);
             break;
         case READINGS:
         case READINGS_ID:
             rowId = mDb.getWritableDatabase().insert(Database.Readings.TABLE_NAME, null, values);
-            uri = ContentUris.withAppendedId(READINGS_URI, rowId);
+            ret = ContentUris.withAppendedId(READINGS_URI, rowId);
             break;
         case SCALE:
         case SCALE_ID:
             rowId = mDb.getWritableDatabase().insert(Database.Scale.TABLE_NAME, null, values);
-            uri = ContentUris.withAppendedId(SCALE_URI, rowId);
+            ret = ContentUris.withAppendedId(SCALE_URI, rowId);
             break;
         case PROBES:
         case PROBES_ID:
             rowId = mDb.getWritableDatabase().insert(Database.Probes.TABLE_NAME, null, values);
-            uri = ContentUris.withAppendedId(PROBES_URI, rowId);
+            ret = ContentUris.withAppendedId(PROBES_URI, rowId);
             break;
         default:
             throw new IllegalArgumentException("Unmatchable URI " + uri);
