@@ -45,10 +45,11 @@ public class Utils {
 
         public static final String PINEAPPLE_URL = "http://172.16.42.1";
         public static final String PINEAPPLE_SCRAPER_PORT = "8000";
-        public static final String PINEAPPLE_SERVER_URL = PINEAPPLE_URL + ":" +
-                PINEAPPLE_SCRAPER_PORT;
+        public static final String PINEAPPLE_SERVER_URL = PINEAPPLE_URL + ":" + PINEAPPLE_SCRAPER_PORT;
 
         public static final String METADATA_URL = "http://eic15.eng.fiu.edu/wifiloc/getmeta.php";
+        public static final String POINTS_URL = "http://eic15.eng.fiu.edu/wifiloc/getpoints.php";
+        public static final String DELETE_URL = "http://eic15.eng.fiu.edu/wifiloc/deletereading.php";
         public static final String INSERT_URL = "http://eic15.eng.fiu.edu/wifiloc/insertreading.php";
     }
 
