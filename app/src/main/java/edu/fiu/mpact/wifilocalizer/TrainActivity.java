@@ -61,9 +61,7 @@ public class TrainActivity extends Activity {
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (!mSaveScanData) {
-                return;
-            }
+            if (!mSaveScanData) return;
 
             if (mPineappleData != null)
                 Toast.makeText(getApplicationContext(), "got " + mPineappleData.count + " " +
@@ -120,7 +118,6 @@ public class TrainActivity extends Activity {
         //  Setup PhotoViewAttacher and listeners
         final int[] imgSize = Utils.getImageSize(img, getApplicationContext());
         final ImageView imageView = (ImageView) findViewById(R.id.image_map);
-        // FIXME this is incredibly slow
         imageView.setImageURI(img);
         mAttacher = new PhotoViewAttacher(imageView, imgSize);
         mAttacher.setOnPhotoTapListener(new OnPhotoTapListener() {
@@ -157,7 +154,6 @@ public class TrainActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        Log.i("onResume", "adding intent filter...");
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         registerReceiver(mReceiver, filter);
@@ -369,11 +365,14 @@ public class TrainActivity extends Activity {
         );
     }
 
+    // ***********************************************************************
+
+
     class ScanResultBuffer {
         protected final long mMapId;
-        private final Deque<Quartet<List<ScanResult>, float[], Long, PineappleResponse>> mStash
-                = new ArrayDeque<>();
+        private final Deque<Quartet<List<ScanResult>, float[], Long, PineappleResponse>> mStash = new ArrayDeque<>();
         private Deque<ContentValues> mToCommit = new ArrayDeque<>();
+        // TODO unused
         private Deque<ContentValues> mProbesToCommit = new ArrayDeque<>();
 
         public ScanResultBuffer(long mapId) {
@@ -400,10 +399,8 @@ public class TrainActivity extends Activity {
             mStash.clear();
         }
 
-        public int stashScanResults(List<ScanResult> resultsToStash, float[] loc, Utils
-                .PineappleResponse response) {
+        public int stashScanResults(List<ScanResult> resultsToStash, float[] loc, Utils.PineappleResponse response) {
             mStash.add(new Quartet<>(resultsToStash, loc, System.currentTimeMillis(), response));
-
             return resultsToStash.size();
         }
 
@@ -471,9 +468,8 @@ public class TrainActivity extends Activity {
          * @return number of newly inserted rows
          */
         public int saveTrainingToDatabase(ContentResolver resolver) {
-            return resolver.bulkInsert(DataProvider.READINGS_URI, mToCommit.toArray(new
-                    ContentValues[]{}));
+            return resolver.bulkInsert(DataProvider.READINGS_URI,
+                    mToCommit.toArray(new ContentValues[mToCommit.size()]));
         }
     }
-
 }
