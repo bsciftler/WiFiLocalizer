@@ -20,8 +20,6 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -32,7 +30,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -49,16 +46,15 @@ import uk.co.senab.photoview.PhotoViewAttacher;
 
 public class LocalizeActivity extends Activity {
     private long mMapId;
-    private ImageView mImg;
     private RelativeLayout mRelative;
     private PhotoViewAttacher mAttacher;
+
     private boolean mHavePlacedMarker = false;
-    private boolean auto = false;
+    private boolean mScanRequested = false;
+    private boolean mAutoLocalizeEnabled = false;
     private int opt = 1;
     private PrivateKey sk;
     private PublicKey pk;
-    private boolean scanRequested = false;
-    private List<ScanResult> testdata;
 
     protected Map<TrainLocation, ArrayList<APValue>> mCachedMapData = null;
     protected Map<TrainLocation, ArrayList<APValue>> mFileData = null;
@@ -68,34 +64,12 @@ public class LocalizeActivity extends Activity {
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("LocalizeActivity", "onReceive start");
-            //			System.out.println(context.toString());
-            //			System.out.println(intent.toString());
-            if (!scanRequested) return;
-            final List<ScanResult> realresults = mWifiManager.getScanResults();
-            List<ScanResult> results = realresults;//testdata;
-            //Gson gson = new Gson();
+            if (!mScanRequested) return;
+            if (mAutoLocalizeEnabled) mWifiManager.startScan();
 
-            // convert java object to JSON format,
-            // and returned as JSON formatted string
-            //			String json = gson.toJson(realresults);
-            //
-            //			try {
-            //				OutputStreamWriter outputStreamWriter = new
-            // OutputStreamWriter(openFileOutput("testscandata.json", Context
-            // .MODE_PRIVATE));
-            //				outputStreamWriter.write(json);
-            //				outputStreamWriter.close();
-            //			}
-            //			catch (IOException e) {
-            //				Log.e("Exception", "File write failed: " + e
-            // .toString());
-            //			}
-            //
-            //			System.out.println(realresults.size());
-            System.out.println(results.size());
-            if (auto) mWifiManager.startScan();
-            switch (opt) {
+            List<ScanResult> results = mWifiManager.getScanResults();
+
+            switch (opt) { // todo refactor
             case 1:
                 mAlgo.localize(results);
                 break;
@@ -123,7 +97,6 @@ public class LocalizeActivity extends Activity {
             default:
                 break;
             }
-            Log.d("LocalizeActivity", "onReceive end");
         }
     };
 
@@ -132,88 +105,52 @@ public class LocalizeActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_localize);
 
+        mAlgo = new LocalizationEuclideanDistance();
         mMapId = getIntent().getExtras().getLong(Utils.Constants.MAP_ID_EXTRA);
-        mImg = (ImageView) findViewById(R.id.image_map);
+        mRelative = (RelativeLayout) findViewById(R.id.image_map_container);
+        final ImageView mapImage = (ImageView) findViewById(R.id.image_map);
 
-        // Get image URI
-        final Cursor cursor = getContentResolver().query(ContentUris.withAppendedId(DataProvider
-                .MAPS_URI, mMapId), null, null, null, null);
+        // Check mMapId is valid
+        final Cursor cursor = getContentResolver().query(
+                ContentUris.withAppendedId(DataProvider.MAPS_URI, mMapId), null, null, null, null);
         if (cursor == null) {
             Toast.makeText(this, "Invalid mapId", Toast.LENGTH_SHORT).show();
             finish();
             return;
-        }
-        if (!cursor.moveToFirst()) {
-            Toast.makeText(this, getResources().getText(R.string.toast_map_id_warning), Toast
-                    .LENGTH_LONG).show();
+        } else if (!cursor.moveToFirst()) {
+            Toast.makeText(this, getResources().getText(R.string.toast_map_id_warning), Toast.LENGTH_LONG).show();
             cursor.close();
             finish();
             return;
         }
+
+        // Get and display map image
         final Uri img = Uri.parse(cursor.getString(cursor.getColumnIndex(Database.Maps.DATA)));
         cursor.close();
+        mapImage.setImageURI(img);
+        mAttacher = new PhotoViewAttacher(mapImage, Utils.getImageSize(img, getApplicationContext()));
 
-        // Setup PhotoViewAttacher
-        mImg.setImageURI(img);
-        mRelative = (RelativeLayout) findViewById(R.id.image_map_container);
-        mAttacher = new PhotoViewAttacher(mImg, Utils.getImageSize(img, getApplicationContext()));
-
+        // Add existing map data to the view
         mCachedMapData = Utils.gatherLocalizationData(getContentResolver(), mMapId);
+        mAttacher.addData(Utils.generateMarkers(mCachedMapData, getApplicationContext(), mRelative));
 
-        mAttacher.addData(Utils.generateMarkers(mCachedMapData, getApplicationContext(),
-                mRelative));
-
-        getMetaPoints();
-
-        mAlgo = new LocalizationEuclideanDistance();
-
+        // Setup WifiManager
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         registerReceiver(mReceiver, filter);
 
-        String ret = "";
-
-        try {
-            InputStream inputStream = openFileInput("testscandata.json");
-
-            if (inputStream != null) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString;
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ((receiveString = bufferedReader.readLine()) != null) {
-                    stringBuilder.append(receiveString);
-                }
-
-                inputStream.close();
-                ret = stringBuilder.toString();
-            }
-        } catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
-        } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
-        }
-
-        Gson gson = new Gson();
-        testdata = gson.fromJson(ret, new TypeToken<ArrayList<ScanResult>>() {
-        }.getType());
+        // Load in data from alternative sources than the database
+        mFileData = loadFileData(mMapId);
+        getPoints();
 
         sk = new PrivateKey(1024);
         pk = new PublicKey();
         Paillier.keyGen(sk, pk);
 
-        Utils.createHintIfNeeded(this, Utils.Constants.PREF_LOCALIZE_HINT, R.string.hint_localize);
-
-        try {
-            mFileData = loadFileData(mMapId);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println("cachedata size " + mCachedMapData.size());
         mAlgo.setup(mCachedMapData, LocalizeActivity.this, mFileData);
+
+        Utils.createHintIfNeeded(this, Utils.Constants.PREF_LOCALIZE_HINT, R.string.hint_localize);
     }
 
     @Override
@@ -222,6 +159,7 @@ public class LocalizeActivity extends Activity {
         unregisterReceiver(mReceiver);
     }
 
+    // todo refactor
     public void onClickedCheckBox(View view) {
         switch (view.getId()) {
         case R.id.rbLocal:
@@ -252,14 +190,11 @@ public class LocalizeActivity extends Activity {
     }
 
     public void onToggleClickedAuto(View view) {
-        // Is the toggle on?
-        boolean on = ((ToggleButton) view).isChecked();
-
-        if (on) {
-            auto = true;
+        if (((ToggleButton) view).isChecked()) {
+            mAutoLocalizeEnabled = true;
             localizeNow();
         } else {
-            auto = false;
+            mAutoLocalizeEnabled = false;
         }
     }
 
@@ -269,8 +204,8 @@ public class LocalizeActivity extends Activity {
                     .toast_not_enough_data), Toast.LENGTH_LONG).show();
             return;
         }
-        scanRequested = true;
-        System.out.println("localizenow got called");
+
+        mScanRequested = true;
         mWifiManager.startScan();
     }
 
@@ -281,12 +216,10 @@ public class LocalizeActivity extends Activity {
     public void drawMarkers(float[] markerlocs) {
         float cx = markerlocs[0] * markerlocs[6] + markerlocs[2] * markerlocs[7] + markerlocs[4] * markerlocs[8];
         float cy = markerlocs[1] * markerlocs[6] + markerlocs[3] * markerlocs[7] + markerlocs[5] * markerlocs[8];
-
-        final PhotoMarker mark = Utils.createNewMarker(getApplicationContext(), mRelative, cx,
-                cy, R.drawable.o);
-
+        final PhotoMarker mark = Utils.createNewMarker(getApplicationContext(), mRelative, cx, cy, R.drawable.o);
         final PhotoMarker bestguess = Utils.createNewMarker(getApplicationContext(), mRelative,
                 markerlocs[0], markerlocs[1], R.drawable.red_x);
+
         bestguess.marker.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -298,7 +231,7 @@ public class LocalizeActivity extends Activity {
                         switch (item.getItemId()) {
                         case R.id.action_delete_cmenu:
                             bestguess.marker.setVisibility(View.GONE);
-                            onDelete(bestguess.x, bestguess.y);
+                            deletePoint(bestguess.x, bestguess.y);
                             // remove from file data
                             if (mFileData.size() > 0)
                                 mFileData.remove(new TrainLocation(bestguess.x, bestguess.y));
@@ -326,7 +259,7 @@ public class LocalizeActivity extends Activity {
                         switch (item.getItemId()) {
                         case R.id.action_delete_cmenu:
                             secondguess.marker.setVisibility(View.GONE);
-                            onDelete(secondguess.x, secondguess.y);
+                            deletePoint(secondguess.x, secondguess.y);
                             // remove from file data
                             if (mFileData.size() > 0)
                                 mFileData.remove(new TrainLocation(secondguess.x, secondguess.y));
@@ -354,7 +287,7 @@ public class LocalizeActivity extends Activity {
                         switch (item.getItemId()) {
                         case R.id.action_delete_cmenu:
                             thirdguess.marker.setVisibility(View.GONE);
-                            onDelete(thirdguess.x, thirdguess.y);
+                            deletePoint(thirdguess.x, thirdguess.y);
                             // remove from file data
                             if (mFileData.size() > 0)
                                 mFileData.remove(new TrainLocation(thirdguess.x, thirdguess.y));
@@ -369,12 +302,11 @@ public class LocalizeActivity extends Activity {
             }
         });
 
-        //			final PhotoMarker mark = Utils.createNewMarker(
-        //					getApplicationContext(), mRelative, bestGuess[0],
-        //					bestGuess[1], R.drawable.o);
-
-        if (mHavePlacedMarker) for (int i = 0; i < 4; i++)
-            mAttacher.removeLastMarkerAdded();
+        // Remove the last four we added in preparation for adding the new results
+        if (mHavePlacedMarker) {
+            for (int i = 0; i < 4; i++)
+                mAttacher.removeLastMarkerAdded();
+        }
         mAttacher.addData(mark);
         mAttacher.addData(bestguess);
         mAttacher.addData(secondguess);
@@ -382,124 +314,91 @@ public class LocalizeActivity extends Activity {
         mHavePlacedMarker = true;
     }
 
-    private void onDelete(float x, float y) {
-        AsyncHttpClient client = new AsyncHttpClient();
-        RequestParams params = new RequestParams();
-
-        System.out.println("trying to delete " + x + "," + y);
-
-        params.put("x", x);
-        params.put("y", y);
-        client.post("http://eic15.eng.fiu.edu:80/wifiloc/deletereading.php", params, new
-                AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                        System.out.println(new String(bytes));
-                        Toast.makeText(getApplicationContext(), "message = " + new String(bytes), Toast
-                                .LENGTH_LONG).show();
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                            throwable) {
-                        if (statusCode == 404) {
-                            Toast.makeText(getApplicationContext(), "Requested " + "resource not " +
-                                    "found", Toast.LENGTH_LONG).show();
-                        } else if (statusCode == 500) {
-                            Toast.makeText(getApplicationContext(), "Something went " + "wrong at" +
-                                    " server end", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Unexpected Error" +
-                                    " occcured! [Most common Error: Device might not " +
-                                    "be connected to Internet]", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-    }
-
-    private Map<TrainLocation, ArrayList<APValue>> loadFileData(long mapId) throws IOException {
-        Log.d("my log", "loading file");
-        ArrayList<String[]> data = new ArrayList<>();
-
-        // set up file reading
-        InputStream inStream = getApplicationContext().getResources().openRawResource(R.raw
-                .readings);
-        InputStreamReader is = new InputStreamReader(inStream);
-        BufferedReader reader = new BufferedReader(is);
-
-        int i = 0;
+    /**
+     * Load in data from the file R.raw.readings stored as part of the application data.
+     *
+     * @param mapId filter rows that have this mapId
+     * @return a map of values from the text file
+     */
+    private Map<TrainLocation, ArrayList<APValue>> loadFileData(long mapId) {
+        InputStream inStream = getApplicationContext().getResources().openRawResource(R.raw.readings);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
         final Map<TrainLocation, ArrayList<APValue>> fileData = new HashMap<>();
-        String line = reader.readLine();  //read first line
 
-        while (line != null) {             //continue until no more lines
-            String[] lineList = line.split("\\|"); // put line tokens in array
+        try {
+            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                String[] lineList = line.split("\\|");
 
-            if (Long.parseLong(lineList[8]) == mapId) { //get from correct map
-                data.add(lineList);        // add to array of data
+                if (Long.parseLong(lineList[8]) == mapId) {
+                    TrainLocation loc = new TrainLocation(Float.valueOf(lineList[3]), Float.valueOf(lineList[4]));
+                    APValue ap = new APValue(lineList[7], Integer.parseInt(lineList[5]));
 
-                // create training location
-                TrainLocation loc = new TrainLocation(Float.valueOf(data.get(i)[3]), Float
-                        .valueOf(data.get(i)[4]));
-                // create AP
-                APValue ap = (new APValue(data.get(i)[7], Integer.parseInt(data.get(i)[5])));
-
-                if (fileData.containsKey(loc)) {
-                    fileData.get(loc).add(ap);
-                } else {
-                    ArrayList<APValue> new_ = new ArrayList<>();
-                    new_.add(ap);
-                    fileData.put(loc, new_);
+                    if (fileData.containsKey(loc)) {
+                        fileData.get(loc).add(ap);
+                    } else {
+                        ArrayList<APValue> toAdd = new ArrayList<>();
+                        toAdd.add(ap);
+                        fileData.put(loc, toAdd);
+                    }
                 }
-
-                i++;
             }
-
-            line = reader.readLine();
+        } catch (IOException e) {
+            Log.e("loadFileData", "failed to read line", e);
         }
+
         return fileData;
     }
 
-    public void getMetaPoints() {
+    private void deletePoint(float x, float y) {
+        Log.d("deletePoint", "trying to delete " + x + "," + y);
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
-        client.post("http://eic15.eng.fiu.edu:80/wifiloc/getpoints.php", params, new
-                AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int i, Header[] headers, byte[] response) {
-                        updatePoints(new String(response));
-                    }
+        params.put("x", x);
+        params.put("y", y);
 
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                            throwable) {
-                        if (statusCode == 404) {
-                            Toast.makeText(getApplicationContext(), "Requested " + "resource not " +
-                                    "found", Toast.LENGTH_LONG).show();
-                        } else if (statusCode == 500) {
-                            Toast.makeText(getApplicationContext(), "Something went " + "wrong at" +
-                                    " server end", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Unexpected Error" +
-                                    " occcured! [Most common Error: Device might not " +
-                                    "be connected to Internet]", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
+        client.post(Utils.Constants.DELETE_URL, params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                Toast.makeText(getApplicationContext(), "message = " + new String(bytes), Toast
+                        .LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
+                Toast.makeText(getApplicationContext(), "Couldn't delete point", Toast.LENGTH_SHORT).show();
+                Log.e("deletePoint", "couldn't delete; http code = " + statusCode);
+            }
+        });
     }
 
-    private void updatePoints(String response) {
-        try {
-            JSONArray arr = new JSONArray(response);
-            if (arr.length() != 0) {
-                for (int i = 0; i < arr.length(); i++) {
-                    JSONObject obj = (JSONObject) arr.get(i);
-                    mAttacher.addData(Utils.createNewMarker(getApplicationContext(), mRelative,
-                            (float) obj.getDouble("mapx"), (float) obj.getDouble("mapy"), R
-                                    .drawable.grey_x));
+    /**
+     * Download the server's copy of points.
+     */
+    public void getPoints() {
+        AsyncHttpClient client = new AsyncHttpClient();
+        RequestParams params = new RequestParams();
+        client.post(Utils.Constants.POINTS_URL, params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+                try {
+                    JSONArray arr = new JSONArray(new String(response));
+                    if (arr.length() != 0) {
+                        for (int i = 0; i < arr.length(); i++) {
+                            JSONObject obj = (JSONObject) arr.get(i);
+                            mAttacher.addData(Utils.createNewMarker(getApplicationContext(),
+                                    mRelative, (float) obj.getDouble("mapx"), (float) obj.getDouble("mapy"), R.drawable.grey_x));
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.w("getPoints", e);
                 }
             }
-        } catch (JSONException e) {
-            Log.w("updatePoints", e);
-        }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
+                Toast.makeText(getApplicationContext(), "Couldn't get points", Toast.LENGTH_SHORT).show();
+                Log.e("getPoints", "couldn't update; http code = " + statusCode);
+            }
+        });
     }
 }
