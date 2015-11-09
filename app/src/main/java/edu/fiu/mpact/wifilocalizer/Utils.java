@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.CheckBox;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import uk.co.senab.photoview.PhotoMarker;
+
 
 public class Utils {
     public final class Constants {
@@ -109,7 +111,6 @@ public class Utils {
 
     // ***********************************************************************
 
-    // TODO: replace these with pairs and triplets
 
     public static class EncTrainDistMatchPair {
         public TrainLocation trainLocation;
@@ -123,6 +124,7 @@ public class Utils {
         }
     }
 
+
     public static class EncTrainDistPair {
         public TrainLocation trainLocation;
         public BigInteger dist;
@@ -132,6 +134,7 @@ public class Utils {
             dist = d;
         }
     }
+
 
     public static class TrainDistPair implements Comparable<TrainDistPair> {
         public TrainLocation trainLocation;
@@ -143,10 +146,11 @@ public class Utils {
         }
 
         @Override
-        public int compareTo(TrainDistPair another) {
+        public int compareTo(@NonNull TrainDistPair another) {
             return dist < another.dist ? -1 : dist > another.dist ? 1 : 0;
         }
     }
+
 
     public static class Coord {
         public float mX, mY;
@@ -156,6 +160,7 @@ public class Utils {
             mY = y;
         }
     }
+
 
     public static class TrainLocation extends Coord {
         public TrainLocation(float x, float y) {
@@ -179,6 +184,7 @@ public class Utils {
         }
     }
 
+
     public static class APValue {
         public String mBssid = "";
         public int mRssi = -1; //received signal strength indicator
@@ -189,6 +195,7 @@ public class Utils {
         }
     }
 
+
     public class PineappleResponse {
         public int count = 0;
         public String[] results;
@@ -198,7 +205,7 @@ public class Utils {
 
         public String[] parse(String s) {
             final String[] split = s.split(" ", 2);
-            return new String[]{split[0], split[1]};
+            return new String[] {split[0], split[1]};
         }
 
         public String[][] getData() {
@@ -222,12 +229,13 @@ public class Utils {
      * @param c any context to give to BitmapFactory.decodeResource
      * @return the pair of pixel width x height
      */
+    @SuppressWarnings("unused")
     public static int[] getImageSize(Uri _, Context c) {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeResource(c.getResources(), R.drawable.ec_1, options);
 
-        return new int[]{options.outWidth, options.outHeight};
+        return new int[] {options.outWidth, options.outHeight};
     }
 
     /**
@@ -247,19 +255,16 @@ public class Utils {
         return ret;
     }
 
-    public static PhotoMarker createNewMarker(Context context, RelativeLayout wrapper, float x,
-                                              float y, int resId) {
+    public static PhotoMarker createNewMarker(Context context, RelativeLayout wrapper, float x, float y, int resId) {
         return new PhotoMarker(createNewMarker(context, wrapper, resId), x, y, context
                 .getResources().getInteger(R.integer.map_marker_size));
     }
 
-    public static PhotoMarker createNewMarker(Context context, RelativeLayout wrapper, float x,
-                                              float y) {
+    public static PhotoMarker createNewMarker(Context context, RelativeLayout wrapper, float x, float y) {
         return createNewMarker(context, wrapper, x, y, R.drawable.x);
     }
 
-    public static Deque<PhotoMarker> generateMarkers(Deque<Coord> coordsToDraw, Context context,
-                                                     RelativeLayout wrapper) {
+    public static Deque<PhotoMarker> generateMarkers(Deque<Coord> coordsToDraw, Context context, RelativeLayout wrapper) {
         final Deque<PhotoMarker> data = new ArrayDeque<>();
         final Set<Coord> points = new HashSet<>();
 
@@ -273,9 +278,8 @@ public class Utils {
         return data;
     }
 
-    public static Deque<PhotoMarker> generateMarkers(Map<TrainLocation, ArrayList<APValue>>
-                                                             coordsToDraw, Context context,
-                                                     RelativeLayout wrapper) {
+    public static Deque<PhotoMarker> generateMarkers(Map<TrainLocation,
+            ArrayList<APValue>> coordsToDraw, Context context, RelativeLayout wrapper) {
         return generateMarkers(new ArrayDeque<Coord>(coordsToDraw.keySet()), context, wrapper);
     }
 
@@ -283,7 +287,9 @@ public class Utils {
         final Set<String> macs = new HashSet<>();
 
         final Cursor cursor = cr.query(DataProvider.META_URI, null, null, null, null);
+        if (cursor == null) return null;
         final int macColumn = cursor.getColumnIndex(Database.Meta.MAC);
+
         while (cursor.moveToNext()) {
             if (cursor.isNull(macColumn)) {
                 continue;
@@ -296,13 +302,12 @@ public class Utils {
         return macs;
     }
 
-    public static Map<TrainLocation, ArrayList<APValue>> gatherLocalizationData(ContentResolver
-                                                                                        cr, long
-            mapId) {
-        final Cursor cursor = cr.query(DataProvider.READINGS_URI, new String[]{Database.Readings
-                .MAP_X, Database.Readings.MAP_Y, Database.Readings.MAC, Database.Readings
-                .SIGNAL_STRENGTH}, Database.Readings.MAP_ID + "=?", new String[]{Long.toString
-                (mapId)}, null);
+    public static Map<TrainLocation, ArrayList<APValue>> gatherLocalizationData(ContentResolver cr, long mapId) {
+        final Cursor cursor = cr.query(DataProvider.READINGS_URI,
+                new String[] {Database.Readings.MAP_X, Database.Readings.MAP_Y,
+                        Database.Readings.MAC, Database.Readings.SIGNAL_STRENGTH},
+                Database.Readings.MAP_ID + "=?", new String[] {Long.toString(mapId)}, null);
+        if (cursor == null) return null;
 
         // For readability, store these as local constants
         final int xColumn = cursor.getColumnIndex(Database.Readings.MAP_X);
