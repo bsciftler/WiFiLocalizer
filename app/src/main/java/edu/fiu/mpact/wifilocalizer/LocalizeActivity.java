@@ -47,11 +47,6 @@ import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
 
-/**
- * A lot in common with TrainActivity.java
- *
- * @author oychang
- */
 public class LocalizeActivity extends Activity {
     private long mMapId;
     private ImageView mImg;
@@ -143,6 +138,11 @@ public class LocalizeActivity extends Activity {
         // Get image URI
         final Cursor cursor = getContentResolver().query(ContentUris.withAppendedId(DataProvider
                 .MAPS_URI, mMapId), null, null, null, null);
+        if (cursor == null) {
+            Toast.makeText(this, "Invalid mapId", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
         if (!cursor.moveToFirst()) {
             Toast.makeText(this, getResources().getText(R.string.toast_map_id_warning), Toast
                     .LENGTH_LONG).show();
@@ -165,7 +165,6 @@ public class LocalizeActivity extends Activity {
 
         getMetaPoints();
 
-
         mAlgo = new LocalizationEuclideanDistance();
 
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -181,7 +180,7 @@ public class LocalizeActivity extends Activity {
             if (inputStream != null) {
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString = "";
+                String receiveString;
                 StringBuilder stringBuilder = new StringBuilder();
 
                 while ((receiveString = bufferedReader.readLine()) != null) {
@@ -280,14 +279,11 @@ public class LocalizeActivity extends Activity {
     }
 
     public void drawMarkers(float[] markerlocs) {
-        float cx = (float) (markerlocs[0] * markerlocs[6] + markerlocs[2] * markerlocs[7] +
-                markerlocs[4] * markerlocs[8]);
-        float cy = (float) (markerlocs[1] * markerlocs[6] + markerlocs[3] * markerlocs[7] +
-                markerlocs[5] * markerlocs[8]);
+        float cx = markerlocs[0] * markerlocs[6] + markerlocs[2] * markerlocs[7] + markerlocs[4] * markerlocs[8];
+        float cy = markerlocs[1] * markerlocs[6] + markerlocs[3] * markerlocs[7] + markerlocs[5] * markerlocs[8];
 
         final PhotoMarker mark = Utils.createNewMarker(getApplicationContext(), mRelative, cx,
                 cy, R.drawable.o);
-
 
         final PhotoMarker bestguess = Utils.createNewMarker(getApplicationContext(), mRelative,
                 markerlocs[0], markerlocs[1], R.drawable.red_x);
@@ -345,7 +341,6 @@ public class LocalizeActivity extends Activity {
             }
         });
 
-
         final PhotoMarker thirdguess = Utils.createNewMarker(getApplicationContext(), mRelative,
                 markerlocs[4], markerlocs[5], R.drawable.bluegreen_x);
         thirdguess.marker.setOnLongClickListener(new View.OnLongClickListener() {
@@ -397,34 +392,34 @@ public class LocalizeActivity extends Activity {
         params.put("y", y);
         client.post("http://eic15.eng.fiu.edu:80/wifiloc/deletereading.php", params, new
                 AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                System.out.println(new String(bytes));
-                Toast.makeText(getApplicationContext(), "message = " + new String(bytes), Toast
-                        .LENGTH_LONG).show();
-            }
+                    @Override
+                    public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                        System.out.println(new String(bytes));
+                        Toast.makeText(getApplicationContext(), "message = " + new String(bytes), Toast
+                                .LENGTH_LONG).show();
+                    }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                    throwable) {
-                if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Requested " + "resource not " +
-                            "found", Toast.LENGTH_LONG).show();
-                } else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Something went " + "wrong at" +
-                            " server end", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Unexpected Error" +
-                            " occcured! [Most common Error: Device might not " +
-                            "be connected to Internet]", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
+                            throwable) {
+                        if (statusCode == 404) {
+                            Toast.makeText(getApplicationContext(), "Requested " + "resource not " +
+                                    "found", Toast.LENGTH_LONG).show();
+                        } else if (statusCode == 500) {
+                            Toast.makeText(getApplicationContext(), "Something went " + "wrong at" +
+                                    " server end", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Unexpected Error" +
+                                    " occcured! [Most common Error: Device might not " +
+                                    "be connected to Internet]", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
     }
 
     private Map<TrainLocation, ArrayList<APValue>> loadFileData(long mapId) throws IOException {
         Log.d("my log", "loading file");
-        ArrayList<String[]> data = new ArrayList<String[]>();
+        ArrayList<String[]> data = new ArrayList<>();
 
         // set up file reading
         InputStream inStream = getApplicationContext().getResources().openRawResource(R.raw
@@ -432,10 +427,8 @@ public class LocalizeActivity extends Activity {
         InputStreamReader is = new InputStreamReader(inStream);
         BufferedReader reader = new BufferedReader(is);
 
-
         int i = 0;
-        final Map<TrainLocation, ArrayList<APValue>> fileData = new HashMap<TrainLocation,
-                ArrayList<APValue>>();
+        final Map<TrainLocation, ArrayList<APValue>> fileData = new HashMap<>();
         String line = reader.readLine();  //read first line
 
         while (line != null) {             //continue until no more lines
@@ -453,17 +446,15 @@ public class LocalizeActivity extends Activity {
                 if (fileData.containsKey(loc)) {
                     fileData.get(loc).add(ap);
                 } else {
-                    ArrayList<APValue> new_ = new ArrayList<APValue>();
+                    ArrayList<APValue> new_ = new ArrayList<>();
                     new_.add(ap);
                     fileData.put(loc, new_);
                 }
-
 
                 i++;
             }
 
             line = reader.readLine();
-
         }
         return fileData;
     }
@@ -473,28 +464,27 @@ public class LocalizeActivity extends Activity {
         RequestParams params = new RequestParams();
         client.post("http://eic15.eng.fiu.edu:80/wifiloc/getpoints.php", params, new
                 AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] response) {
-                updatePoints(new String(response));
-            }
+                    @Override
+                    public void onSuccess(int i, Header[] headers, byte[] response) {
+                        updatePoints(new String(response));
+                    }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                    throwable) {
-                if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Requested " + "resource not " +
-                            "found", Toast.LENGTH_LONG).show();
-                } else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Something went " + "wrong at" +
-                            " server end", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Unexpected Error" +
-                            " occcured! [Most common Error: Device might not " +
-                            "be connected to Internet]", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
+                            throwable) {
+                        if (statusCode == 404) {
+                            Toast.makeText(getApplicationContext(), "Requested " + "resource not " +
+                                    "found", Toast.LENGTH_LONG).show();
+                        } else if (statusCode == 500) {
+                            Toast.makeText(getApplicationContext(), "Something went " + "wrong at" +
+                                    " server end", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Unexpected Error" +
+                                    " occcured! [Most common Error: Device might not " +
+                                    "be connected to Internet]", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
     }
 
     private void updatePoints(String response) {
@@ -509,9 +499,7 @@ public class LocalizeActivity extends Activity {
                 }
             }
         } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Log.w("updatePoints", e);
         }
-
     }
 }
