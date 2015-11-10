@@ -15,23 +15,22 @@ import org.apache.http.Header;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.fiu.mpact.wifilocalizer.Utils.APValue;
 import edu.fiu.mpact.wifilocalizer.Utils.EncTrainDistMatchPair;
 import edu.fiu.mpact.wifilocalizer.Utils.EncTrainDistPair;
 import edu.fiu.mpact.wifilocalizer.Utils.TrainDistPair;
-import edu.fiu.mpact.wifilocalizer.Utils.TrainLocation;
 
 
 public class LocalizationEuclideanDistance {
 
     protected boolean mIsReady = false; // true if setup() has been called
-    protected Map<TrainLocation, ArrayList<APValue>> mData = null; // data gathered on this phone
-    protected Map<TrainLocation, ArrayList<APValue>> mFileData = null; // other downloaded data
+    protected LocalizationData mData = null; // data gathered on this phone
+    protected LocalizationData mFileData = null; // other downloaded data
     private LocalizeActivity mLocAct; // store for access to marker drawing methods
 
     /**
@@ -49,12 +48,12 @@ public class LocalizationEuclideanDistance {
         // for every access point seen at that training location, note the MAC addresses in common with localization results
         // if the localization data has more than half AP in common with this training location, add distance to resultList
         // then, move on to the next training location
-        for (TrainLocation loc : mData.keySet()) {
+        for (LocalizationData.Location loc : mData.getLocations()) {
             final List<ScanResult> scanResultsInCommon = new ArrayList<>();
-            final ArrayList<APValue> trainingAps = mData.get(loc);
+            final Deque<LocalizationData.AccessPoint> trainingAps = mData.getAccessPoints(loc);
             final Set<String> bssids = new HashSet<>(trainingAps.size());
 
-            for (APValue ap : trainingAps) bssids.add(ap.mBssid);
+            for (LocalizationData.AccessPoint ap : trainingAps) bssids.add(ap.mBssid);
             for (ScanResult result : results)
                 if (bssids.contains(result.BSSID))
                     scanResultsInCommon.add(result);
@@ -63,7 +62,7 @@ public class LocalizationEuclideanDistance {
             double distance = 0;
             if (scanResultsInCommon.size() > results.size() / 2) {
                 for (ScanResult result : scanResultsInCommon) {
-                    for (APValue reading : trainingAps) {
+                    for (LocalizationData.AccessPoint reading : trainingAps) {
                         // exactly zero or one reading will have the same MAC
                         if (reading.mBssid.equals(result.BSSID)) {
                             distance += Math.pow(result.level - reading.mRssi, 2);
@@ -98,12 +97,12 @@ public class LocalizationEuclideanDistance {
         // for every access point seen at that training location, note the *number of* MAC addresses in common with localization results
         // if the localization data has more than half AP in common with this training location, add distance to resultList
         // then, move on to the next training location
-        for (TrainLocation loc : mData.keySet()) {
-            final ArrayList<APValue> trainingAps = mData.get(loc);
+        for (LocalizationData.Location loc : mData.getLocations()) {
+            final Deque<LocalizationData.AccessPoint> trainingAps = mData.getAccessPoints(loc);
             final Set<String> bssids = new HashSet<>(trainingAps.size());
             int count = 0;
 
-            for (APValue ap : trainingAps) bssids.add(ap.mBssid);
+            for (LocalizationData.AccessPoint ap : trainingAps) bssids.add(ap.mBssid);
             for (ScanResult result : results)
                 if (bssids.contains(result.BSSID))
                     count++;
@@ -112,7 +111,7 @@ public class LocalizationEuclideanDistance {
             if (count > results.size() / 2) {
                 for (ScanResult result : results) {
                     // exactly zero or one reading will have the same MAC
-                    for (APValue reading : trainingAps) {
+                    for (LocalizationData.AccessPoint reading : trainingAps) {
                         if (reading.mBssid.equals(result.BSSID)) {
                             distance += Math.pow(result.level - reading.mRssi, 2);
                             break;
@@ -136,12 +135,12 @@ public class LocalizationEuclideanDistance {
         ArrayList<TrainDistPair> resultList = new ArrayList<>();
         ArrayList<ScanResult> filteredresults = new ArrayList<>();
 
-        for (TrainLocation loc : mFileData.keySet()) { // for each element in the set
+        for (LocalizationData.Location loc : mFileData.getLocations()) { // for each element in the set
             filteredresults.clear();
-            ArrayList<APValue> aps = mFileData.get(loc); // return the value of the key thats
+            Deque<LocalizationData.AccessPoint> aps = mFileData.getAccessPoints(loc); // return the value of the key thats
             // mapped (an array)
             Set<String> bssids = new HashSet<>(aps.size());
-            for (APValue ap : aps)
+            for (LocalizationData.AccessPoint ap : aps)
                 bssids.add(ap.mBssid);
 
             int count = 0;
@@ -154,7 +153,7 @@ public class LocalizationEuclideanDistance {
             }
             if (count > results.size() / 2) {
                 for (ScanResult fresult : filteredresults) {
-                    for (APValue reading : aps) {
+                    for (LocalizationData.AccessPoint reading : aps) {
                         if (reading.mBssid.equals(fresult.BSSID)) {
                             distance += Math.pow(fresult.level - reading.mRssi, 2);
                             break;
@@ -178,11 +177,11 @@ public class LocalizationEuclideanDistance {
         ArrayList<TrainDistPair> resultList = new ArrayList<>();
         //ArrayList<ScanResult> filteredresults = new ArrayList<>();
 
-        for (TrainLocation loc : mFileData.keySet()) { // for each element in the set
-            ArrayList<APValue> aps = mFileData.get(loc); // return the value of the key thats
+        for (LocalizationData.Location loc : mFileData.getLocations()) { // for each element in the set
+            Deque<LocalizationData.AccessPoint> aps = mFileData.getAccessPoints(loc); // return the value of the key thats
             // mapped (an array)
             Set<String> bssids = new HashSet<>(aps.size());
-            for (APValue ap : aps)
+            for (LocalizationData.AccessPoint ap : aps)
                 bssids.add(ap.mBssid);
 
             int count = 0;
@@ -196,7 +195,7 @@ public class LocalizationEuclideanDistance {
             if (count > results.size() / 2) {
                 for (ScanResult result : results) {
                     if (bssids.contains(result.BSSID)) {
-                        for (APValue reading : aps) {
+                        for (LocalizationData.AccessPoint reading : aps) {
                             if (reading.mBssid.equals(result.BSSID)) {
                                 distance += Math.pow(result.level - reading.mRssi, 2);
                                 break;
@@ -220,8 +219,8 @@ public class LocalizationEuclideanDistance {
         final AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
-        ArrayList<APValue> resultAPVs = new ArrayList<>();
-        for (ScanResult res : results) resultAPVs.add(new APValue(res.BSSID, res.level));
+        ArrayList<LocalizationData.AccessPoint> resultAPVs = new ArrayList<>();
+        for (ScanResult res : results) resultAPVs.add(new LocalizationData.AccessPoint(res.BSSID, res.level));
         String jsondata = gson.toJson(resultAPVs);
 
         params.put("mapId", mMapId);
@@ -257,14 +256,14 @@ public class LocalizationEuclideanDistance {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
-        ArrayList<APValue> resultAPVs = new ArrayList<>();
+        ArrayList<LocalizationData.AccessPoint> resultAPVs = new ArrayList<>();
         Set<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
 
         ArrayList<String> matches = new ArrayList<>();
         for (ScanResult res : results) {
             if (bssids.contains(res.BSSID)) {
                 matches.add(res.BSSID);
-                resultAPVs.add(new APValue(res.BSSID, res.level));
+                resultAPVs.add(new LocalizationData.AccessPoint(res.BSSID, res.level));
             }
         }
 
@@ -321,9 +320,9 @@ public class LocalizationEuclideanDistance {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
-        ArrayList<APValue> resultAPVs = new ArrayList<>();
+        ArrayList<LocalizationData.AccessPoint> resultAPVs = new ArrayList<>();
         for (ScanResult res : results) {
-            resultAPVs.add(new APValue(res.BSSID, res.level));
+            resultAPVs.add(new LocalizationData.AccessPoint(res.BSSID, res.level));
         }
         String jsondata = gson.toJson(resultAPVs);
 
@@ -558,9 +557,7 @@ public class LocalizationEuclideanDistance {
      *
      * @return true always
      */
-    public boolean setup(Map<TrainLocation, ArrayList<APValue>> data,
-                         LocalizeActivity locact,
-                         Map<TrainLocation, ArrayList<APValue>> fileData) {
+    public boolean setup(LocalizationData data,  LocalizationData fileData, LocalizeActivity locact) {
         mData = data;
         mLocAct = locact;
         mFileData = fileData;
