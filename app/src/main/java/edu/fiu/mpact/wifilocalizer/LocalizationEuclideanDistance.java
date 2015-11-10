@@ -16,9 +16,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import edu.fiu.mpact.wifilocalizer.Utils.EncTrainDistMatchPair;
@@ -49,16 +47,10 @@ public class LocalizationEuclideanDistance {
         // if the localization data has more than half AP in common with this training location, add distance to resultList
         // then, move on to the next training location
         for (LocalizationData.Location loc : mData.getLocations()) {
-            final List<ScanResult> scanResultsInCommon = new ArrayList<>();
             final Deque<LocalizationData.AccessPoint> trainingAps = mData.getAccessPoints(loc);
-            final Set<String> bssids = new HashSet<>(trainingAps.size());
+            final Set<ScanResult> scanResultsInCommon = LocalizationData.getCommonBssids(
+                    LocalizationData.getAccessPointBssids(trainingAps), results);
 
-            for (LocalizationData.AccessPoint ap : trainingAps) bssids.add(ap.mBssid);
-            for (ScanResult result : results)
-                if (bssids.contains(result.BSSID))
-                    scanResultsInCommon.add(result);
-
-            final int apsInCommon = scanResultsInCommon.size();
             double distance = 0;
             if (scanResultsInCommon.size() > results.size() / 2) {
                 for (ScanResult result : scanResultsInCommon) {
@@ -70,7 +62,8 @@ public class LocalizationEuclideanDistance {
                         }
                     }
                 }
-                distance = distance / apsInCommon;
+
+                distance = distance / scanResultsInCommon.size();
                 resultList.add(new TrainDistPair(loc, distance));
             }
         }
@@ -99,13 +92,8 @@ public class LocalizationEuclideanDistance {
         // then, move on to the next training location
         for (LocalizationData.Location loc : mData.getLocations()) {
             final Deque<LocalizationData.AccessPoint> trainingAps = mData.getAccessPoints(loc);
-            final Set<String> bssids = new HashSet<>(trainingAps.size());
-            int count = 0;
-
-            for (LocalizationData.AccessPoint ap : trainingAps) bssids.add(ap.mBssid);
-            for (ScanResult result : results)
-                if (bssids.contains(result.BSSID))
-                    count++;
+            final int count = LocalizationData.getCommonBssids(
+                    LocalizationData.getAccessPointBssids(trainingAps), results).size();
 
             double distance = 0;
             if (count > results.size() / 2) {
@@ -128,74 +116,66 @@ public class LocalizationEuclideanDistance {
         mLocAct.drawMarkers(sortAndWeight(resultList));
     }
 
+    /**
+     * Identical algorithm to localize(), but uses the dataset marked as file data in setup().
+     *
+     * @param results access points seen at a localization moment
+     */
     public void fileLocalize(List<ScanResult> results) {
         if (!isReadyToLocalize()) return;
 
-        long starttime = System.currentTimeMillis();
-        ArrayList<TrainDistPair> resultList = new ArrayList<>();
-        ArrayList<ScanResult> filteredresults = new ArrayList<>();
+        final long startTime = System.currentTimeMillis();
+        final ArrayList<TrainDistPair> resultList = new ArrayList<>();
 
-        for (LocalizationData.Location loc : mFileData.getLocations()) { // for each element in the set
-            filteredresults.clear();
-            Deque<LocalizationData.AccessPoint> aps = mFileData.getAccessPoints(loc); // return the value of the key thats
-            // mapped (an array)
-            Set<String> bssids = new HashSet<>(aps.size());
-            for (LocalizationData.AccessPoint ap : aps)
-                bssids.add(ap.mBssid);
+        for (LocalizationData.Location loc : mFileData.getLocations()) {
+            final Deque<LocalizationData.AccessPoint> trainingAps = mFileData.getAccessPoints(loc);
+            final Set<ScanResult> scanResultsInCommon = LocalizationData.getCommonBssids(
+                    LocalizationData.getAccessPointBssids(trainingAps), results);
 
-            int count = 0;
             double distance = 0;
-            for (final ScanResult result : results) {
-                if (bssids.contains(result.BSSID)) {
-                    count++;
-                    filteredresults.add(result);
-                }
-            }
-            if (count > results.size() / 2) {
-                for (ScanResult fresult : filteredresults) {
-                    for (LocalizationData.AccessPoint reading : aps) {
-                        if (reading.mBssid.equals(fresult.BSSID)) {
-                            distance += Math.pow(fresult.level - reading.mRssi, 2);
+            if (scanResultsInCommon.size() > results.size() / 2) {
+                for (ScanResult result : scanResultsInCommon) {
+                    for (LocalizationData.AccessPoint reading : trainingAps) {
+                        if (reading.mBssid.equals(result.BSSID)) {
+                            distance += Math.pow(result.level - reading.mRssi, 2);
                             break;
                         }
                     }
                 }
-                distance = distance / (double) count;
+
+                distance = distance / scanResultsInCommon.size();
                 resultList.add(new TrainDistPair(loc, distance));
             }
-            //Log.d("euc", "result match " + count + " out of " + results.size());
-
         }
-        System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
+
+        final long elapsedTime = System.currentTimeMillis() - startTime;
+        Log.i("fileLocalize", "took " + elapsedTime + " ms");
         mLocAct.drawMarkers(sortAndWeight(resultList));
     }
 
+    /**
+     * Operates on fileData, but this method is **NOT** identical to localize2(). It penalizes bssids
+     * in the list of localization scan results that did not occur in the training.
+     *
+     * @param results access points seen at a localization moment
+     */
     public void fileLocalize2(List<ScanResult> results) {
         if (!isReadyToLocalize()) return;
 
-        long starttime = System.currentTimeMillis();
-        ArrayList<TrainDistPair> resultList = new ArrayList<>();
-        //ArrayList<ScanResult> filteredresults = new ArrayList<>();
+        final long startTime = System.currentTimeMillis();
+        final ArrayList<TrainDistPair> resultList = new ArrayList<>();
 
-        for (LocalizationData.Location loc : mFileData.getLocations()) { // for each element in the set
-            Deque<LocalizationData.AccessPoint> aps = mFileData.getAccessPoints(loc); // return the value of the key thats
-            // mapped (an array)
-            Set<String> bssids = new HashSet<>(aps.size());
-            for (LocalizationData.AccessPoint ap : aps)
-                bssids.add(ap.mBssid);
+        for (LocalizationData.Location loc : mFileData.getLocations()) {
+            final Deque<LocalizationData.AccessPoint> trainingAps = mFileData.getAccessPoints(loc);
+            final Set<String> bssids = LocalizationData.getAccessPointBssids(trainingAps);
+            final int count = LocalizationData.getCommonBssids(
+                    LocalizationData.getAccessPointBssids(trainingAps), results).size();
 
-            int count = 0;
             double distance = 0;
-            for (final ScanResult result : results) {
-                if (bssids.contains(result.BSSID)) {
-                    count++;
-                    //filteredresults.add(result);
-                }
-            }
             if (count > results.size() / 2) {
                 for (ScanResult result : results) {
                     if (bssids.contains(result.BSSID)) {
-                        for (LocalizationData.AccessPoint reading : aps) {
+                        for (LocalizationData.AccessPoint reading : trainingAps) {
                             if (reading.mBssid.equals(result.BSSID)) {
                                 distance += Math.pow(result.level - reading.mRssi, 2);
                                 break;
@@ -205,13 +185,13 @@ public class LocalizationEuclideanDistance {
                         distance += Math.pow(result.level + 100, 2);
                     }
                 }
-                //distance = distance / (double)count;
+
                 resultList.add(new TrainDistPair(loc, distance));
             }
-            //Log.d("euc", "result match " + count + " out of " + results.size());
-
         }
-        System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
+
+        final long elapsedTime = System.currentTimeMillis() - startTime;
+        Log.i("fileLocalize2", "took " + elapsedTime + " ms");
         mLocAct.drawMarkers(sortAndWeight(resultList));
     }
 
@@ -220,7 +200,8 @@ public class LocalizationEuclideanDistance {
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
         ArrayList<LocalizationData.AccessPoint> resultAPVs = new ArrayList<>();
-        for (ScanResult res : results) resultAPVs.add(new LocalizationData.AccessPoint(res.BSSID, res.level));
+        for (ScanResult res : results)
+            resultAPVs.add(new LocalizationData.AccessPoint(res.BSSID, res.level));
         String jsondata = gson.toJson(resultAPVs);
 
         params.put("mapId", mMapId);
@@ -246,8 +227,7 @@ public class LocalizationEuclideanDistance {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                    throwable) {
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
             }
         });
     }
@@ -292,25 +272,7 @@ public class LocalizationEuclideanDistance {
                     }
 
                     @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                            throwable) {
-                        if (statusCode == 404) {
-                            Toast.makeText(mLocAct.getApplicationContext(), "Requested resource not " +
-                                    "found", Toast.LENGTH_LONG).show();
-                        }
-                        // When Http response code is '500'
-                        else if (statusCode == 500) {
-                            Toast.makeText(mLocAct.getApplicationContext(), "Something went wrong at " +
-                                    "server end", Toast.LENGTH_LONG).show();
-                        }
-                        // When Http response code other than 404, 500
-                        else {
-                            Toast.makeText(mLocAct.getApplicationContext(), "Unexpected Error occcured! " +
-                                    "[Most common Error: Device might not be connected to Internet or " +
-                                    "remote server is not up and running]" + statusCode, Toast
-                                    .LENGTH_LONG).show();
-                        }
-                        //System.out.println(new String(bytes) + " " + i);
+                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
                     }
                 });
     }
@@ -333,29 +295,27 @@ public class LocalizationEuclideanDistance {
         // 10.109.185.244
         // eic15.eng.fiu.edu
         client.addHeader("Content-Type", "application/json");
-        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/dolocalize3", params, new
-                AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                        System.out.println(new String(bytes) + " " + i);
-                        ArrayList<TrainDistPair> resultList;
-                        try {
-                            resultList = gson.fromJson(new String(bytes), new
-                                    TypeToken<ArrayList<TrainDistPair>>() {
-                                    }.getType());
-                        } catch (Exception e) {
-                            Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
-                            return;
-                        }
-                        System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
-                        mLocAct.drawMarkers(sortAndWeight(resultList));
-                    }
+        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/dolocalize3", params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                System.out.println(new String(bytes) + " " + i);
+                ArrayList<TrainDistPair> resultList;
+                try {
+                    resultList = gson.fromJson(new String(bytes), new
+                            TypeToken<ArrayList<TrainDistPair>>() {
+                            }.getType());
+                } catch (Exception e) {
+                    Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
+                    return;
+                }
+                System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
+                mLocAct.drawMarkers(sortAndWeight(resultList));
+            }
 
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                            throwable) {
-                    }
-                });
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
+            }
+        });
     }
 
     public void remotePrivLocalize(List<ScanResult> results, long mMapId, final PrivateKey sk, PublicKey pk) {
@@ -414,8 +374,7 @@ public class LocalizationEuclideanDistance {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                    throwable) {
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
             }
         });
     }
@@ -474,8 +433,7 @@ public class LocalizationEuclideanDistance {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                    throwable) {
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
             }
         });
     }
@@ -536,8 +494,7 @@ public class LocalizationEuclideanDistance {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                    throwable) {
+            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
             }
         });
     }
@@ -557,7 +514,7 @@ public class LocalizationEuclideanDistance {
      *
      * @return true always
      */
-    public boolean setup(LocalizationData data,  LocalizationData fileData, LocalizeActivity locact) {
+    public boolean setup(LocalizationData data, LocalizationData fileData, LocalizeActivity locact) {
         mData = data;
         mLocAct = locact;
         mFileData = fileData;

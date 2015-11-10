@@ -3,6 +3,7 @@ package edu.fiu.mpact.wifilocalizer;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.wifi.ScanResult;
 import android.util.Log;
 import android.widget.RelativeLayout;
 
@@ -14,6 +15,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -124,6 +126,23 @@ public class LocalizationData {
 
     public Deque<AccessPoint> getAccessPoints(Location loc) {
         return mData.get(loc);
+    }
+
+    public static Set<String> getAccessPointBssids(Deque<AccessPoint> aps) {
+        final Set<String> bssids = new HashSet<>(aps.size());
+        for (AccessPoint ap : aps) bssids.add(ap.mBssid);
+        return bssids;
+    }
+
+    public static Set<ScanResult> getCommonBssids(Set<String> bssidsOriginal, List<ScanResult> results) {
+        final Set<String> bssids = new HashSet<>(bssidsOriginal);
+
+        final Set<ScanResult> ret = new HashSet<>(results.size());
+        for (ScanResult sr : results)
+            if (bssids.contains(sr.BSSID))
+                ret.add(sr);
+
+        return ret;
     }
 
     // ***********************************************************************
