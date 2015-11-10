@@ -13,14 +13,14 @@
             android:id="@+id/image_map"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="Map!"/>
+            android:contentDescription="Map!" />
 
     </RelativeLayout>
 
     <HorizontalScrollView
+        android:id="@+id/horizontalScrollView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/horizontalScrollView">
+        android:layout_height="wrap_content">
 
         <RadioGroup
             android:layout_width="match_parent"
@@ -28,70 +28,69 @@
             android:orientation="horizontal">
 
             <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Local"
                 android:id="@+id/rbLocal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:checked="true"
-                android:onClick="onClickedCheckBox"/>
+                android:onClick="onClickedCheckBox"
+                android:text="Local" />
 
             <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Local2"
                 android:id="@+id/rbLocal2"
-                android:onClick="onClickedCheckBox"/>
-
-            <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="File"
+                android:onClick="onClickedCheckBox"
+                android:text="Local2" />
+
+            <RadioButton
                 android:id="@+id/rbFile"
-                android:onClick="onClickedCheckBox"/>
-
-            <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="File2"
+                android:onClick="onClickedCheckBox"
+                android:text="File" />
+
+            <RadioButton
                 android:id="@+id/rbFile2"
-                android:onClick="onClickedCheckBox"/>
-
-            <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Remote"
-                android:id="@+id/rbRemote"
-                android:onClick="onClickedCheckBox"/>
+                android:onClick="onClickedCheckBox"
+                android:text="File2" />
 
+            <!--<RadioButton-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="Remote"-->
+            <!--android:id="@+id/rbRemote"-->
+            <!--android:onClick="onClickedCheckBox"/>-->
 
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Remote2"
-                android:id="@+id/rbRemote2"
-                android:onClick="onClickedCheckBox"/>
+            <!--<RadioButton-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="Remote2"-->
+            <!--android:id="@+id/rbRemote2"-->
+            <!--android:onClick="onClickedCheckBox"/>-->
 
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Private"
-                android:id="@+id/rbPrivate"
-                android:onClick="onClickedCheckBox"/>
+            <!--<RadioButton-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="Private"-->
+            <!--android:id="@+id/rbPrivate"-->
+            <!--android:onClick="onClickedCheckBox"/>-->
 
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Private2"
-                android:id="@+id/rbPrivate2"
-                android:onClick="onClickedCheckBox"/>
+            <!--<RadioButton-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="Private2"-->
+            <!--android:id="@+id/rbPrivate2"-->
+            <!--android:onClick="onClickedCheckBox"/>-->
         </RadioGroup>
     </HorizontalScrollView>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:orientation="horizontal"
-        android:layout_weight="0.5">
+        android:layout_weight="0.5"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btn_localize"
@@ -100,20 +99,20 @@
             android:layout_weight="1"
             android:onClick="localizeNow"
             android:text="@string/btn_localize"
-            android:textSize="20dp"/>
+            android:textSize="20dp" />
 
         <ToggleButton
+            android:id="@+id/toggleButton"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="Auto-Localize"
-            android:id="@+id/toggleButton"
             android:layout_weight="1"
+            android:nestedScrollingEnabled="false"
+            android:onClick="onToggleClickedAuto"
             android:singleLine="false"
+            android:text="Auto-Localize"
             android:textOff="Auto-Localize Off"
             android:textOn="Auto-Localize On"
-            android:textSize="20dp"
-            android:onClick="onToggleClickedAuto"
-            android:nestedScrollingEnabled="false"/>
+            android:textSize="20dp" />
 
     </LinearLayout>
 
