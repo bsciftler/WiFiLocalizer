@@ -29,17 +29,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import edu.fiu.mpact.wifilocalizer.Utils.APValue;
-import edu.fiu.mpact.wifilocalizer.Utils.TrainLocation;
 import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -56,8 +47,8 @@ public class LocalizeActivity extends Activity {
     private PrivateKey sk;
     private PublicKey pk;
 
-    protected Map<TrainLocation, ArrayList<APValue>> mCachedMapData = null;
-    protected Map<TrainLocation, ArrayList<APValue>> mFileData = null;
+    protected LocalizationData mCachedMapData;
+    protected LocalizationData mFileData;
     protected LocalizationEuclideanDistance mAlgo = null;
 
     private WifiManager mWifiManager;
@@ -131,8 +122,8 @@ public class LocalizeActivity extends Activity {
         mAttacher = new PhotoViewAttacher(mapImage, Utils.getImageSize(img, getApplicationContext()));
 
         // Add existing map data to the view
-        mCachedMapData = Utils.gatherLocalizationData(getContentResolver(), mMapId);
-        mAttacher.addData(Utils.generateMarkers(mCachedMapData, getApplicationContext(), mRelative));
+        mCachedMapData = new LocalizationData(getContentResolver(), mMapId);
+        mAttacher.addData(mCachedMapData.generateMarkers(getApplicationContext(), mRelative));
 
         // Setup WifiManager
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -141,14 +132,14 @@ public class LocalizeActivity extends Activity {
         registerReceiver(mReceiver, filter);
 
         // Load in data from alternative sources than the database
-        mFileData = loadFileData(mMapId);
+        mFileData = new LocalizationData(getResources().openRawResource(R.raw.readings), mMapId);
         getPoints();
 
         sk = new PrivateKey(1024);
         pk = new PublicKey();
         Paillier.keyGen(sk, pk);
 
-        mAlgo.setup(mCachedMapData, LocalizeActivity.this, mFileData);
+        mAlgo.setup(mCachedMapData, mFileData, LocalizeActivity.this);
 
         Utils.createHintIfNeeded(this, Utils.Constants.PREF_LOCALIZE_HINT, R.string.hint_localize);
     }
@@ -199,7 +190,9 @@ public class LocalizeActivity extends Activity {
     }
 
     public void localizeNow() {
-        if ((opt == 1 && mCachedMapData.size() < 3) || (opt == 7 && mFileData.size() < 3)) {
+        final int numTrainingLocations = mCachedMapData.numLocations();
+
+        if ((opt == 1 && numTrainingLocations < 3) || (opt == 7 && numTrainingLocations < 3)) {
             Toast.makeText(LocalizeActivity.this, getResources().getText(R.string
                     .toast_not_enough_data), Toast.LENGTH_LONG).show();
             return;
@@ -233,8 +226,8 @@ public class LocalizeActivity extends Activity {
                             bestguess.marker.setVisibility(View.GONE);
                             deletePoint(bestguess.x, bestguess.y);
                             // remove from file data
-                            if (mFileData.size() > 0)
-                                mFileData.remove(new TrainLocation(bestguess.x, bestguess.y));
+                            if (mFileData.numLocations() > 0)
+                                mFileData.removeLocation(new LocalizationData.Location(bestguess.x, bestguess.y));
                             return true;
                         default:
                             return true;
@@ -261,8 +254,8 @@ public class LocalizeActivity extends Activity {
                             secondguess.marker.setVisibility(View.GONE);
                             deletePoint(secondguess.x, secondguess.y);
                             // remove from file data
-                            if (mFileData.size() > 0)
-                                mFileData.remove(new TrainLocation(secondguess.x, secondguess.y));
+                            if (mFileData.numLocations() > 0)
+                                mFileData.removeLocation(new LocalizationData.Location(secondguess.x, secondguess.y));
                             return true;
                         default:
                             return true;
@@ -289,8 +282,8 @@ public class LocalizeActivity extends Activity {
                             thirdguess.marker.setVisibility(View.GONE);
                             deletePoint(thirdguess.x, thirdguess.y);
                             // remove from file data
-                            if (mFileData.size() > 0)
-                                mFileData.remove(new TrainLocation(thirdguess.x, thirdguess.y));
+                            if (mFileData.numLocations() > 0)
+                                mFileData.removeLocation(new LocalizationData.Location(thirdguess.x, thirdguess.y));
                             return true;
                         default:
                             return true;
@@ -312,41 +305,6 @@ public class LocalizeActivity extends Activity {
         mAttacher.addData(secondguess);
         mAttacher.addData(thirdguess);
         mHavePlacedMarker = true;
-    }
-
-    /**
-     * Load in data from the file R.raw.readings stored as part of the application data.
-     *
-     * @param mapId filter rows that have this mapId
-     * @return a map of values from the text file
-     */
-    private Map<TrainLocation, ArrayList<APValue>> loadFileData(long mapId) {
-        InputStream inStream = getApplicationContext().getResources().openRawResource(R.raw.readings);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
-        final Map<TrainLocation, ArrayList<APValue>> fileData = new HashMap<>();
-
-        try {
-            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-                String[] lineList = line.split("\\|");
-
-                if (Long.parseLong(lineList[8]) == mapId) {
-                    TrainLocation loc = new TrainLocation(Float.valueOf(lineList[3]), Float.valueOf(lineList[4]));
-                    APValue ap = new APValue(lineList[7], Integer.parseInt(lineList[5]));
-
-                    if (fileData.containsKey(loc)) {
-                        fileData.get(loc).add(ap);
-                    } else {
-                        ArrayList<APValue> toAdd = new ArrayList<>();
-                        toAdd.add(ap);
-                        fileData.put(loc, toAdd);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            Log.e("loadFileData", "failed to read line", e);
-        }
-
-        return fileData;
     }
 
     private void deletePoint(float x, float y) {

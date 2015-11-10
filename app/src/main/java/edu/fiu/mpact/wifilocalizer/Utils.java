@@ -19,7 +19,6 @@ import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -114,11 +113,11 @@ public class Utils {
 
 
     public static class EncTrainDistMatchPair {
-        public TrainLocation trainLocation;
+        public LocalizationData.Location trainLocation;
         public BigInteger dist;
         public int matches;
 
-        public EncTrainDistMatchPair(TrainLocation t, BigInteger d, int m) {
+        public EncTrainDistMatchPair(LocalizationData.Location t, BigInteger d, int m) {
             trainLocation = t;
             dist = d;
             matches = m;
@@ -127,10 +126,10 @@ public class Utils {
 
 
     public static class EncTrainDistPair {
-        public TrainLocation trainLocation;
+        public LocalizationData.Location trainLocation;
         public BigInteger dist;
 
-        public EncTrainDistPair(TrainLocation t, BigInteger d) {
+        public EncTrainDistPair(LocalizationData.Location t, BigInteger d) {
             trainLocation = t;
             dist = d;
         }
@@ -138,10 +137,10 @@ public class Utils {
 
 
     public static class TrainDistPair implements Comparable<TrainDistPair> {
-        public TrainLocation trainLocation;
+        public LocalizationData.Location trainLocation;
         public double dist;
 
-        public TrainDistPair(TrainLocation t, double d) {
+        public TrainDistPair(LocalizationData.Location t, double d) {
             trainLocation = t;
             dist = d;
         }
@@ -149,50 +148,6 @@ public class Utils {
         @Override
         public int compareTo(@NonNull TrainDistPair another) {
             return dist < another.dist ? -1 : dist > another.dist ? 1 : 0;
-        }
-    }
-
-
-    public static class Coord {
-        public float mX, mY;
-
-        public Coord(float x, float y) {
-            mX = x;
-            mY = y;
-        }
-    }
-
-
-    public static class TrainLocation extends Coord {
-        public TrainLocation(float x, float y) {
-            super(x, y);
-        }
-
-        public boolean equals(Object obj) {
-            if (!(obj instanceof TrainLocation)) return false;
-            if (obj == this) return true;
-
-            TrainLocation t = (TrainLocation) obj;
-
-            return this.mX == t.mX && this.mY == t.mY;
-        }
-
-        public int hashCode() {
-            int hash = 3;
-
-            hash = 7 * hash + (int) this.mX;
-            return hash;
-        }
-    }
-
-
-    public static class APValue {
-        public String mBssid = "";
-        public int mRssi = -1; //received signal strength indicator
-
-        public APValue(String bssid, int rssi) {
-            mBssid = bssid;
-            mRssi = rssi;
         }
     }
 
@@ -265,30 +220,12 @@ public class Utils {
         return createNewMarker(context, wrapper, x, y, R.drawable.x);
     }
 
-    public static Deque<PhotoMarker> generateMarkers(Deque<Coord> coordsToDraw, Context context, RelativeLayout wrapper) {
-        final Deque<PhotoMarker> data = new ArrayDeque<>();
-        final Set<Coord> points = new HashSet<>();
-
-        for (Coord tmpCoord : coordsToDraw) {
-            if (!points.contains(tmpCoord)) {
-                points.add(tmpCoord);
-                data.add(createNewMarker(context, wrapper, tmpCoord.mX, tmpCoord.mY));
-            }
-        }
-
-        return data;
-    }
-
-    public static Deque<PhotoMarker> generateMarkers(Map<TrainLocation,
-            ArrayList<APValue>> coordsToDraw, Context context, RelativeLayout wrapper) {
-        return generateMarkers(new ArrayDeque<Coord>(coordsToDraw.keySet()), context, wrapper);
-    }
-
+    @NonNull
     public static Set<String> gatherMetaMacs(ContentResolver cr) {
         final Set<String> macs = new HashSet<>();
 
         final Cursor cursor = cr.query(DataProvider.META_URI, null, null, null, null);
-        if (cursor == null) return null;
+        if (cursor == null) return macs;
         final int macColumn = cursor.getColumnIndex(Database.Meta.MAC);
 
         while (cursor.moveToNext()) {
@@ -301,42 +238,5 @@ public class Utils {
         cursor.close();
 
         return macs;
-    }
-
-    public static Map<TrainLocation, ArrayList<APValue>> gatherLocalizationData(ContentResolver cr, long mapId) {
-        final Cursor cursor = cr.query(DataProvider.READINGS_URI,
-                new String[] {Database.Readings.MAP_X, Database.Readings.MAP_Y,
-                        Database.Readings.MAC, Database.Readings.SIGNAL_STRENGTH},
-                Database.Readings.MAP_ID + "=?", new String[] {Long.toString(mapId)}, null);
-        if (cursor == null) return null;
-
-        // For readability, store these as local constants
-        final int xColumn = cursor.getColumnIndex(Database.Readings.MAP_X);
-        final int yColumn = cursor.getColumnIndex(Database.Readings.MAP_Y);
-        final int bssidColumn = cursor.getColumnIndex(Database.Readings.MAC);
-        final int rssiColumn = cursor.getColumnIndex(Database.Readings.SIGNAL_STRENGTH);
-
-        // Cache results of cursor result in a more convenient data structure
-        final Map<TrainLocation, ArrayList<APValue>> data = new HashMap<>();
-        while (cursor.moveToNext()) {
-            if (cursor.isNull(xColumn) || cursor.isNull(yColumn)) {
-                continue;
-            }
-
-            final TrainLocation loc = new TrainLocation(cursor.getFloat(xColumn), cursor.getFloat
-                    (yColumn));
-            final APValue ap = new APValue(cursor.getString(bssidColumn), cursor.getInt
-                    (rssiColumn));
-            if (data.containsKey(loc)) {
-                data.get(loc).add(ap);
-            } else {
-                ArrayList<APValue> new_ = new ArrayList<>();
-                new_.add(ap);
-                data.put(loc, new_);
-            }
-        }
-        cursor.close();
-
-        return data;
     }
 }
