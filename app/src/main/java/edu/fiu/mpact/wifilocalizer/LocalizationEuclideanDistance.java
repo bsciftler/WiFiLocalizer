@@ -26,98 +26,110 @@ import edu.fiu.mpact.wifilocalizer.Utils.EncTrainDistPair;
 import edu.fiu.mpact.wifilocalizer.Utils.TrainDistPair;
 import edu.fiu.mpact.wifilocalizer.Utils.TrainLocation;
 
+
 public class LocalizationEuclideanDistance {
 
-    protected boolean mIsReady = false;
-    protected Map<TrainLocation, ArrayList<APValue>> mData = null;
-    protected Map<TrainLocation, ArrayList<APValue>> mFileData = null;
-    private LocalizeActivity mLocAct;
+    protected boolean mIsReady = false; // true if setup() has been called
+    protected Map<TrainLocation, ArrayList<APValue>> mData = null; // data gathered on this phone
+    protected Map<TrainLocation, ArrayList<APValue>> mFileData = null; // other downloaded data
+    private LocalizeActivity mLocAct; // store for access to marker drawing methods
 
-    public void localize(List<ScanResult> results) throws IllegalStateException {
+    /**
+     * Calls LocalizeActivity.drawMarkers on the three points with minimum euclidean distance.
+     *
+     * @param results access points seen at a localization moment
+     */
+    public void localize(List<ScanResult> results) {
         if (!isReadyToLocalize()) return;
 
-        long starttime = System.currentTimeMillis();
-        ArrayList<TrainDistPair> resultList = new ArrayList<>();
-        ArrayList<ScanResult> filteredresults = new ArrayList<>();
+        final long startTime = System.currentTimeMillis();
+        final List<TrainDistPair> resultList = new ArrayList<>();
 
-        for (TrainLocation loc : mData.keySet()) { // for each element in the set
-            filteredresults.clear();
-            ArrayList<APValue> aps = mData.get(loc); // return the value of the key thats mapped
-            // (an array)
-            Set<String> bssids = new HashSet<>(aps.size());
-            for (APValue ap : aps)
-                bssids.add(ap.mBssid);
+        // iterate through every training location
+        // for every access point seen at that training location, note the MAC addresses in common with localization results
+        // if the localization data has more than half AP in common with this training location, add distance to resultList
+        // then, move on to the next training location
+        for (TrainLocation loc : mData.keySet()) {
+            final List<ScanResult> scanResultsInCommon = new ArrayList<>();
+            final ArrayList<APValue> trainingAps = mData.get(loc);
+            final Set<String> bssids = new HashSet<>(trainingAps.size());
 
-            int count = 0;
+            for (APValue ap : trainingAps) bssids.add(ap.mBssid);
+            for (ScanResult result : results)
+                if (bssids.contains(result.BSSID))
+                    scanResultsInCommon.add(result);
+
+            final int apsInCommon = scanResultsInCommon.size();
             double distance = 0;
-            for (final ScanResult result : results) {
-                if (bssids.contains(result.BSSID)) {
-                    count++;
-                    filteredresults.add(result);
-                }
-            }
-            if (count > results.size() / 2) {
-                for (ScanResult fresult : filteredresults) {
-                    for (APValue reading : aps) {
-                        if (reading.mBssid.equals(fresult.BSSID)) {
-                            distance += Math.pow(fresult.level - reading.mRssi, 2);
-                            break;
-                        }
-                    }
-                }
-                distance = distance / (double) count;
-                resultList.add(new TrainDistPair(loc, distance));
-            }
-            //Log.d("euc", "result match " + count + " out of " + results.size());
-
-        }
-        System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
-        mLocAct.drawMarkers(sortAndWeight(resultList));
-    }
-
-    public void localize2(List<ScanResult> results) throws IllegalStateException {
-        if (!isReadyToLocalize()) return;
-
-        long starttime = System.currentTimeMillis();
-        ArrayList<TrainDistPair> resultList = new ArrayList<>();
-        //ArrayList<ScanResult> filteredresults = new ArrayList<>();
-
-        for (TrainLocation loc : mData.keySet()) { // for each element in the set
-            //filteredresults.clear();
-            ArrayList<APValue> aps = mData.get(loc); // return the value of the key thats mapped
-            // (an array)
-            Set<String> bssids = new HashSet<>(aps.size());
-            for (APValue ap : aps)
-                bssids.add(ap.mBssid);
-
-            int count = 0;
-            double distance = 0;
-            for (final ScanResult result : results) {
-                if (bssids.contains(result.BSSID)) {
-                    count++;
-                    //filteredresults.add(result);
-                }
-            }
-            if (count > results.size() / 2) {
-                for (ScanResult result : results) {
-                    for (APValue reading : aps) {
+            if (scanResultsInCommon.size() > results.size() / 2) {
+                for (ScanResult result : scanResultsInCommon) {
+                    for (APValue reading : trainingAps) {
+                        // exactly zero or one reading will have the same MAC
                         if (reading.mBssid.equals(result.BSSID)) {
                             distance += Math.pow(result.level - reading.mRssi, 2);
                             break;
                         }
                     }
                 }
-                distance = distance / (double) count;
+                distance = distance / apsInCommon;
                 resultList.add(new TrainDistPair(loc, distance));
             }
-            //Log.d("euc", "result match " + count + " out of " + results.size());
-
         }
-        System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
+
+        final long elapsedTime = System.currentTimeMillis() - startTime;
+        Log.i("localize", "took " + elapsedTime + " ms");
         mLocAct.drawMarkers(sortAndWeight(resultList));
     }
 
-    public void fileLocalize(List<ScanResult> results) throws IllegalStateException {
+    /**
+     * Calls LocalizeActivity.drawMarkers on the three points with minimum euclidean distance.
+     * The difference between localize and localize2 is that localize2 does not filter the scanResults
+     * There should be no difference in results, but this will run slower yet use less memory.
+     *
+     * @param results access points seen at a localization moment
+     */
+    public void localize2(List<ScanResult> results) {
+        if (!isReadyToLocalize()) return;
+
+        final long startTime = System.currentTimeMillis();
+        final ArrayList<TrainDistPair> resultList = new ArrayList<>();
+
+        // iterate through every training location
+        // for every access point seen at that training location, note the *number of* MAC addresses in common with localization results
+        // if the localization data has more than half AP in common with this training location, add distance to resultList
+        // then, move on to the next training location
+        for (TrainLocation loc : mData.keySet()) {
+            final ArrayList<APValue> trainingAps = mData.get(loc);
+            final Set<String> bssids = new HashSet<>(trainingAps.size());
+            int count = 0;
+
+            for (APValue ap : trainingAps) bssids.add(ap.mBssid);
+            for (ScanResult result : results)
+                if (bssids.contains(result.BSSID))
+                    count++;
+
+            double distance = 0;
+            if (count > results.size() / 2) {
+                for (ScanResult result : results) {
+                    // exactly zero or one reading will have the same MAC
+                    for (APValue reading : trainingAps) {
+                        if (reading.mBssid.equals(result.BSSID)) {
+                            distance += Math.pow(result.level - reading.mRssi, 2);
+                            break;
+                        }
+                    }
+                }
+                distance = distance / count;
+                resultList.add(new TrainDistPair(loc, distance));
+            }
+        }
+
+        final long elapsedTime = System.currentTimeMillis() - startTime;
+        Log.i("localize2", "took " + elapsedTime + " ms");
+        mLocAct.drawMarkers(sortAndWeight(resultList));
+    }
+
+    public void fileLocalize(List<ScanResult> results) {
         if (!isReadyToLocalize()) return;
 
         long starttime = System.currentTimeMillis();
@@ -159,7 +171,7 @@ public class LocalizationEuclideanDistance {
         mLocAct.drawMarkers(sortAndWeight(resultList));
     }
 
-    public void fileLocalize2(List<ScanResult> results) throws IllegalStateException {
+    public void fileLocalize2(List<ScanResult> results) {
         if (!isReadyToLocalize()) return;
 
         long starttime = System.currentTimeMillis();
@@ -204,27 +216,20 @@ public class LocalizationEuclideanDistance {
         mLocAct.drawMarkers(sortAndWeight(resultList));
     }
 
-    public void remoteLocalize(List<ScanResult> results, long mMapId) throws IllegalStateException {
-
+    public void remoteLocalize(List<ScanResult> results, long mMapId) {
         final AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
         ArrayList<APValue> resultAPVs = new ArrayList<>();
-        for (ScanResult res : results) {
-            resultAPVs.add(new APValue(res.BSSID, res.level));
-        }
+        for (ScanResult res : results) resultAPVs.add(new APValue(res.BSSID, res.level));
         String jsondata = gson.toJson(resultAPVs);
 
         params.put("mapId", mMapId);
         params.put("scanData", jsondata);
 
-
         final long starttime = System.currentTimeMillis();
-        // 10.109.185.244
-        // eic15.eng.fiu.edu
         client.addHeader("Content-Type", "application/json");
-        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/dolocalize", params, new
-                AsyncHttpResponseHandler() {
+        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/dolocalize", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] bytes) {
                 System.out.println(new String(bytes) + " " + i);
@@ -232,7 +237,7 @@ public class LocalizationEuclideanDistance {
                 try {
                     resultList = gson.fromJson(new String(bytes), new
                             TypeToken<ArrayList<TrainDistPair>>() {
-                    }.getType());
+                            }.getType());
                 } catch (Exception e) {
                     Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
                     return;
@@ -244,23 +249,6 @@ public class LocalizationEuclideanDistance {
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
                     throwable) {
-                if (statusCode == 404) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Requested resource not " +
-                            "found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Something went wrong at " +
-                            "server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Unexpected Error occcured! " +
-                            "[Most common Error: Device might not be connected to Internet or " +
-                            "remote server is not up and running]" + statusCode, Toast
-                            .LENGTH_LONG).show();
-                }
-                //System.out.println(new String(bytes) + " " + i);
             }
         });
     }
@@ -284,50 +272,48 @@ public class LocalizationEuclideanDistance {
         params.put("matches", gson.toJson(matches));
         params.put("scanData", gson.toJson(resultAPVs));
 
-
         final long starttime = System.currentTimeMillis();
         client.addHeader("Content-Type", "application/json");
         client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/dolocalize2", params, new
                 AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                ArrayList<TrainDistPair> resultList;
-                try {
-                    resultList = gson.fromJson(new String(bytes), new
-                            TypeToken<ArrayList<TrainDistPair>>() {
-                    }.getType());
-                } catch (Exception e) {
-                    Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
-                    return;
-                }
+                    @Override
+                    public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                        ArrayList<TrainDistPair> resultList;
+                        try {
+                            resultList = gson.fromJson(new String(bytes), new
+                                    TypeToken<ArrayList<TrainDistPair>>() {
+                                    }.getType());
+                        } catch (Exception e) {
+                            Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
+                            return;
+                        }
 
-                System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
-                mLocAct.drawMarkers(sortAndWeight(resultList));
-            }
+                        System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
+                        mLocAct.drawMarkers(sortAndWeight(resultList));
+                    }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                    throwable) {
-                if (statusCode == 404) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Requested resource not " +
-                            "found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Something went wrong at " +
-                            "server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Unexpected Error occcured! " +
-                            "[Most common Error: Device might not be connected to Internet or " +
-                            "remote server is not up and running]" + statusCode, Toast
-                            .LENGTH_LONG).show();
-                }
-                //System.out.println(new String(bytes) + " " + i);
-            }
-        });
-
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
+                            throwable) {
+                        if (statusCode == 404) {
+                            Toast.makeText(mLocAct.getApplicationContext(), "Requested resource not " +
+                                    "found", Toast.LENGTH_LONG).show();
+                        }
+                        // When Http response code is '500'
+                        else if (statusCode == 500) {
+                            Toast.makeText(mLocAct.getApplicationContext(), "Something went wrong at " +
+                                    "server end", Toast.LENGTH_LONG).show();
+                        }
+                        // When Http response code other than 404, 500
+                        else {
+                            Toast.makeText(mLocAct.getApplicationContext(), "Unexpected Error occcured! " +
+                                    "[Most common Error: Device might not be connected to Internet or " +
+                                    "remote server is not up and running]" + statusCode, Toast
+                                    .LENGTH_LONG).show();
+                        }
+                        //System.out.println(new String(bytes) + " " + i);
+                    }
+                });
     }
 
     public void remoteLocalize3(List<ScanResult> results, long mMapId) throws
@@ -350,73 +336,43 @@ public class LocalizationEuclideanDistance {
         client.addHeader("Content-Type", "application/json");
         client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/dolocalize3", params, new
                 AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                System.out.println(new String(bytes) + " " + i);
-                ArrayList<TrainDistPair> resultList;
-                try {
-                    resultList = gson.fromJson(new String(bytes), new
-                            TypeToken<ArrayList<TrainDistPair>>() {
-                    }.getType());
-                } catch (Exception e) {
-                    Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
-                    return;
-                }
-                System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
-                mLocAct.drawMarkers(sortAndWeight(resultList));
-            }
+                    @Override
+                    public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                        System.out.println(new String(bytes) + " " + i);
+                        ArrayList<TrainDistPair> resultList;
+                        try {
+                            resultList = gson.fromJson(new String(bytes), new
+                                    TypeToken<ArrayList<TrainDistPair>>() {
+                                    }.getType());
+                        } catch (Exception e) {
+                            Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
+                        mLocAct.drawMarkers(sortAndWeight(resultList));
+                    }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
-                    throwable) {
-                if (statusCode == 404) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Requested resource not " +
-                            "found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Something went wrong at " +
-                            "server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Unexpected Error occcured! " +
-                            "[Most common Error: Device might not be connected to Internet or " +
-                            "remote server is not up and running]" + statusCode, Toast
-                            .LENGTH_LONG).show();
-                }
-                //System.out.println(new String(bytes) + " " + i);
-            }
-        });
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
+                            throwable) {
+                    }
+                });
     }
 
-    public void remotePrivLocalize(List<ScanResult> results, long mMapId, final PrivateKey sk,
-                                   PublicKey pk) throws IllegalStateException {
-
+    public void remotePrivLocalize(List<ScanResult> results, long mMapId, final PrivateKey sk, PublicKey pk) {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
-        ArrayList<APValue> resultAPVs = new ArrayList<>();
-        //HashSet<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
-
-        // SELECT mac, COUNT(mac) totalCount FROM testtable GROUP BY mac HAVING COUNT(mac) = (
-        // SELECT COUNT(mac) totalCount FROM testtable GROUP BY mac ORDER BY totalCount DESC
-        // LIMIT 1 )
 
         final long starttime = System.currentTimeMillis();
         // local sums
         ArrayList<String> scanAPs = new ArrayList<>();
-        long sum3 = 0;
         ArrayList<BigInteger> sum2comp = new ArrayList<>();
         ArrayList<BigInteger> sum3comp = new ArrayList<>();
         for (ScanResult res : results) {
             scanAPs.add(res.BSSID);
-            sum3comp.add(Paillier.encrypt(BigInteger.valueOf((long) Math.pow(res.level, 2)), pk))
-            ;   // positive
+            sum3comp.add(Paillier.encrypt(BigInteger.valueOf((long) Math.pow(res.level, 2)), pk));
             sum2comp.add(Paillier.encrypt(BigInteger.valueOf((long) res.level * 2), pk)); // -2*v
-            // = x   negative
-            //System.out.println("res.level * 2 = " + res.level *2);
-
         }
 
         //BigInteger sum3c = Paillier.encrypt(BigInteger.valueOf(sum3),pk);
@@ -426,22 +382,18 @@ public class LocalizationEuclideanDistance {
         params.put("sum3comp", gson.toJson(sum3comp));
         params.put("publicKey", gson.toJson(pk));
 
-        // 10.109.185.244
-        // eic15.eng.fiu.edu
         client.addHeader("Content-Type", "application/json");
         client.setResponseTimeout(30000);
-        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/doprivlocalize", params, new
-                AsyncHttpResponseHandler() {
-
+        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/doprivlocalize", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] bytes) {
                 System.out.println(new String(bytes) + " " + i);
                 ArrayList<EncTrainDistMatchPair> resultList;
-                ArrayList<TrainDistPair> plainResultList = new ArrayList<TrainDistPair>();
+                ArrayList<TrainDistPair> plainResultList = new ArrayList<>();
                 try {
                     resultList = gson.fromJson(new String(bytes), new
                             TypeToken<ArrayList<EncTrainDistMatchPair>>() {
-                    }.getType());
+                            }.getType());
                     System.out.println(resultList.size());
                 } catch (Exception e) {
                     Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -465,34 +417,14 @@ public class LocalizationEuclideanDistance {
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
                     throwable) {
-                if (statusCode == 404) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Requested resource not " +
-                            "found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Something went wrong at " +
-                            "server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Unexpected Error occcured! " +
-                            "[Most common Error: Device might not be connected to Internet or " +
-                            "remote server is not up and running]" + statusCode, Toast
-                            .LENGTH_LONG).show();
-                }
-                //System.out.println(new String(bytes) + " " + i);
             }
         });
     }
 
-    public void remotePrivLocalize2(List<ScanResult> results, long mMapId, final PrivateKey sk,
-                                    PublicKey pk) throws IllegalStateException {
-
+    public void remotePrivLocalize2(List<ScanResult> results, long mMapId, final PrivateKey sk, PublicKey pk) {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
-        ArrayList<APValue> resultAPVs = new ArrayList<>();
         Set<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
 
         final long starttime = System.currentTimeMillis();
@@ -516,22 +448,16 @@ public class LocalizationEuclideanDistance {
         params.put("sum3", sum3c);
         params.put("publicKey", gson.toJson(pk));
 
-
-        // 10.109.185.244
-        // eic15.eng.fiu.edu
         client.addHeader("Content-Type", "application/json");
         client.setResponseTimeout(30000);
-        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/doprivlocalize2", params, new
-                AsyncHttpResponseHandler() {
+        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/doprivlocalize2", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] bytes) {
                 System.out.println(new String(bytes) + " " + i);
                 ArrayList<EncTrainDistPair> resultList;
-                ArrayList<TrainDistPair> plainResultList = new ArrayList<TrainDistPair>();
+                ArrayList<TrainDistPair> plainResultList = new ArrayList<>();
                 try {
-                    resultList = gson.fromJson(new String(bytes), new
-                            TypeToken<ArrayList<EncTrainDistPair>>() {
-                    }.getType());
+                    resultList = gson.fromJson(new String(bytes), new TypeToken<ArrayList<EncTrainDistPair>>() {}.getType());
                 } catch (Exception e) {
                     Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
                     return;
@@ -551,42 +477,17 @@ public class LocalizationEuclideanDistance {
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
                     throwable) {
-                if (statusCode == 404) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Requested resource not " +
-                            "found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Something went wrong at " +
-                            "server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Unexpected Error occcured! " +
-                            "[Most common Error: Device might not be connected to Internet or " +
-                            "remote server is not up and running]" + statusCode, Toast
-                            .LENGTH_LONG).show();
-                }
-                //System.out.println(new String(bytes) + " " + i);
             }
         });
     }
 
     public void remotePrivLocalize3(List<ScanResult> results, long mMapId, final PrivateKey sk,
-                                    PublicKey pk) throws IllegalStateException {
-
+                                    PublicKey pk) {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
-        ArrayList<APValue> resultAPVs = new ArrayList<>();
-        //HashSet<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
-
-        // SELECT mac, COUNT(mac) totalCount FROM testtable GROUP BY mac HAVING COUNT(mac) = (
-        // SELECT COUNT(mac) totalCount FROM testtable GROUP BY mac ORDER BY totalCount DESC
-        // LIMIT 1 )
 
         final long starttime = System.currentTimeMillis();
-        // local sums
         ArrayList<String> scanAPs = new ArrayList<>();
         long sum3 = 0;
         ArrayList<BigInteger> sum2comp = new ArrayList<>();
@@ -594,9 +495,7 @@ public class LocalizationEuclideanDistance {
             scanAPs.add(res.BSSID);
             sum3 += Math.pow(res.level, 2);   // positive
             sum2comp.add(Paillier.encrypt(BigInteger.valueOf((long) res.level * 2), pk)); // -2*v
-            // = x   negative
             System.out.println("res.level * 2 = " + res.level * 2);
-
         }
 
         BigInteger sum3c = Paillier.encrypt(BigInteger.valueOf(sum3), pk);
@@ -606,22 +505,18 @@ public class LocalizationEuclideanDistance {
         params.put("sum3", sum3c);
         params.put("publicKey", gson.toJson(pk));
 
-        // 10.109.185.244
-        // eic15.eng.fiu.edu
         client.addHeader("Content-Type", "application/json");
         client.setResponseTimeout(30000);
-        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/doprivlocalize3", params, new
-                AsyncHttpResponseHandler() {
-
+        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/doprivlocalize3", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] bytes) {
                 System.out.println(new String(bytes) + " " + i);
                 ArrayList<EncTrainDistPair> resultList;
-                ArrayList<TrainDistPair> plainResultList = new ArrayList<TrainDistPair>();
+                ArrayList<TrainDistPair> plainResultList = new ArrayList<>();
                 try {
                     resultList = gson.fromJson(new String(bytes), new
                             TypeToken<ArrayList<EncTrainDistPair>>() {
-                    }.getType());
+                            }.getType());
                     System.out.println(resultList.size());
                 } catch (Exception e) {
                     Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -644,33 +539,27 @@ public class LocalizationEuclideanDistance {
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable
                     throwable) {
-                if (statusCode == 404) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Requested resource not " +
-                            "found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Something went wrong at " +
-                            "server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(mLocAct.getApplicationContext(), "Unexpected Error occcured! " +
-                            "[Most common Error: Device might not be connected to Internet or " +
-                            "remote server is not up and running]" + statusCode, Toast
-                            .LENGTH_LONG).show();
-                }
-                //System.out.println(new String(bytes) + " " + i);
             }
         });
     }
 
-
+    /**
+     * Indicates whether the data structures are setup to do a localization.
+     *
+     * @return true if setup() has been called at least once, else false
+     */
     public boolean isReadyToLocalize() {
         return mIsReady;
     }
 
-    public boolean setup(Map<TrainLocation, ArrayList<APValue>> data, LocalizeActivity locact,
+    /**
+     * Sets up and caches data to use for localization
+     * Must call this method before running any localization.
+     *
+     * @return true always
+     */
+    public boolean setup(Map<TrainLocation, ArrayList<APValue>> data,
+                         LocalizeActivity locact,
                          Map<TrainLocation, ArrayList<APValue>> fileData) {
         mData = data;
         mLocAct = locact;
@@ -680,21 +569,33 @@ public class LocalizationEuclideanDistance {
         return true;
     }
 
-    private float[] sortAndWeight(ArrayList<TrainDistPair> resultList) {
-        if (resultList.isEmpty()) return new float[]{};
+    /**
+     * Return three lowest distances TrainDistPairs in resultList.
+     *
+     * @param resultList list to weight
+     * @return a 9-tuple of three (x,y) pairs and three corresponding weights
+     */
+    private float[] sortAndWeight(List<TrainDistPair> resultList) {
+        if (resultList.isEmpty()) return new float[] {};
+
+        // all of the magic happens in this compareTo
         Collections.sort(resultList);
 
         System.out.println("result0 = " + resultList.get(0).dist);
         System.out.println("result1 = " + resultList.get(1).dist);
         System.out.println("result2 = " + resultList.get(2).dist);
+
         double tot = resultList.get(0).dist + resultList.get(1).dist + resultList.get(2).dist;
         double w0 = (1 - (resultList.get(0).dist / tot)) / 2.0;
         double w1 = (1 - (resultList.get(1).dist / tot)) / 2.0;
         double w2 = (1 - (resultList.get(2).dist / tot)) / 2.0;
         Log.d("weight", "w0 = " + w0 + " w1 = " + w1 + " w2 = " + w2);
-        return new float[]{resultList.get(0).trainLocation.mX, resultList.get(0).trainLocation
-                .mY, resultList.get(1).trainLocation.mX, resultList.get(1).trainLocation.mY,
-                resultList.get(2).trainLocation.mX, resultList.get(2).trainLocation.mY, (float)
-                w0, (float) w1, (float) w2};
+
+        return new float[] {
+                resultList.get(0).trainLocation.mX, resultList.get(0).trainLocation.mY,
+                resultList.get(1).trainLocation.mX, resultList.get(1).trainLocation.mY,
+                resultList.get(2).trainLocation.mX, resultList.get(2).trainLocation.mY,
+                (float) w0, (float) w1, (float) w2
+        };
     }
 }
