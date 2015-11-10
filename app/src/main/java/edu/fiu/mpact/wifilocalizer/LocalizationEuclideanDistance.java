@@ -232,52 +232,7 @@ public class LocalizationEuclideanDistance {
         });
     }
 
-    public void remoteLocalize2(List<ScanResult> results, long mMapId) {
-        AsyncHttpClient client = new AsyncHttpClient();
-        RequestParams params = new RequestParams();
-        final Gson gson = new Gson();
-        ArrayList<LocalizationData.AccessPoint> resultAPVs = new ArrayList<>();
-        Set<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
-
-        ArrayList<String> matches = new ArrayList<>();
-        for (ScanResult res : results) {
-            if (bssids.contains(res.BSSID)) {
-                matches.add(res.BSSID);
-                resultAPVs.add(new LocalizationData.AccessPoint(res.BSSID, res.level));
-            }
-        }
-
-        params.put("mapId", mMapId);
-        params.put("matches", gson.toJson(matches));
-        params.put("scanData", gson.toJson(resultAPVs));
-
-        final long starttime = System.currentTimeMillis();
-        client.addHeader("Content-Type", "application/json");
-        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/dolocalize2", params, new
-                AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                        ArrayList<TrainDistPair> resultList;
-                        try {
-                            resultList = gson.fromJson(new String(bytes), new
-                                    TypeToken<ArrayList<TrainDistPair>>() {
-                                    }.getType());
-                        } catch (Exception e) {
-                            Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
-                            return;
-                        }
-
-                        System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
-                        mLocAct.drawMarkers(sortAndWeight(resultList));
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
-                    }
-                });
-    }
-
-    public void remoteLocalize3(List<ScanResult> results, long mMapId) throws
+    public void remoteLocalize2(List<ScanResult> results, long mMapId) throws
             IllegalStateException {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
@@ -379,66 +334,7 @@ public class LocalizationEuclideanDistance {
         });
     }
 
-    public void remotePrivLocalize2(List<ScanResult> results, long mMapId, final PrivateKey sk, PublicKey pk) {
-        AsyncHttpClient client = new AsyncHttpClient();
-        RequestParams params = new RequestParams();
-        final Gson gson = new Gson();
-        Set<String> bssids = Utils.gatherMetaMacs(mLocAct.getContentResolver());
-
-        final long starttime = System.currentTimeMillis();
-        // local sums
-        ArrayList<String> matches = new ArrayList<>();
-        long sum3 = 0;
-        ArrayList<BigInteger> sum2comp = new ArrayList<>();
-        for (ScanResult res : results) {
-            if (bssids.contains(res.BSSID)) {
-                matches.add(res.BSSID);
-                sum3 += Math.pow(res.level, 2);   // positive
-                sum2comp.add(Paillier.encrypt(BigInteger.valueOf((long) res.level * 2), pk)); //
-                // -2*v = x   negative
-                System.out.println("res.level * 2 = " + res.level * 2);
-            }
-        }
-        BigInteger sum3c = Paillier.encrypt(BigInteger.valueOf(sum3), pk);
-        params.put("mapId", mMapId);
-        params.put("matches", gson.toJson(matches));
-        params.put("sum2comp", gson.toJson(sum2comp));
-        params.put("sum3", sum3c);
-        params.put("publicKey", gson.toJson(pk));
-
-        client.addHeader("Content-Type", "application/json");
-        client.setResponseTimeout(30000);
-        client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/doprivlocalize2", params, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                System.out.println(new String(bytes) + " " + i);
-                ArrayList<EncTrainDistPair> resultList;
-                ArrayList<TrainDistPair> plainResultList = new ArrayList<>();
-                try {
-                    resultList = gson.fromJson(new String(bytes), new TypeToken<ArrayList<EncTrainDistPair>>() {}.getType());
-                } catch (Exception e) {
-                    Toast.makeText(mLocAct, e.getMessage(), Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                System.out.println("runtime = " + (System.currentTimeMillis() - starttime) + " ms");
-                // decrypt
-                for (EncTrainDistPair res : resultList) {
-                    plainResultList.add(new TrainDistPair(res.trainLocation, Paillier.decrypt(res
-                            .dist, sk).doubleValue()));
-                }
-
-                // draw
-                mLocAct.drawMarkers(sortAndWeight(plainResultList));
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
-            }
-        });
-    }
-
-    public void remotePrivLocalize3(List<ScanResult> results, long mMapId, final PrivateKey sk,
+    public void remotePrivLocalize2(List<ScanResult> results, long mMapId, final PrivateKey sk,
                                     PublicKey pk) {
         AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
