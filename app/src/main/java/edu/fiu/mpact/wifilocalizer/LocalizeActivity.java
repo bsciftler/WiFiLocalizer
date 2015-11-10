@@ -77,13 +77,13 @@ public class LocalizeActivity extends Activity {
                 mAlgo.remoteLocalize(results, mMapId);
                 break;
             case 6:
-                mAlgo.remoteLocalize3(results, mMapId);
+                mAlgo.remoteLocalize2(results, mMapId);
                 break;
             case 7:
                 mAlgo.remotePrivLocalize(results, mMapId, sk, pk);
                 break;
             case 8:
-                mAlgo.remotePrivLocalize3(results, mMapId, sk, pk);
+                mAlgo.remotePrivLocalize2(results, mMapId, sk, pk);
                 break;
             default:
                 break;
