@@ -195,7 +195,7 @@ public class LocalizationEuclideanDistance {
         mLocAct.drawMarkers(sortAndWeight(resultList));
     }
 
-    public void remoteLocalize(List<ScanResult> results, long mMapId) {
+   /* public void remoteLocalize(List<ScanResult> results, long mMapId) {
         final AsyncHttpClient client = new AsyncHttpClient();
         RequestParams params = new RequestParams();
         final Gson gson = new Gson();
@@ -247,8 +247,6 @@ public class LocalizationEuclideanDistance {
         params.put("scanData", jsondata);
 
         final long starttime = System.currentTimeMillis();
-        // 10.109.185.244
-        // eic15.eng.fiu.edu
         client.addHeader("Content-Type", "application/json");
         client.post("http://eic15.eng.fiu.edu:8080/wifiloc/localize/dolocalize3", params, new AsyncHttpResponseHandler() {
             @Override
@@ -393,7 +391,7 @@ public class LocalizationEuclideanDistance {
             public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
             }
         });
-    }
+    }*/
 
     /**
      * Indicates whether the data structures are setup to do a localization.

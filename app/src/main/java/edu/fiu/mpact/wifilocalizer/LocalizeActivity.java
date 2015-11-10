@@ -43,7 +43,7 @@ public class LocalizeActivity extends Activity {
     private boolean mHavePlacedMarker = false;
     private boolean mScanRequested = false;
     private boolean mAutoLocalizeEnabled = false;
-    private int opt = 1;
+    private int mLocalizationMode = 1;
     private PrivateKey sk;
     private PublicKey pk;
 
@@ -60,20 +60,20 @@ public class LocalizeActivity extends Activity {
 
             List<ScanResult> results = mWifiManager.getScanResults();
 
-            switch (opt) { // todo refactor
-            case 1:
+            switch (mLocalizationMode) {
+            case R.id.rbLocal:
                 mAlgo.localize(results);
                 break;
-            case 2:
+            case R.id.rbLocal2:
                 mAlgo.localize2(results);
                 break;
-            case 3:
+            case R.id.rbFile:
                 mAlgo.fileLocalize(results);
                 break;
-            case 4:
+            case R.id.rbFile2:
                 mAlgo.fileLocalize2(results);
                 break;
-            case 5:
+/*            case 5:
                 mAlgo.remoteLocalize(results, mMapId);
                 break;
             case 6:
@@ -84,7 +84,7 @@ public class LocalizeActivity extends Activity {
                 break;
             case 8:
                 mAlgo.remotePrivLocalize2(results, mMapId, sk, pk);
-                break;
+                break;*/
             default:
                 break;
             }
@@ -150,34 +150,8 @@ public class LocalizeActivity extends Activity {
         unregisterReceiver(mReceiver);
     }
 
-    // todo refactor
     public void onClickedCheckBox(View view) {
-        switch (view.getId()) {
-        case R.id.rbLocal:
-            opt = 1;
-            break;
-        case R.id.rbLocal2:
-            opt = 2;
-            break;
-        case R.id.rbFile:
-            opt = 3;
-            break;
-        case R.id.rbFile2:
-            opt = 4;
-            break;
-        case R.id.rbRemote:
-            opt = 5;
-            break;
-        case R.id.rbRemote2:
-            opt = 6;
-            break;
-        case R.id.rbPrivate:
-            opt = 7;
-            break;
-        case R.id.rbPrivate2:
-            opt = 8;
-            break;
-        }
+        mLocalizationMode = view.getId();
     }
 
     public void onToggleClickedAuto(View view) {
@@ -192,7 +166,7 @@ public class LocalizeActivity extends Activity {
     public void localizeNow() {
         final int numTrainingLocations = mCachedMapData.numLocations();
 
-        if ((opt == 1 && numTrainingLocations < 3) || (opt == 7 && numTrainingLocations < 3)) {
+        if ((mLocalizationMode == 1 && numTrainingLocations < 3) || (mLocalizationMode == 7 && numTrainingLocations < 3)) {
             Toast.makeText(LocalizeActivity.this, getResources().getText(R.string
                     .toast_not_enough_data), Toast.LENGTH_LONG).show();
             return;
