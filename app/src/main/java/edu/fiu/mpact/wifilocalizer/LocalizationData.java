@@ -22,6 +22,10 @@ import java.util.Set;
 import uk.co.senab.photoview.PhotoMarker;
 
 
+/**
+ * Store data for use in LocalizeActivity. Really, anyone who wants a read-only copy of
+ * points should use *this* class.
+ */
 public class LocalizationData {
     private static final String[] PROJECTION = {
             Database.Readings.MAP_X, Database.Readings.MAP_Y,

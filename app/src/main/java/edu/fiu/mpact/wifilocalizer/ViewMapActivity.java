@@ -44,20 +44,17 @@ public class ViewMapActivity extends Activity {
     private ImageView selMrk;
     private TextView mTextView;
     private ListView mListView;
-    private Map<Utils.TrainLocation, ArrayList<Utils.APValue>> mCachedMapData;
-    private ArrayList<Utils.APValue> aparray;
-    private Database controller;
+    private LocalizationData mCachedMapData;
 
-
-    public class APValueAdapter extends ArrayAdapter<Utils.APValue> {
-        public APValueAdapter(Context context, ArrayList<Utils.APValue> aps) {
-            super(context, 0, aps);
+    public class APValueAdapter extends ArrayAdapter<LocalizationData.AccessPoint> {
+        public APValueAdapter(Context context, Deque<LocalizationData.AccessPoint> aps) {
+            super(context, 0, aps.toArray(new LocalizationData.AccessPoint[aps.size()]));
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             // Get the data item for this position
-            Utils.APValue ap = getItem(position);
+            LocalizationData.AccessPoint ap = getItem(position);
             // Check if an existing view is being reused, otherwise inflate the view
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.marker_list_item, parent, false);
@@ -79,6 +76,8 @@ public class ViewMapActivity extends Activity {
         setContentView(R.layout.activity_view_map);
 
         mMapId = getIntent().getExtras().getLong(Utils.Constants.MAP_ID_EXTRA);
+        mTextView = (TextView) findViewById(R.id.marker_location_text);
+        mListView = (ListView) findViewById(R.id.marker_rss_list);
 
         // Get URI for map image.
         // The cursor that handles the list of sessions is created in
@@ -95,22 +94,58 @@ public class ViewMapActivity extends Activity {
         cursor.close();
 
         mRelative = (RelativeLayout) findViewById(R.id.image_map_container);
-
         mImageView = (ImageView) findViewById(R.id.img_map_preview);
         mImageView.setImageURI(mapUri);
-        // mAttacher = new PhotoViewAttacher(mImageView);
-
         mAttacher = new PhotoViewAttacher(mImageView, Utils.getImageSize(mapUri, getApplicationContext()));
 
-        // gathersamples is buggy
-
-        mTextView = (TextView) findViewById(R.id.marker_location_text);
-        mListView = (ListView) findViewById(R.id.marker_rss_list);
-
-        aparray = new ArrayList<>();
-        updateMarkers();
+        setupMarkers();
 
         Utils.createHintIfNeeded(this, Utils.Constants.PREF_VIEW_HINT, R.string.hint_view_act);
+    }
+
+
+    private void setupMarkers() {
+        mCachedMapData = new LocalizationData(getContentResolver(), mMapId);
+        final Deque<PhotoMarker> mrkrs = mCachedMapData.generateMarkers(getApplicationContext(), mRelative);
+
+        for (final PhotoMarker mrk : mrkrs) {
+            mrk.marker.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    PopupMenu popup = new PopupMenu(ViewMapActivity.this, mrk.marker);
+                    popup.getMenuInflater().inflate(R.menu.marker, popup.getMenu());
+                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            switch (item.getItemId()) {
+                            case R.id.action_delete_cmenu:
+                                mrk.marker.setVisibility(View.GONE);
+                                onDelete(mrk.x, mrk.y);
+                                return true;
+                            default:
+                                return true;
+                            }
+                        }
+                    });
+                    popup.show();
+                    return true;
+                }
+            });
+
+            mrk.marker.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Deque<LocalizationData.AccessPoint> data =
+                            mCachedMapData.getAccessPoints(new LocalizationData.Location(mrk.x, mrk.y));
+
+                    mTextView.setText(String.valueOf(mrk.x) + " , " + String.valueOf(mrk.y) + "  " +
+                            " size = " + data.size());
+                    mListView.setAdapter(new APValueAdapter(ViewMapActivity.this, data));
+                }
+            });
+        }
+
+        mAttacher.replaceData(mrkrs);
     }
 
     @Override
@@ -142,59 +177,20 @@ public class ViewMapActivity extends Activity {
         }
     }
 
-    public void updateMarkers() {
-        mCachedMapData = Utils.gatherLocalizationData(getContentResolver(), mMapId);
-        Deque<PhotoMarker> mrkrs = Utils.generateMarkers(mCachedMapData, getApplicationContext(), mRelative);
-        for (final PhotoMarker mrk : mrkrs) {
-            mrk.marker.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    PopupMenu popup = new PopupMenu(ViewMapActivity.this, mrk.marker);
-                    popup.getMenuInflater().inflate(R.menu.marker, popup.getMenu());
-                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                        @Override
-                        public boolean onMenuItemClick(MenuItem item) {
-                            switch (item.getItemId()) {
-                            case R.id.action_delete_cmenu:
-                                mrk.marker.setVisibility(View.GONE);
-                                onDelete(mrk.x, mrk.y);
-                                return true;
-                            default:
-                                return true;
-                            }
-                        }
-                    });
-                    popup.show();
-                    return true;
-                }
-            });
-
-            mrk.marker.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    aparray = mCachedMapData.get(new Utils.TrainLocation(mrk.x, mrk.y));
-                    mTextView.setText(String.valueOf(mrk.x) + " , " + String.valueOf(mrk.y) + "  " +
-                            " size = " + aparray.size());
-                    Log.d("qwer", "aparray size = " + aparray.size());
-                    APValueAdapter adapter = new APValueAdapter(ViewMapActivity.this, aparray);
-
-                    mListView.setAdapter(adapter);
-                }
-            });
-        }
-        mAttacher.replaceData(mrkrs);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            updateMarkers();
+            setupMarkers();
         }
     }
 
     private void onDelete(float x, float y) {
-        String[] mSelectionArgs = {String.valueOf(x - 0.0001), String.valueOf(x + 0.0001), String.valueOf(y - 0.0001), String.valueOf(y + 0.0001)};
-        getContentResolver().delete(DataProvider.READINGS_URI, "mapx>? and mapx<? and mapy>? and " +
-                "" + "mapy<?", mSelectionArgs);
+        String[] mSelectionArgs = {
+                String.valueOf(x - 0.0001), String.valueOf(x + 0.0001),
+                String.valueOf(y - 0.0001), String.valueOf(y + 0.0001)
+        };
+
+        getContentResolver().delete(DataProvider.READINGS_URI,
+                "mapx>? and mapx<? and mapy>? and mapy<?", mSelectionArgs);
     }
 }
