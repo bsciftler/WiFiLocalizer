@@ -138,8 +138,8 @@ public class TrainActivity extends Activity {
         });
 
         // Get data in Readings table for previously trained points and draw them on the map
-        final Deque<PhotoMarker> mrkrs = Utils.generateMarkers(Utils.gatherLocalizationData
-                (getContentResolver(), mapId), getApplicationContext(), mRelative);
+        final Deque<PhotoMarker> mrkrs = new LocalizationData(
+                getContentResolver(), mapId).generateMarkers(getApplicationContext(), mRelative);
         for (PhotoMarker mrk : mrkrs) {
             mrk.marker.setAlpha(0.8f);
             mrk.marker.setImageResource(R.drawable.grey_x);
