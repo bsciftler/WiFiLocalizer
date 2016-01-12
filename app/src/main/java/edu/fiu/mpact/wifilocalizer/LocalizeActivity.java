@@ -176,7 +176,7 @@ public class LocalizeActivity extends Activity {
         mWifiManager.startScan();
     }
 
-    public void localizeNow(View _) {
+    public void localizeNow(View unused) {
         localizeNow();
     }
 

@@ -181,12 +181,12 @@ public class Utils {
      * Returns a pair of (width, height) representing the dimensions of an image. Right now just
      * assumes all images are the same size as R.drawable.ec_1
      *
-     * @param _ unused
+     * @param unused unused
      * @param c any context to give to BitmapFactory.decodeResource
      * @return the pair of pixel width x height
      */
     @SuppressWarnings("unused")
-    public static int[] getImageSize(Uri _, Context c) {
+    public static int[] getImageSize(Uri unused, Context c) {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeResource(c.getResources(), R.drawable.ec_1, options);
