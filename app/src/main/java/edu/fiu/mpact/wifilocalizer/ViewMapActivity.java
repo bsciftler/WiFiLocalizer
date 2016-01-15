@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Environment;
+import android.provider.ContactsContract;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,9 +23,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Deque;
-import java.util.Map;
+import java.util.Locale;
 
 import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
@@ -45,6 +52,7 @@ public class ViewMapActivity extends Activity {
     private TextView mTextView;
     private ListView mListView;
     private LocalizationData mCachedMapData;
+
 
     public class APValueAdapter extends ArrayAdapter<LocalizationData.AccessPoint> {
         public APValueAdapter(Context context, Deque<LocalizationData.AccessPoint> aps) {
@@ -102,7 +110,6 @@ public class ViewMapActivity extends Activity {
 
         Utils.createHintIfNeeded(this, Utils.Constants.PREF_VIEW_HINT, R.string.hint_view_act);
     }
-
 
     private void setupMarkers() {
         mCachedMapData = new LocalizationData(getContentResolver(), mMapId);
@@ -172,9 +179,81 @@ public class ViewMapActivity extends Activity {
             intent.putExtra(Utils.Constants.MAP_ID_EXTRA, mMapId);
             startActivity(intent);
             return true;
+        case R.id.action_export_csv:
+            exportCsv();
+            return true;
         default:
             return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void exportCsv() {
+        // Setup file name
+        String mapName = "unknown-map";
+        final String date = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+        final Cursor nameCursor = getContentResolver().query(DataProvider.MAPS_URI,
+                new String[] {Database.Maps.NAME},
+                Database.Maps.ID + "=?",
+                new String[] {Long.toString(mMapId)}, null);
+        if (nameCursor.moveToFirst())
+            mapName = nameCursor.getString(nameCursor.getColumnIndex(Database.Maps.NAME));
+        nameCursor.close();
+
+        // Create file
+        final Uri uri;
+        final PrintWriter file;
+        final String filename = String.format(Locale.US, "%s-%s", mapName, date);
+        try {
+            uri = Uri.fromFile(File.createTempFile(filename, ".csv", Environment.getExternalStorageDirectory()));
+            file = new PrintWriter(new File(uri.getPath()));
+        } catch (IOException e) {
+            Toast.makeText(this, "Couldn't create CSV file", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Select all semi-useful rows
+        final String[] selection = {
+                Database.Readings.ID,
+                Database.Readings.DATETIME,
+                Database.Readings.MAP_X,
+                Database.Readings.MAP_Y,
+                Database.Readings.SIGNAL_STRENGTH,
+                Database.Readings.AP_NAME,
+                Database.Readings.MAC,
+                Database.Readings.UPDATE_STATUS
+        };
+        Cursor mapReadings = getContentResolver().query(DataProvider.READINGS_URI,
+                selection,
+                Database.Readings.MAP_ID + "=?",
+                new String[] {Long.toString(mMapId)}, null);
+
+        if (mapReadings == null) {
+            Toast.makeText(this, "Couldn't query Readings table", Toast.LENGTH_SHORT).show();
+            file.close();
+            return;
+        }
+
+        // Write header
+        file.write(TextUtils.join(",", selection) + "\n");
+
+        // Write a csv row at a time
+        while (mapReadings.moveToNext()) {
+            // TODO mapx and mapy might trigger null pointer exceptions
+            final String row = TextUtils.join(",", new String[] {
+                    Integer.toString(mapReadings.getInt(mapReadings.getColumnIndex(Database.Readings.ID))),
+                    Long.toString(mapReadings.getLong(mapReadings.getColumnIndex(Database.Readings.DATETIME))),
+                    Float.toString(mapReadings.getFloat(mapReadings.getColumnIndex(Database.Readings.MAP_X))),
+                    Float.toString(mapReadings.getFloat(mapReadings.getColumnIndex(Database.Readings.MAP_Y))),
+                    Integer.toString(mapReadings.getInt(mapReadings.getColumnIndex(Database.Readings.SIGNAL_STRENGTH))),
+                    mapReadings.getString(mapReadings.getColumnIndex(Database.Readings.AP_NAME)),
+                    mapReadings.getString(mapReadings.getColumnIndex(Database.Readings.MAC)),
+                    Integer.toString(mapReadings.getInt(mapReadings.getColumnIndex(Database.Readings.UPDATE_STATUS)))
+            });
+            file.write(row + "\n");
+        }
+        mapReadings.close();
+        file.close();
+        Toast.makeText(this, "Wrote " + uri.getPath(), Toast.LENGTH_LONG).show();
     }
 
     @Override
