@@ -8,3 +8,5 @@
 .idea/
 gradle
 gradlew*
+
+app/app-release.apk
