@@ -31,7 +31,6 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 
 import org.apache.http.Header;
-import org.javatuples.Quartet;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayDeque;
@@ -367,10 +366,39 @@ public class TrainActivity extends Activity {
 
     // ***********************************************************************
 
+    class ScanResultWithExtras {
+        private final List<ScanResult> mScanResults;
+        private final float[] mPos;
+        private final Long mTime;
+        private final PineappleResponse mPineappleResponse;
+
+        ScanResultWithExtras(List<ScanResult> ls, float[] pos, Long time, PineappleResponse resp) {
+            mScanResults = ls;
+            mPos = pos;
+            mTime = time;
+            mPineappleResponse = resp;
+        }
+
+        public List<ScanResult> getScanResults() {
+            return mScanResults;
+        }
+
+        public float[] getPosition() {
+            return mPos;
+        }
+
+        public Long getTime() {
+            return mTime;
+        }
+
+        public PineappleResponse getPineappleResponse() {
+            return mPineappleResponse;
+        }
+    }
 
     class ScanResultBuffer {
         protected final long mMapId;
-        private final Deque<Quartet<List<ScanResult>, float[], Long, PineappleResponse>> mStash = new ArrayDeque<>();
+        private final Deque<ScanResultWithExtras> mStash = new ArrayDeque<>();
         private Deque<ContentValues> mToCommit = new ArrayDeque<>();
         // TODO unused
         private Deque<ContentValues> mProbesToCommit = new ArrayDeque<>();
@@ -400,16 +428,21 @@ public class TrainActivity extends Activity {
         }
 
         public int stashScanResults(List<ScanResult> resultsToStash, float[] loc, Utils.PineappleResponse response) {
-            mStash.add(new Quartet<>(resultsToStash, loc, System.currentTimeMillis(), response));
+            mStash.add(new ScanResultWithExtras(resultsToStash, loc, System.currentTimeMillis(), response));
             return resultsToStash.size();
         }
 
         public int saveStash() {
             int rowsInserted = 0;
 
-            for (Quartet<List<ScanResult>, float[], Long, Utils.PineappleResponse> t : mStash) {
-                rowsInserted += insertScanResults(t.getValue0(), t.getValue1(), t.getValue2());
-                insertProbeResults(t.getValue1(), t.getValue3());
+            for (ScanResultWithExtras x : mStash) {
+                rowsInserted += insertScanResults(
+                        x.getScanResults(),
+                        x.getPosition(),
+                        x.getTime());
+                insertProbeResults(
+                        x.getPosition(),
+                        x.getPineappleResponse());
             }
 
             return rowsInserted;
