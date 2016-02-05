@@ -10,8 +10,6 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-import org.apache.http.Header;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
