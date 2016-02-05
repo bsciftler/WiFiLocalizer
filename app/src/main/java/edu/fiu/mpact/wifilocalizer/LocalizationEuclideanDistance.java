@@ -2,23 +2,13 @@ package edu.fiu.mpact.wifilocalizer;
 
 import android.net.wifi.ScanResult;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
-
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 
-import edu.fiu.mpact.wifilocalizer.Utils.EncTrainDistMatchPair;
-import edu.fiu.mpact.wifilocalizer.Utils.EncTrainDistPair;
 import edu.fiu.mpact.wifilocalizer.Utils.TrainDistPair;
 
 
