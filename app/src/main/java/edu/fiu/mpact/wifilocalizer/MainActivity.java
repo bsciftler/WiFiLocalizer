@@ -57,10 +57,6 @@ public class MainActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.action_dbm:
-            final Intent dbmIntent = new Intent(this, DatabaseManagerActivity.class);
-            startActivity(dbmIntent);
-            return true;
         case R.id.action_info:
             Utils.buildDialog(this, R.string.info_string).show();
             return true;
