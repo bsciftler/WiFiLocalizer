@@ -10,3 +10,5 @@ gradle
 gradlew*
 
 app/app-release.apk
+*.pyc
+__pycache__/
