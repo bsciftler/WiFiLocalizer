@@ -8,8 +8,8 @@ android {
         applicationId "edu.fiu.mpact.wifilocalizer"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "2.0.0"
     }
 
     buildTypes {
@@ -19,6 +19,7 @@ android {
         }
     }
 
+    // from http://stackoverflow.com/a/21000452/1832800
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES.txt'
         exclude 'META-INF/DEPENDENCIES'
@@ -31,6 +32,13 @@ android {
         exclude 'META-INF/NOTICE'
         exclude 'META-INF/notice.txt'
     }
+}
+
+// from http://stackoverflow.com/q/28935846/1832800
+configurations {
+    all*.exclude module: 'commons-logging'
+    all*.exclude module: 'httpclient'
+    all*.exclude module: 'json'
 }
 
 dependencies {
