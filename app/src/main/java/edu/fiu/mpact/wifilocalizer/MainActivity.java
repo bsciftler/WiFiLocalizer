@@ -12,6 +12,11 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.common.collect.ImmutableList;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.async.Callback;
+import com.mashape.unirest.http.exceptions.UnirestException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -72,36 +77,33 @@ public class MainActivity extends Activity {
         mDialog.setMessage(getString(R.string.retrieve_in_progress));
         mDialog.show();
 
-        new AsyncHelper.AsyncHelperBuilder()
-                .url(Utils.Constants.METADATA_URL)
-                .handler(new ResponseHelper() {
-                    @Override
-                    public void onSuccess(String response) {
-                        mDialog.hide();
-                        updateSQLite(response);
-                    }
+        Unirest.post(Utils.Constants.METADATA_URL)
+            .header("accept", "application/json")
+            .asJsonAsync(new Callback<JsonNode>() {
+                public void failed(UnirestException e) {
+                    mDialog.hide();
+                    Toast.makeText(getApplicationContext(), "Couldn't update metadata", Toast.LENGTH_SHORT).show();
+                    Log.e("metadataUpdate", "couldn't update; http code = " + e.getMessage());
+                }
 
-                    @Override
-                    public void onFailure(int statusCode, String response) {
-                        mDialog.hide();
-                        Toast.makeText(getApplicationContext(), "Couldn't update metadata", Toast.LENGTH_SHORT).show();
-                        Log.e("metadataUpdate", "couldn't update; http code = " + statusCode);
-                    }
-                })
-                .create()
-                .post();
+                public void completed(HttpResponse<JsonNode> response) {
+                    mDialog.hide();
+                    updateSQLite(response.getBody().getArray());
+                }
+
+                public void cancelled() {}
+            });
     }
 
     /**
      * Update metadata database with new mac addresses.
      *
-     * @param response a valid JSON array
+     * @param arr a valid JSON array
      */
-    public void updateSQLite(String response) {
+    public void updateSQLite(JSONArray arr) {
         final ArrayList<ContentValues> toInsert = new ArrayList<>();
 
         try {
-            JSONArray arr = new JSONArray(response);
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject obj = (JSONObject) arr.get(i);
 
@@ -114,7 +116,7 @@ public class MainActivity extends Activity {
             if (toInsert.isEmpty()) return;
             getContentResolver().delete(DataProvider.META_URI, null, null);
             getContentResolver().bulkInsert(DataProvider.META_URI,
-                    toInsert.toArray(new ContentValues[arr.length()]));
+                toInsert.toArray(new ContentValues[arr.length()]));
         } catch (JSONException e) {
             Log.e("metadataUpdate", "malformed JSON");
         }
@@ -137,38 +139,37 @@ public class MainActivity extends Activity {
         mDialog.setMessage(getString(R.string.sync_in_progress));
         mDialog.show();
 
-        new AsyncHelper.AsyncHelperBuilder()
-                .url(Utils.Constants.INSERT_URL)
-                .param("readingsJSON", nonUploadedReadings)
-                .handler(new ResponseHelper() {
-                    @Override
-                    public void onSuccess(String response) {
-                        mDialog.hide();
+        Unirest.post(Utils.Constants.INSERT_URL)
+            .header("accept", "application/json")
+            .field("readingsJSON", nonUploadedReadings)
+            .asJsonAsync(new Callback<JsonNode>() {
+                public void failed(UnirestException e) {
+                    mDialog.hide();
 
-                        try {
-                            JSONArray arr = new JSONArray(response);
-                            for (int i = 0; i < arr.length(); i++) {
-                                JSONObject obj = (JSONObject) arr.get(i);
-                                mDb.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
-                            }
+                    Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
+                    Log.e("syncUpdate", "couldn't update; http code = " + e.getMessage());
+                }
 
-                            Toast.makeText(getApplicationContext(), "Sync complete!", Toast.LENGTH_LONG).show();
-                        } catch (JSONException e) {
-                            Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
-                            Log.e("syncUpdate", "couldn't update");
+                public void completed(HttpResponse<JsonNode> response) {
+                    JsonNode body = response.getBody();
+                    body.getArray();
+
+                    try {
+                        JSONArray arr = body.getArray();
+                        for (int i = 0; i < arr.length(); i++) {
+                            JSONObject obj = (JSONObject) arr.get(i);
+                            mDb.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
                         }
-                    }
 
-                    @Override
-                    public void onFailure(int statusCode, String response) {
-                        mDialog.hide();
-
+                        Toast.makeText(getApplicationContext(), "Sync complete!", Toast.LENGTH_LONG).show();
+                    } catch (JSONException e) {
                         Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
-                        Log.e("syncUpdate", "couldn't update; http code = " + statusCode);
+                        Log.e("syncUpdate", "couldn't update");
                     }
-                })
-                .create()
-                .post();
+                }
+
+                public void cancelled() {}
+            });
     }
 
     /**
@@ -178,7 +179,7 @@ public class MainActivity extends Activity {
      */
     private boolean noMaps() {
         final Cursor cursor = getContentResolver().query(DataProvider.MAPS_URI,
-                new String[] {Database.Maps.ID}, null, null, null);
+            new String[] {Database.Maps.ID}, null, null, null);
         if (cursor == null) return true;
 
         final boolean ret = cursor.getCount() == 0;
@@ -191,9 +192,9 @@ public class MainActivity extends Activity {
      */
     private void loadDefaultMaps() {
         final ImmutableList<Pair<String, Integer>> floors = ImmutableList.of(
-                new Pair<>("Engineering 1st Floor", R.drawable.ec_1),
-                new Pair<>("Engineering 2nd Floor", R.drawable.ec_2),
-                new Pair<>("Engineering 3rd Floor", R.drawable.ec_3));
+            new Pair<>("Engineering 1st Floor", R.drawable.ec_1),
+            new Pair<>("Engineering 2nd Floor", R.drawable.ec_2),
+            new Pair<>("Engineering 3rd Floor", R.drawable.ec_3));
 
         for (Pair<String, Integer> floor : floors) {
             final ContentValues values = new ContentValues();
