@@ -3,7 +3,6 @@ package edu.fiu.mpact.wifilocalizer;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,17 +12,12 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.common.collect.ImmutableList;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-
-import cz.msebera.android.httpclient.Header;
 
 
 public class MainActivity extends Activity {
@@ -78,21 +72,24 @@ public class MainActivity extends Activity {
         mDialog.setMessage(getString(R.string.retrieve_in_progress));
         mDialog.show();
 
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.post(Utils.Constants.METADATA_URL, new RequestParams(), new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] response) {
-                mDialog.hide();
-                updateSQLite(new String(response));
-            }
+        new AsyncHelper.AsyncHelperBuilder()
+                .url(Utils.Constants.METADATA_URL)
+                .handler(new ResponseHelper() {
+                    @Override
+                    public void onSuccess(String response) {
+                        mDialog.hide();
+                        updateSQLite(response);
+                    }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
-                mDialog.hide();
-                Toast.makeText(getApplicationContext(), "Couldn't update metadata", Toast.LENGTH_SHORT).show();
-                Log.e("metadataUpdate", "couldn't update; http code = " + statusCode);
-            }
-        });
+                    @Override
+                    public void onFailure(int statusCode, String response) {
+                        mDialog.hide();
+                        Toast.makeText(getApplicationContext(), "Couldn't update metadata", Toast.LENGTH_SHORT).show();
+                        Log.e("metadataUpdate", "couldn't update; http code = " + statusCode);
+                    }
+                })
+                .create()
+                .post();
     }
 
     /**
@@ -134,42 +131,44 @@ public class MainActivity extends Activity {
             cursor.close();
             return;
         }
+        final String nonUploadedReadings = mDb.readingsCursorToJson(cursor);
+        cursor.close();
 
         mDialog.setMessage(getString(R.string.sync_in_progress));
         mDialog.show();
 
-        final RequestParams params = new RequestParams();
-        params.put("readingsJSON", mDb.readingsCursorToJson(cursor));
-        cursor.close();
+        new AsyncHelper.AsyncHelperBuilder()
+                .url(Utils.Constants.INSERT_URL)
+                .param("readingsJSON", nonUploadedReadings)
+                .handler(new ResponseHelper() {
+                    @Override
+                    public void onSuccess(String response) {
+                        mDialog.hide();
 
-        final AsyncHttpClient client = new AsyncHttpClient();
-        client.post(Utils.Constants.INSERT_URL, params, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] bytes) {
-                mDialog.hide();
+                        try {
+                            JSONArray arr = new JSONArray(response);
+                            for (int i = 0; i < arr.length(); i++) {
+                                JSONObject obj = (JSONObject) arr.get(i);
+                                mDb.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
+                            }
 
-                try {
-                    JSONArray arr = new JSONArray(new String(bytes));
-                    for (int i = 0; i < arr.length(); i++) {
-                        JSONObject obj = (JSONObject) arr.get(i);
-                        mDb.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
+                            Toast.makeText(getApplicationContext(), "Sync complete!", Toast.LENGTH_LONG).show();
+                        } catch (JSONException e) {
+                            Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
+                            Log.e("syncUpdate", "couldn't update");
+                        }
                     }
 
-                    Toast.makeText(getApplicationContext(), "Sync complete!", Toast.LENGTH_LONG).show();
-                } catch (JSONException e) {
-                    Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
-                    Log.e("syncUpdate", "couldn't update");
-                }
-            }
+                    @Override
+                    public void onFailure(int statusCode, String response) {
+                        mDialog.hide();
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
-                mDialog.hide();
-
-                Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
-                Log.e("syncUpdate", "couldn't update; http code = " + statusCode);
-            }
-        });
+                        Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
+                        Log.e("syncUpdate", "couldn't update; http code = " + statusCode);
+                    }
+                })
+                .create()
+                .post();
     }
 
     /**
