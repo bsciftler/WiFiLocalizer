@@ -58,7 +58,7 @@ public class Utils {
      * @param res     the resource id of the hint string if
      * @return the value of the preference given by key
      */
-    public static boolean createHintIfNeeded(Context context, String key, int res) {
+    public static boolean showHelpOnFirstRun(Context context, String key, int res) {
         final SharedPreferences prefs = context.getSharedPreferences(Constants.PREF_FILE, Context
                 .MODE_PRIVATE);
 

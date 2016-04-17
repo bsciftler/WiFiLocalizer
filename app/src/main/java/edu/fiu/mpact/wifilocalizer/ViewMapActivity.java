@@ -106,7 +106,7 @@ public class ViewMapActivity extends Activity {
 
         setupMarkers();
 
-        Utils.createHintIfNeeded(this, Utils.Constants.PREF_VIEW_HINT, R.string.hint_view_act);
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_VIEW_HINT, R.string.hint_view_act);
     }
 
     private void setupMarkers() {

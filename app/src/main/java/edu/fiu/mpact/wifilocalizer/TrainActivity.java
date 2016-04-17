@@ -145,7 +145,7 @@ public class TrainActivity extends Activity {
         mAttacher.addData(mrkrs);
 
         // Create hint if first time running
-        Utils.createHintIfNeeded(this, Utils.Constants.PREF_TRAIN_HINT, R.string.hint_train);
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_TRAIN_HINT, R.string.hint_train);
     }
 
     @Override

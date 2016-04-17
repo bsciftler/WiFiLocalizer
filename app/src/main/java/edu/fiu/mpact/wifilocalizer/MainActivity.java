@@ -34,14 +34,13 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Create textless dialog object
         mDialog = new ProgressDialog(this);
         mDialog.setCancelable(false);
 
         mDb = new Database(this);
 
         // Show welcome message if first run
-        Utils.createHintIfNeeded(this, Utils.Constants.PREF_MAIN_HINT, R.string.first_welcome_message);
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_MAIN_HINT, R.string.first_welcome_message);
 
         // Initialize to EC maps if there are no maps
         if (noMaps()) loadDefaultMaps();

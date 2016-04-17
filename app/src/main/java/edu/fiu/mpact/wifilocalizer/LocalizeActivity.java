@@ -141,7 +141,7 @@ public class LocalizeActivity extends Activity {
 
         mAlgo.setup(mCachedMapData, mFileData, LocalizeActivity.this);
 
-        Utils.createHintIfNeeded(this, Utils.Constants.PREF_LOCALIZE_HINT, R.string.hint_localize);
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_LOCALIZE_HINT, R.string.hint_localize);
     }
 
     @Override
