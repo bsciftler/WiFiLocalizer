@@ -27,16 +27,17 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.async.Callback;
+import com.mashape.unirest.http.exceptions.UnirestException;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
 
-import cz.msebera.android.httpclient.Header;
 import edu.fiu.mpact.wifilocalizer.Utils.PineappleResponse;
 import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
@@ -63,12 +64,12 @@ public class TrainActivity extends Activity {
 
             if (mPineappleData != null)
                 Toast.makeText(getApplicationContext(), "got " + mPineappleData.count + " " +
-                        "results", Toast.LENGTH_SHORT).show();
+                    "results", Toast.LENGTH_SHORT).show();
             else
                 Toast.makeText(getApplicationContext(), "got no pineapple results", Toast
-                        .LENGTH_SHORT).show();
+                    .LENGTH_SHORT).show();
             final int newRows = mDataBuffer.stashScanResults(mWifiManager.getScanResults(),
-                    mImgLocation, mPineappleData);
+                mImgLocation, mPineappleData);
             final boolean keepCapturing = updateProgressDialog(newRows);
 
             if (keepCapturing) {
@@ -102,10 +103,10 @@ public class TrainActivity extends Activity {
         // Get map URI or die trying
         final Uri img;
         final Cursor cursor = getContentResolver().query(ContentUris.withAppendedId(DataProvider
-                .MAPS_URI, mapId), null, null, null, null);
+            .MAPS_URI, mapId), null, null, null, null);
         if (cursor == null || !cursor.moveToFirst()) {
             Toast.makeText(this, getResources().getText(R.string.toast_map_id_warning), Toast
-                    .LENGTH_LONG).show();
+                .LENGTH_LONG).show();
             finish();
             return;
         } else {
@@ -130,14 +131,14 @@ public class TrainActivity extends Activity {
                     mAttacher.removeLastMarkerAdded();
                 }
                 mAttacher.addData(Utils.createNewMarker(getApplicationContext(), mRelative,
-                        mImgLocation[0], mImgLocation[1]));
+                    mImgLocation[0], mImgLocation[1]));
                 mIsMarkerPlaced = true;
             }
         });
 
         // Get data in Readings table for previously trained points and draw them on the map
         final Deque<PhotoMarker> mrkrs = new LocalizationData(
-                getContentResolver(), mapId).generateMarkers(getApplicationContext(), mRelative);
+            getContentResolver(), mapId).generateMarkers(getApplicationContext(), mRelative);
         for (PhotoMarker mrk : mrkrs) {
             mrk.marker.setAlpha(0.8f);
             mrk.marker.setImageResource(R.drawable.grey_x);
@@ -212,7 +213,7 @@ public class TrainActivity extends Activity {
         case CONTINUOUS:
             mCurrentCollectionCount += newRows;
             mPrgBarDialog.setMessage(String.format(Locale.US, getString(R.string
-                    .dialog_scanning_continuous_message), mCurrentCollectionCount));
+                .dialog_scanning_continuous_message), mCurrentCollectionCount));
             return true;
         case SAMPLES:
             mCurrentCollectionCount += newRows;
@@ -258,7 +259,7 @@ public class TrainActivity extends Activity {
         case CONTINUOUS:
             mPrgBarDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             mPrgBarDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string
-                    .dialog_save), new DialogInterface.OnClickListener() {
+                .dialog_save), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     mDataBuffer.saveStash();
@@ -271,7 +272,7 @@ public class TrainActivity extends Activity {
                 }
             });
             mPrgBarDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string
-                    .no), new DialogInterface.OnClickListener() {
+                .no), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     mSaveScanData = false;
@@ -286,7 +287,7 @@ public class TrainActivity extends Activity {
             mPrgBarDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             mPrgBarDialog.setMax(mModePasses);
             mPrgBarDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string
-                    .no), new DialogInterface.OnClickListener() {
+                .no), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     mSaveScanData = false;
@@ -305,7 +306,7 @@ public class TrainActivity extends Activity {
         mIsMarkerPlaced = false;
         // In the same location, place a permanent marker
         final PhotoMarker mrk = Utils.createNewMarker(getApplicationContext(), mRelative,
-                mImgLocation[0], mImgLocation[1], R.drawable.red_x);
+            mImgLocation[0], mImgLocation[1], R.drawable.red_x);
         // Create a popup that will allow deletion of the marker from the map
         mrk.marker.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -340,30 +341,23 @@ public class TrainActivity extends Activity {
 
     public void sendPineappleGet() {
         mPineappleData = null;
+        Unirest.post(Utils.Constants.PINEAPPLE_SERVER_URL)
+            .header("accept", "application/json")
+            .asJsonAsync(new Callback<JsonNode>() {
+                public void failed(UnirestException e) {
+                }
 
-        new AsyncHttpClient().get(Utils.Constants.PINEAPPLE_SERVER_URL, new
-                        AsyncHttpResponseHandler() {
-                            @Override
-                            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                                try {
-                                    mPineappleData = new Gson().fromJson(new String(responseBody, "UTF8")
-                                            , PineappleResponse.class);
-                                } catch (UnsupportedEncodingException e) {
-                                    // intentionally blank
-                                }
-                            }
+                public void completed(HttpResponse<JsonNode> response) {
+                    JsonNode body = response.getBody();
+                    mPineappleData = new Gson().fromJson(body.toString(), PineappleResponse.class);
+                }
 
-                            @Override
-                            public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
-                                                  Throwable error) {
-                                // intentionally blank
-                            }
-                        }
-
-        );
+                public void cancelled() {}
+            });
     }
 
     // ***********************************************************************
+
 
     class ScanResultWithExtras {
         private final List<ScanResult> mScanResults;
@@ -395,6 +389,7 @@ public class TrainActivity extends Activity {
         }
     }
 
+
     class ScanResultBuffer {
         protected final long mMapId;
         private final Deque<ScanResultWithExtras> mStash = new ArrayDeque<>();
@@ -411,7 +406,7 @@ public class TrainActivity extends Activity {
 
             for (ContentValues values : mToCommit) {
                 if (values.getAsFloat(Database.Readings.MAP_X) != x && values.getAsFloat(Database
-                        .Readings.MAP_Y) != y) {
+                    .Readings.MAP_Y) != y) {
                     commitCopy.add(values);
                 }
             }
@@ -436,12 +431,12 @@ public class TrainActivity extends Activity {
 
             for (ScanResultWithExtras x : mStash) {
                 rowsInserted += insertScanResults(
-                        x.getScanResults(),
-                        x.getPosition(),
-                        x.getTime());
+                    x.getScanResults(),
+                    x.getPosition(),
+                    x.getTime());
                 insertProbeResults(
-                        x.getPosition(),
-                        x.getPineappleResponse());
+                    x.getPosition(),
+                    x.getPineappleResponse());
             }
 
             return rowsInserted;
@@ -501,7 +496,7 @@ public class TrainActivity extends Activity {
          */
         public int saveTrainingToDatabase(ContentResolver resolver) {
             return resolver.bulkInsert(DataProvider.READINGS_URI,
-                    mToCommit.toArray(new ContentValues[mToCommit.size()]));
+                mToCommit.toArray(new ContentValues[mToCommit.size()]));
         }
     }
 }

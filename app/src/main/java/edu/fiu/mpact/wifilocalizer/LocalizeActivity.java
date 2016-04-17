@@ -20,9 +20,11 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.async.Callback;
+import com.mashape.unirest.http.exceptions.UnirestException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +32,6 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-import cz.msebera.android.httpclient.Header;
 import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -103,7 +104,7 @@ public class LocalizeActivity extends Activity {
 
         // Check mMapId is valid
         final Cursor cursor = getContentResolver().query(
-                ContentUris.withAppendedId(DataProvider.MAPS_URI, mMapId), null, null, null, null);
+            ContentUris.withAppendedId(DataProvider.MAPS_URI, mMapId), null, null, null, null);
         if (cursor == null) {
             Toast.makeText(this, "Invalid mapId", Toast.LENGTH_SHORT).show();
             finish();
@@ -168,7 +169,7 @@ public class LocalizeActivity extends Activity {
 
         if ((mLocalizationMode == 1 && numTrainingLocations < 3) || (mLocalizationMode == 7 && numTrainingLocations < 3)) {
             Toast.makeText(LocalizeActivity.this, getResources().getText(R.string
-                    .toast_not_enough_data), Toast.LENGTH_LONG).show();
+                .toast_not_enough_data), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -185,7 +186,7 @@ public class LocalizeActivity extends Activity {
         float cy = markerlocs[1] * markerlocs[6] + markerlocs[3] * markerlocs[7] + markerlocs[5] * markerlocs[8];
         final PhotoMarker mark = Utils.createNewMarker(getApplicationContext(), mRelative, cx, cy, R.drawable.o);
         final PhotoMarker bestguess = Utils.createNewMarker(getApplicationContext(), mRelative,
-                markerlocs[0], markerlocs[1], R.drawable.red_x);
+            markerlocs[0], markerlocs[1], R.drawable.red_x);
 
         bestguess.marker.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -214,7 +215,7 @@ public class LocalizeActivity extends Activity {
         });
 
         final PhotoMarker secondguess = Utils.createNewMarker(getApplicationContext(), mRelative,
-                markerlocs[2], markerlocs[3], R.drawable.bluegreen_x);
+            markerlocs[2], markerlocs[3], R.drawable.bluegreen_x);
         secondguess.marker.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -242,7 +243,7 @@ public class LocalizeActivity extends Activity {
         });
 
         final PhotoMarker thirdguess = Utils.createNewMarker(getApplicationContext(), mRelative,
-                markerlocs[4], markerlocs[5], R.drawable.bluegreen_x);
+            markerlocs[4], markerlocs[5], R.drawable.bluegreen_x);
         thirdguess.marker.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -283,54 +284,53 @@ public class LocalizeActivity extends Activity {
 
     private void deletePoint(float x, float y) {
         Log.d("deletePoint", "trying to delete " + x + "," + y);
-        AsyncHttpClient client = new AsyncHttpClient();
-        RequestParams params = new RequestParams();
-        params.put("x", x);
-        params.put("y", y);
 
-        client.post(Utils.Constants.DELETE_URL, params, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                Toast.makeText(getApplicationContext(), "message = " + new String(bytes), Toast
+        Unirest.post(Utils.Constants.DELETE_URL)
+            .field("x", x)
+            .field("y", y)
+            .asJsonAsync(new Callback<JsonNode>() {
+                public void failed(UnirestException e) {
+                    Toast.makeText(getApplicationContext(), "Couldn't delete point", Toast.LENGTH_SHORT).show();
+                    Log.e("deletePoint", "couldn't delete; http code = " + e.getMessage());
+                }
+
+                public void completed(HttpResponse<JsonNode> response) {
+                    Toast.makeText(getApplicationContext(), "message = " + response.getStatusText(), Toast
                         .LENGTH_LONG).show();
-            }
+                }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
-                Toast.makeText(getApplicationContext(), "Couldn't delete point", Toast.LENGTH_SHORT).show();
-                Log.e("deletePoint", "couldn't delete; http code = " + statusCode);
-            }
-        });
+                public void cancelled() {}
+            });
     }
 
     /**
      * Download the server's copy of points.
      */
     public void getPoints() {
-        AsyncHttpClient client = new AsyncHttpClient();
-        RequestParams params = new RequestParams();
-        client.post(Utils.Constants.POINTS_URL, params, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                try {
-                    JSONArray arr = new JSONArray(new String(response));
-                    if (arr.length() != 0) {
-                        for (int i = 0; i < arr.length(); i++) {
-                            JSONObject obj = (JSONObject) arr.get(i);
-                            mAttacher.addData(Utils.createNewMarker(getApplicationContext(),
-                                    mRelative, (float) obj.getDouble("mapx"), (float) obj.getDouble("mapy"), R.drawable.grey_x));
-                        }
-                    }
-                } catch (JSONException e) {
-                    Log.w("getPoints", e);
+        Unirest.post(Utils.Constants.POINTS_URL)
+            .header("accept", "application/json")
+            .asJsonAsync(new Callback<JsonNode>() {
+                public void failed(UnirestException e) {
+                    Toast.makeText(getApplicationContext(), "Couldn't get points", Toast.LENGTH_SHORT).show();
+                    Log.e("getPoints", "couldn't update; http code = " + e.getMessage());
                 }
-            }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] bytes, Throwable throwable) {
-                Toast.makeText(getApplicationContext(), "Couldn't get points", Toast.LENGTH_SHORT).show();
-                Log.e("getPoints", "couldn't update; http code = " + statusCode);
-            }
-        });
+                public void completed(HttpResponse<JsonNode> response) {
+                    try {
+                        JSONArray arr = response.getBody().getArray();
+                        if (arr.length() != 0) {
+                            for (int i = 0; i < arr.length(); i++) {
+                                JSONObject obj = (JSONObject) arr.get(i);
+                                mAttacher.addData(Utils.createNewMarker(getApplicationContext(),
+                                    mRelative, (float) obj.getDouble("mapx"), (float) obj.getDouble("mapy"), R.drawable.grey_x));
+                            }
+                        }
+                    } catch (JSONException e) {
+                        Log.w("getPoints", e);
+                    }
+                }
+
+                public void cancelled() {}
+            });
     }
 }
