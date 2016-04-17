@@ -3,6 +3,7 @@ package edu.fiu.mpact.wifilocalizer;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +29,8 @@ import java.util.ArrayList;
 public class MainActivity extends Activity {
     private Database mDb;
     private ProgressDialog mDialog;
+
+    private static final int ADD_MAP_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,11 +61,14 @@ public class MainActivity extends Activity {
         case R.id.action_info:
             Utils.buildDialog(this, R.string.info_string).show();
             return true;
-        case R.id.action_syncDB:
-            syncDatabase();
-            return true;
-        case R.id.action_getMetaData:
-            getMetaData();
+//        case R.id.action_syncDB:
+//            syncDatabase();
+//            return true;
+//        case R.id.action_getMetaData:
+//            getMetaData();
+//            return true;
+        case R.id.action_add_map:
+            startActivity(new Intent(this, AddMapActivity.class));
             return true;
         default:
             return super.onOptionsItemSelected(item);
@@ -186,6 +192,7 @@ public class MainActivity extends Activity {
         return ret;
     }
 
+
     /**
      * Load locally available maps of the FIU engineering campus.
      */
@@ -196,10 +203,7 @@ public class MainActivity extends Activity {
             new Pair<>("Engineering 3rd Floor", R.drawable.ec_3));
 
         for (Pair<String, Integer> floor : floors) {
-            final ContentValues values = new ContentValues();
-            values.put(Database.Maps.NAME, floor.first);
-            values.put(Database.Maps.DATA, Utils.resourceToUri(this, floor.second).toString());
-            values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
+            final ContentValues values = Utils.createNewMapContentValues(this, floor.first, floor.second);
             getContentResolver().insert(DataProvider.MAPS_URI, values);
         }
     }

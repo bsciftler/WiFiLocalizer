@@ -42,12 +42,18 @@
             android:name=".SettingsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_settings" />
+        <activity
+            android:name=".AddMapActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_add_map"/>
 
         <provider
             android:name=".DataProvider"
             android:authorities="edu.fiu.mpact.wifilocalizer.DataProvider"
             android:exported="false"
             android:multiprocess="true" />
+
+        <activity android:name="com.android.camera.CropImage"/>
     </application>
 
 </manifest>

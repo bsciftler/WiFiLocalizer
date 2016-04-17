@@ -2,6 +2,7 @@ package edu.fiu.mpact.wifilocalizer;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -46,6 +47,18 @@ public class Utils {
         public static final String POINTS_URL = "http://eic15.eng.fiu.edu/wifiloc/getpoints.php";
         public static final String DELETE_URL = "http://eic15.eng.fiu.edu/wifiloc/deletereading.php";
         public static final String INSERT_URL = "http://eic15.eng.fiu.edu/wifiloc/insertreading.php";
+    }
+
+    public static ContentValues createNewMapContentValues(Context context, String name, int resID) {
+        return createNewMapContentValues(name, Utils.resourceToUri(context, resID));
+    }
+
+    public static ContentValues createNewMapContentValues(String name, Uri uri) {
+        final ContentValues values = new ContentValues();
+        values.put(Database.Maps.NAME, name);
+        values.put(Database.Maps.DATA, uri.toString());
+        values.put(Database.Maps.DATE_ADDED, System.currentTimeMillis());
+        return values;
     }
 
     /**

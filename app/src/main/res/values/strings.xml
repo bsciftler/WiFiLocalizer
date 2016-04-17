@@ -14,7 +14,7 @@
     <string name="btn_localize">Localize</string>
     <string name="btn_start_automatic_train">Start Automatic Gathering</string>
     <string name="btn_end_automatic_train">End Automatic Gathering</string>
-    <string name="title_activity_import_map">ImportMapActivity</string>
+    <string name="title_activity_add_map">AddMapActivity</string>
     <string name="title_activity_map_scale">MapScaleActivity</string>
     <string name="title_activity_view_map">ViewMapActivity</string>
     <string name="title_activity_train">TrainActivity</string>
@@ -34,6 +34,7 @@
     <string name="title_activity_select_map">SelectMap</string>
     <string name="action_lock">Lock</string>
     <string name="delete">Delete</string>
+    <string name="action_add_map">Add a new map</string>
     <string name="action_selectMap">select map</string>
     <string name="action_deleteMap">delete map</string>
     <string name="action_selectSession">select session</string>
