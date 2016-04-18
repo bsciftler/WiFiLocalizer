@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.github.amlcurran.showcaseview.ShowcaseView;
 import com.google.common.collect.ImmutableList;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
@@ -40,11 +41,18 @@ public class MainActivity extends AppCompatActivity {
 
         mDb = new Database(this);
 
-        // Show welcome message if first run
-        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_MAIN_HINT, R.string.first_welcome_message);
-
         // Initialize to EC maps if there are no maps
-        if (noMaps()) loadDefaultMaps();
+        if (noMaps()) {
+            loadDefaultMaps();
+
+            new ShowcaseView.Builder(this)
+                .withMaterialShowcase()
+                .setStyle(R.style.CustomShowcaseTheme2)
+                .setContentTitle("Welcome!")
+                .setContentText(R.string.first_welcome_message)
+                .hideOnTouchOutside()
+                .build();
+        }
     }
 
     @Override
