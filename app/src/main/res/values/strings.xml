@@ -83,5 +83,11 @@
     <string name="sync_in_progress">Syncing SQLite Data with Remote MySQL DB. Please wait&#8230;</string>
     <string name="retrieve_in_progress">Retrieving metadata from Remote DB. Please wait&#8230;</string>
     <string name="title_activity_pineapple_debug">PineappleDebug</string>
+    <string name="pref_data_continuous">Collect data continuously</string>
+    <string name="pref_data_passes_info">Collect data for specific number of passes</string>
+    <string name="pref_data_passes_num">Choose number of passes</string>
+    <string name="pref_data_samples_info">Collect specific number of samples</string>
+    <string name="pref_data_samples_num">Choose number of samples</string>
+    <string name="train_point_data_info">Tap on a training point and its data will appear here</string>
 
 </resources>

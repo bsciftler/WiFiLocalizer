@@ -26,8 +26,7 @@ public class MapListFragment extends ListFragment implements LoaderManager.Loade
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.map_list_item, null, FROM, TO,
-                0);
+        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.map_list_item, null, FROM, TO, 0);
         mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
             @Override
             public boolean setViewValue(View view, Cursor cursor, int columnIndex) {

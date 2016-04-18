@@ -23,5 +23,10 @@
         android:id="@+id/action_get_metadata"
         android:title="@string/action_getMetaData"
         wifilocalizer:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_options"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="@string/action_options"
+        wifilocalizer:showAsAction="never" />
 
 </menu>

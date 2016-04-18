@@ -11,11 +11,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.media.audiofx.BassBoost;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -96,7 +98,6 @@ public class TrainActivity extends AppCompatActivity {
         mDataBuffer = new ScanResultBuffer(mapId);
 
         // Get map URI or die trying
-        final Uri img;
         final Cursor cursor = getContentResolver().query(ContentUris.withAppendedId(DataProvider
             .MAPS_URI, mapId), null, null, null, null);
         if (cursor == null || !cursor.moveToFirst()) {
@@ -104,10 +105,13 @@ public class TrainActivity extends AppCompatActivity {
                 .LENGTH_LONG).show();
             finish();
             return;
-        } else {
-            img = Uri.parse(cursor.getString(cursor.getColumnIndex(Database.Maps.DATA)));
-            cursor.close();
         }
+        final Uri img = Uri.parse(cursor.getString(cursor.getColumnIndex(Database.Maps.DATA)));
+        final String mapName = cursor.getString(cursor.getColumnIndex(Database.Maps.NAME));
+        cursor.close();
+
+        final ActionBar ab = getSupportActionBar();
+        if (ab != null) ab.setTitle(mapName);
 
         //  Setup PhotoViewAttacher and listeners
         final int[] imgSize = Utils.getImageSize(img, getApplicationContext());
@@ -193,9 +197,6 @@ public class TrainActivity extends AppCompatActivity {
                 mWifiManager.startScan();
                 sendPineappleGet();
             }
-            return true;
-        case R.id.action_options:
-            startActivity(new Intent(this, SettingsActivity.class));
             return true;
         default:
             return super.onOptionsItemSelected(item);

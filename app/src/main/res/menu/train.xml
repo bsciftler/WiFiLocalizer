@@ -6,17 +6,10 @@
         android:id="@+id/action_lock"
         android:title="@string/action_lock"
         wifilocalizer:showAsAction="always" />
-
     <item
         android:id="@+id/action_save"
         android:icon="@android:drawable/ic_menu_save"
         android:title="@string/action_save"
         wifilocalizer:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/action_options"
-        android:icon="@android:drawable/ic_menu_preferences"
-        android:title="@string/action_options"
-        wifilocalizer:showAsAction="never" />
 
 </menu>
