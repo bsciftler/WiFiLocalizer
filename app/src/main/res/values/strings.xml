@@ -10,7 +10,7 @@
     <string name="action_lazy_train">Automatically train</string>
     <string name="action_save">Save</string>
     <string name="action_settings">Settings</string>
-    <string name="action_export_csv">Export Data to CSV</string>
+    <string name="action_export_data">Share CSV Data</string>
     <string name="btn_localize">Localize</string>
     <string name="btn_start_automatic_train">Start Automatic Gathering</string>
     <string name="btn_end_automatic_train">End Automatic Gathering</string>
@@ -23,7 +23,7 @@
     <string name="select_image">Choose an image&#8230;</string>
     <string name="toast_name_warning">Map name must be set.</string>
     <string name="toast_map_warning">Map must be set.</string>
-    <string name="toast_map_id_warning">No map image found.</string>
+    <string name="toast_map_id_warning">Could not find that map in the database.</string>
     <string name="img_map_preview_description">Current map image</string>
     <string name="hint_map_name">Map Name</string>
     <string name="cd_map_image">Selected Map Image</string>
@@ -46,7 +46,7 @@
     <string name="action_info">Info</string>
     <string name="title_activity_settings">Settings</string>
 
-    <string name="dialog_scanning_title">Scanning Wi-Fi Acess Points&#8230;</string>
+    <string name="dialog_scanning_title">Scanning Wi-Fi Access Points&#8230;</string>
     <string name="dialog_save">Save</string>
     <string name="dialog_scanning_description">Please do not move device&#8230;</string>
     <string name="dialog_scanning_continuous_message">Have %d readings&#8230;</string>

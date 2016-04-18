@@ -15,25 +15,21 @@
             android:id="@+id/img_map_preview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="@string/img_map_preview_description"/>
-
+            android:contentDescription="@string/img_map_preview_description" />
     </RelativeLayout>
 
     <TextView
+        android:id="@+id/marker_location_text"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:id="@+id/marker_location_text"
         android:layout_gravity="center_horizontal"
         android:layout_weight="0.1"
-        android:gravity="center"
-        android:textAlignment="gravity"/>
+        android:gravity="center" />
 
     <ListView
+        android:id="@+id/marker_rss_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:id="@+id/marker_rss_list"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_weight="0.4"/>
+        android:layout_weight="0.4" />
 
 </LinearLayout>
