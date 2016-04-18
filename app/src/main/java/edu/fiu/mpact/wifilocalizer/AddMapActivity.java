@@ -3,14 +3,9 @@ package edu.fiu.mpact.wifilocalizer;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Base64;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,11 +13,8 @@ import android.widget.Toast;
 
 import com.android.camera.CropImageIntentBuilder;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 
 
 public class AddMapActivity extends Activity {
@@ -40,14 +32,14 @@ public class AddMapActivity extends Activity {
         this.imageView = (ImageView) findViewById(R.id.img_map);
     }
 
-    public void startPhotoPicker(View _) {
+    public void startPhotoPicker(View view) {
         final Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Map Image"), IMAGE_PICKER_REQUEST_CODE);
     }
 
-    public void saveMap(View _) {
+    public void saveMap(View view) {
         final String mapName = ((EditText) findViewById(R.id.map_name)).getText().toString();
 
         if (mapName.isEmpty()) {
