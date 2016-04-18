@@ -20,6 +20,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.github.amlcurran.showcaseview.ShowcaseView;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -142,7 +143,14 @@ public class LocalizeActivity extends AppCompatActivity {
 
         mAlgo.setup(mCachedMapData, mFileData, LocalizeActivity.this);
 
-        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_LOCALIZE_HINT, R.string.hint_localize);
+
+        ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
+            .withMaterialShowcase()
+            .setStyle(R.style.CustomShowcaseTheme2)
+            .setContentTitle("Instructions for localization")
+            .setContentText(R.string.hint_localize)
+            .hideOnTouchOutside();
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_LOCALIZE_HINT, builder);
     }
 
     @Override

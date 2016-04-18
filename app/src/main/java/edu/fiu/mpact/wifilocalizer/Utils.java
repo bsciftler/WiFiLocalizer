@@ -16,6 +16,8 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import com.github.amlcurran.showcaseview.ShowcaseView;
+
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,7 +35,6 @@ public class Utils {
         // Shared preferences file
         public static final String PREF_FILE = "SharedHintsPreferences";
         // Unique keys to address the hint boxes
-        public static final String PREF_HIDE_ALL_HINTS = "hint0";
         public static final String PREF_MAIN_HINT = "hint1";
         public static final String PREF_VIEW_HINT = "hint2";
         public static final String PREF_LOCALIZE_HINT = "hint3";
@@ -63,36 +64,21 @@ public class Utils {
 
     /**
      * Create hint dialogs with an optional checkbox to hide all. If the box has already been
-     * shown once or the user has opted to not receive hints, we will not show. The method does
-     * call the .show() method of the dialog.
+     * shown once we will not show.
      *
      * @param context context of the running activity
      * @param key     the SharedPreferences key of the boolean setting to check
-     * @param res     the resource id of the hint string if
+     * @param builder     Builder ready to call .build() on
      * @return the value of the preference given by key
      */
-    public static boolean showHelpOnFirstRun(Context context, String key, int res) {
-        final SharedPreferences prefs = context.getSharedPreferences(Constants.PREF_FILE, Context
-                .MODE_PRIVATE);
+    public static boolean showHelpOnFirstRun(Context context, String key, ShowcaseView.Builder builder) {
+        final SharedPreferences prefs = context.getSharedPreferences(Constants.PREF_FILE, Context.MODE_PRIVATE);
 
         // Check if we've already bugged about this
-        if (prefs.getBoolean(key, false)) {
-            return false;
-        } else if (prefs.getBoolean(Constants.PREF_HIDE_ALL_HINTS, false)) {
-            return true;
-        }
+        if (prefs.getBoolean(key, false)) return false;
 
-        // http://stackoverflow.com/a/9763836/1832800
-        final View checkBoxView = View.inflate(context, R.layout.checkbox_dialog, null);
-        final CheckBox box = (CheckBox) checkBoxView.findViewById(R.id.checkbox);
-        box.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                setSharedPreference(prefs, Constants.PREF_HIDE_ALL_HINTS, isChecked);
-            }
-        });
-        box.setText(R.string.dont_show_hints);
-        buildDialog(context, res).setView(checkBoxView).setIcon(R.drawable.ic_launcher).show();
+        // Build and show the dialog
+        builder.build();
 
         // Mark down this dialog as shown
         setSharedPreference(prefs, key, true);

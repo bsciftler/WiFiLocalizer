@@ -41,18 +41,16 @@ public class MainActivity extends AppCompatActivity {
 
         mDb = new Database(this);
 
-        // Initialize to EC maps if there are no maps
-        if (noMaps()) {
-            loadDefaultMaps();
+        ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
+            .withMaterialShowcase()
+            .setStyle(R.style.CustomShowcaseTheme2)
+            .setContentTitle("Welcome!")
+            .setContentText(R.string.first_welcome_message)
+            .hideOnTouchOutside();
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_MAIN_HINT, builder);
 
-            new ShowcaseView.Builder(this)
-                .withMaterialShowcase()
-                .setStyle(R.style.CustomShowcaseTheme2)
-                .setContentTitle("Welcome!")
-                .setContentText(R.string.first_welcome_message)
-                .hideOnTouchOutside()
-                .build();
-        }
+        // Initialize to EC maps if there are no maps
+        if (noMaps()) loadDefaultMaps();
     }
 
     @Override

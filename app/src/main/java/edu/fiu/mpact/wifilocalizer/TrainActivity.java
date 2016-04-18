@@ -27,6 +27,8 @@ import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.github.amlcurran.showcaseview.ShowcaseView;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -145,7 +147,13 @@ public class TrainActivity extends AppCompatActivity {
         mAttacher.addData(mrkrs);
 
         // Create hint if first time running
-        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_TRAIN_HINT, R.string.hint_train);
+        ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
+            .withMaterialShowcase()
+            .setStyle(R.style.CustomShowcaseTheme2)
+            .setContentTitle("Instructions for training")
+            .setContentText(R.string.hint_train)
+            .hideOnTouchOutside();
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_TRAIN_HINT, builder);
     }
 
     @Override

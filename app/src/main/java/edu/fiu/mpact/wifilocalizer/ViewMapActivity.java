@@ -23,6 +23,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.amlcurran.showcaseview.ShowcaseView;
+
 import java.util.Deque;
 import java.util.Locale;
 
@@ -107,7 +109,13 @@ public class ViewMapActivity extends AppCompatActivity {
         // Set markers
         setupMarkers();
 
-        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_VIEW_HINT, R.string.hint_view_act);
+        ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
+            .withMaterialShowcase()
+            .setStyle(R.style.CustomShowcaseTheme2)
+            .setContentTitle("View Map details here")
+            .setContentText("Click on the train button to start a new training session")
+            .hideOnTouchOutside();
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_VIEW_HINT, builder);
     }
 
     private void setupMarkers() {
