@@ -1,27 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <CheckBoxPreference
-        android:defaultValue="true"
-        android:key="pref_continuous_toggle"
-        android:title="@string/pref_data_continuous" />
+    <PreferenceCategory
+        android:title="@string/pref_data_header">
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="pref_continuous_toggle"
+            android:title="@string/pref_data_continuous" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="pref_passes_toggle"
-        android:title="@string/pref_data_passes_info" />
-    <edu.fiu.mpact.wifilocalizer.NumberPickerPreference
-        android:defaultValue="8"
-        android:dependency="pref_passes_toggle"
-        android:key="pref_n_passes"
-        android:title="@string/pref_data_passes_num" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_passes_toggle"
+            android:title="@string/pref_data_passes_info" />
+        <edu.fiu.mpact.wifilocalizer.NumberPickerPreference
+            android:defaultValue="8"
+            android:dependency="pref_passes_toggle"
+            android:key="pref_n_passes"
+            android:title="@string/pref_data_passes_num" />
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="pref_samples_toggle"
-        android:title="@string/pref_data_samples_info" />
-    <edu.fiu.mpact.wifilocalizer.NumberPickerPreference
-        android:defaultValue="12"
-        android:dependency="pref_samples_toggle"
-        android:key="pref_n_samples"
-        android:title="@string/pref_data_samples_num" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_samples_toggle"
+            android:title="@string/pref_data_samples_info" />
+        <edu.fiu.mpact.wifilocalizer.NumberPickerPreference
+            android:defaultValue="12"
+            android:dependency="pref_samples_toggle"
+            android:key="pref_n_samples"
+            android:title="@string/pref_data_samples_num" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="WiFi Pineapple Options">
+        <Preference
+            android:key="pref_pineapple_description"
+            android:selectable="false"
+            android:summary="@string/pref_pineapple_description"/>
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_pineapple_enabled"
+            android:title="@string/pref_pineapple_enabled" />
+    </PreferenceCategory>
 </PreferenceScreen>
