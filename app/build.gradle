@@ -7,7 +7,10 @@ android {
     defaultConfig {
         applicationId "edu.fiu.mpact.wifilocalizer"
         minSdkVersion 15
-        targetSdkVersion 23
+        // DO NOT TARGET SDK VERSION >= 23
+        // THERE IS A KNOWN BUG WITH WIFI SCANNING
+        // https://code.google.com/p/android/issues/detail?id=185370
+        targetSdkVersion 22
         versionCode 3
         versionName "2.0.0"
     }
