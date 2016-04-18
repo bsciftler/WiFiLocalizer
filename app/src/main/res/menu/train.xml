@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:wifilocalizer="http://schemas.android.com/apk/res-auto">
 
     <item
         android:id="@+id/action_lock"
-        android:showAsAction="always"
-        android:title="@string/action_lock"/>
+        android:title="@string/action_lock"
+        wifilocalizer:showAsAction="always" />
 
     <item
         android:id="@+id/action_save"
         android:icon="@android:drawable/ic_menu_save"
-        android:showAsAction="ifRoom"
-        android:title="@string/action_save"/>
+        android:title="@string/action_save"
+        wifilocalizer:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_options"
         android:icon="@android:drawable/ic_menu_preferences"
-        android:showAsAction="never"
-        android:title="@string/action_options"/>
+        android:title="@string/action_options"
+        wifilocalizer:showAsAction="never" />
 
 </menu>

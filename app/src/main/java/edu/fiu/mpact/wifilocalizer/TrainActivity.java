@@ -1,6 +1,5 @@
 package edu.fiu.mpact.wifilocalizer;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -17,6 +16,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,13 +25,6 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-
-import com.google.gson.Gson;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -44,7 +37,7 @@ import uk.co.senab.photoview.PhotoViewAttacher;
 import uk.co.senab.photoview.PhotoViewAttacher.OnPhotoTapListener;
 
 
-public class TrainActivity extends Activity {
+public class TrainActivity extends AppCompatActivity {
     private boolean mIsMarkerPlaced = false;
     private boolean mSaveScanData = false;
     private SettingsActivity.COLLECTION_MODES mMode = SettingsActivity.COLLECTION_MODES.CONTINUOUS;
@@ -60,30 +53,32 @@ public class TrainActivity extends Activity {
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (!mSaveScanData) return;
+//            if (!mSaveScanData) return;
 
-            if (mPineappleData != null)
-                Toast.makeText(getApplicationContext(), "got " + mPineappleData.count + " " +
-                    "results", Toast.LENGTH_SHORT).show();
-            else
-                Toast.makeText(getApplicationContext(), "got no pineapple results", Toast
-                    .LENGTH_SHORT).show();
+//            if (mPineappleData != null)
+//                Toast.makeText(getApplicationContext(), "got " + mPineappleData.count + " " +
+//                    "results", Toast.LENGTH_SHORT).show();
+//            else
+//                Toast.makeText(getApplicationContext(), "got no pineapple results", Toast
+//                    .LENGTH_SHORT).show();
+            System.out.println(mWifiManager.getScanResults());
             final int newRows = mDataBuffer.stashScanResults(mWifiManager.getScanResults(),
                 mImgLocation, mPineappleData);
             final boolean keepCapturing = updateProgressDialog(newRows);
+            mWifiManager.startScan();
 
-            if (keepCapturing) {
-                mWifiManager.startScan();
-                sendPineappleGet();
-                return;
-            }
-
-            resetProgressDialog();
-            mSaveScanData = false;
-            mPrgBarDialog.cancel();
-            mDataBuffer.saveStash();
-
-            addPermanentMarker();
+//            if (keepCapturing) {
+//                mWifiManager.startScan();
+//                sendPineappleGet();
+//                return;
+//            }
+//
+//            resetProgressDialog();
+//            mSaveScanData = false;
+//            mPrgBarDialog.cancel();
+//            mDataBuffer.saveStash();
+//
+//            addPermanentMarker();
         }
     };
 
@@ -117,7 +112,8 @@ public class TrainActivity extends Activity {
         //  Setup PhotoViewAttacher and listeners
         final int[] imgSize = Utils.getImageSize(img, getApplicationContext());
         final ImageView imageView = (ImageView) findViewById(R.id.image_map);
-        imageView.setImageURI(img);
+        if (imageView != null) imageView.setImageURI(img);
+        else Log.e("onCreate", "Couldn't get ImageView");
         mAttacher = new PhotoViewAttacher(imageView, imgSize);
         mAttacher.setOnPhotoTapListener(new OnPhotoTapListener() {
             @Override
@@ -341,19 +337,6 @@ public class TrainActivity extends Activity {
 
     public void sendPineappleGet() {
         mPineappleData = null;
-        Unirest.post(Utils.Constants.PINEAPPLE_SERVER_URL)
-            .header("accept", "application/json")
-            .asJsonAsync(new Callback<JsonNode>() {
-                public void failed(UnirestException e) {
-                }
-
-                public void completed(HttpResponse<JsonNode> response) {
-                    JsonNode body = response.getBody();
-                    mPineappleData = new Gson().fromJson(body.toString(), PineappleResponse.class);
-                }
-
-                public void cancelled() {}
-            });
     }
 
     // ***********************************************************************

@@ -1,14 +1,15 @@
 package edu.fiu.mpact.wifilocalizer;
 
-import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,11 +23,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Deque;
 import java.util.Locale;
 
@@ -41,12 +37,10 @@ import uk.co.senab.photoview.PhotoViewAttacher;
  *
  * @author oychang
  */
-public class ViewMapActivity extends Activity {
+public class ViewMapActivity extends AppCompatActivity {
     private long mMapId;
     private RelativeLayout mRelative;
-    private ImageView mImageView;
     private PhotoViewAttacher mAttacher;
-    private ImageView selMrk;
     private TextView mTextView;
     private ListView mListView;
     private LocalizationData mCachedMapData;
@@ -81,29 +75,36 @@ public class ViewMapActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_map);
 
+        // Setup activity data
         mMapId = getIntent().getExtras().getLong(Utils.Constants.MAP_ID_EXTRA);
         mTextView = (TextView) findViewById(R.id.marker_location_text);
         mListView = (ListView) findViewById(R.id.marker_rss_list);
 
-        // Get URI for map image.
-        // The cursor that handles the list of sessions is created in
-        // SessionListFragment.java
+        // Get details of map
         final Uri queryUri = ContentUris.withAppendedId(DataProvider.MAPS_URI, mMapId);
         final Cursor cursor = getContentResolver().query(queryUri, null, null, null, null);
-        if (!cursor.moveToFirst()) {
+        if (cursor == null || !cursor.moveToFirst()) {
             Toast.makeText(this, getString(R.string.toast_map_id_warning), Toast.LENGTH_LONG).show();
-            cursor.close();
+            if (cursor != null) cursor.close();
             finish();
             return;
         }
         final Uri mapUri = Uri.parse(cursor.getString(cursor.getColumnIndex(Database.Maps.DATA)));
+        final String mapName = cursor.getString(cursor.getColumnIndex(Database.Maps.NAME));
         cursor.close();
 
+        // Try to change action bar title
+        final ActionBar ab = getSupportActionBar();
+        if (ab != null) ab.setTitle(mapName);
+
+        // Set map image
         mRelative = (RelativeLayout) findViewById(R.id.image_map_container);
-        mImageView = (ImageView) findViewById(R.id.img_map_preview);
-        mImageView.setImageURI(mapUri);
+        final ImageView mImageView = (ImageView) findViewById(R.id.img_map_preview);
+        if (mImageView != null) mImageView.setImageURI(mapUri);
+        else Log.e("onCreate", "Couldn't find ImageView...bad layout");
         mAttacher = new PhotoViewAttacher(mImageView, Utils.getImageSize(mapUri, getApplicationContext()));
 
+        // Set markers
         setupMarkers();
 
         Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_VIEW_HINT, R.string.hint_view_act);
@@ -141,10 +142,10 @@ public class ViewMapActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     Deque<LocalizationData.AccessPoint> data =
-                            mCachedMapData.getAccessPoints(new LocalizationData.Location(mrk.x, mrk.y));
+                        mCachedMapData.getAccessPoints(new LocalizationData.Location(mrk.x, mrk.y));
 
-                    mTextView.setText(String.valueOf(mrk.x) + " , " + String.valueOf(mrk.y) + "  " +
-                            " size = " + data.size());
+                    final String displayText = String.format(Locale.US, "%f, %f size = %d", mrk.x, mrk.y, data.size());
+                    mTextView.setText(displayText);
                     mListView.setAdapter(new APValueAdapter(ViewMapActivity.this, data));
                 }
             });
@@ -177,81 +178,80 @@ public class ViewMapActivity extends Activity {
             intent.putExtra(Utils.Constants.MAP_ID_EXTRA, mMapId);
             startActivity(intent);
             return true;
-        case R.id.action_export_csv:
-            exportCsv();
+        case R.id.action_export_data:
+            exportData();
             return true;
         default:
             return super.onOptionsItemSelected(item);
         }
     }
 
-    public void exportCsv() {
+    public void exportData() {
+        StringBuilder out = new StringBuilder();
+
         // Setup file name
         String mapName = "unknown-map";
-        final String date = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
         final Cursor nameCursor = getContentResolver().query(DataProvider.MAPS_URI,
-                new String[] {Database.Maps.NAME},
-                Database.Maps.ID + "=?",
-                new String[] {Long.toString(mMapId)}, null);
-        if (nameCursor.moveToFirst())
+            new String[] {Database.Maps.NAME},
+            Database.Maps.ID + "=?",
+            new String[] {Long.toString(mMapId)}, null);
+        if (nameCursor != null && nameCursor.moveToFirst())
             mapName = nameCursor.getString(nameCursor.getColumnIndex(Database.Maps.NAME));
-        nameCursor.close();
-
-        // Create file
-        final Uri uri;
-        final PrintWriter file;
-        final String filename = String.format(Locale.US, "%s-%s", mapName, date);
-        try {
-            uri = Uri.fromFile(File.createTempFile(filename, ".csv", Environment.getExternalStorageDirectory()));
-            file = new PrintWriter(new File(uri.getPath()));
-        } catch (IOException e) {
-            Toast.makeText(this, "Couldn't create CSV file", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (nameCursor != null) nameCursor.close();
 
         // Select all semi-useful rows
         final String[] selection = {
-                Database.Readings.ID,
-                Database.Readings.DATETIME,
-                Database.Readings.MAP_X,
-                Database.Readings.MAP_Y,
-                Database.Readings.SIGNAL_STRENGTH,
-                Database.Readings.AP_NAME,
-                Database.Readings.MAC,
-                Database.Readings.UPDATE_STATUS
+            Database.Readings.ID,
+            Database.Readings.DATETIME,
+            Database.Readings.MAP_X,
+            Database.Readings.MAP_Y,
+            Database.Readings.SIGNAL_STRENGTH,
+            Database.Readings.AP_NAME,
+            Database.Readings.MAC,
+            Database.Readings.UPDATE_STATUS
         };
-        Cursor mapReadings = getContentResolver().query(DataProvider.READINGS_URI,
-                selection,
-                Database.Readings.MAP_ID + "=?",
-                new String[] {Long.toString(mMapId)}, null);
+        final Cursor mapReadings = getContentResolver().query(DataProvider.READINGS_URI,
+            selection, Database.Readings.MAP_ID + "=?", new String[] {Long.toString(mMapId)}, null);
 
         if (mapReadings == null) {
             Toast.makeText(this, "Couldn't query Readings table", Toast.LENGTH_SHORT).show();
-            file.close();
+            return;
+        }
+
+        if (mapReadings.getColumnIndex(Database.Readings.MAP_X) == -1 ||
+            mapReadings.getColumnIndex(Database.Readings.MAP_Y) == -1) {
+            Toast.makeText(this, "No x/y column", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Write header
-        file.write(TextUtils.join(",", selection) + "\n");
+        out.append(TextUtils.join(",", selection));
+        out.append("\n");
 
         // Write a csv row at a time
         while (mapReadings.moveToNext()) {
-            // TODO mapx and mapy might trigger null pointer exceptions
             final String row = TextUtils.join(",", new String[] {
-                    Integer.toString(mapReadings.getInt(mapReadings.getColumnIndex(Database.Readings.ID))),
-                    Long.toString(mapReadings.getLong(mapReadings.getColumnIndex(Database.Readings.DATETIME))),
-                    Float.toString(mapReadings.getFloat(mapReadings.getColumnIndex(Database.Readings.MAP_X))),
-                    Float.toString(mapReadings.getFloat(mapReadings.getColumnIndex(Database.Readings.MAP_Y))),
-                    Integer.toString(mapReadings.getInt(mapReadings.getColumnIndex(Database.Readings.SIGNAL_STRENGTH))),
-                    mapReadings.getString(mapReadings.getColumnIndex(Database.Readings.AP_NAME)),
-                    mapReadings.getString(mapReadings.getColumnIndex(Database.Readings.MAC)),
-                    Integer.toString(mapReadings.getInt(mapReadings.getColumnIndex(Database.Readings.UPDATE_STATUS)))
+                Integer.toString(mapReadings.getInt(mapReadings.getColumnIndex(Database.Readings.ID))),
+                Long.toString(mapReadings.getLong(mapReadings.getColumnIndex(Database.Readings.DATETIME))),
+                Float.toString(mapReadings.getFloat(mapReadings.getColumnIndex(Database.Readings.MAP_X))),
+                Float.toString(mapReadings.getFloat(mapReadings.getColumnIndex(Database.Readings.MAP_Y))),
+                Integer.toString(mapReadings.getInt(mapReadings.getColumnIndex(Database.Readings.SIGNAL_STRENGTH))),
+                mapReadings.getString(mapReadings.getColumnIndex(Database.Readings.AP_NAME)),
+                mapReadings.getString(mapReadings.getColumnIndex(Database.Readings.MAC)),
+                Integer.toString(mapReadings.getInt(mapReadings.getColumnIndex(Database.Readings.UPDATE_STATUS)))
             });
-            file.write(row + "\n");
+            out.append(row);
+            out.append("\n");
         }
         mapReadings.close();
-        file.close();
-        Toast.makeText(this, "Wrote " + uri.getPath(), Toast.LENGTH_LONG).show();
+
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("message/rfc822");
+        intent.putExtra(Intent.EXTRA_SUBJECT, "WiFi Data for " + mapName);
+        intent.putExtra(Intent.EXTRA_TEXT, out.toString());
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[] {});
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     @Override
@@ -262,12 +262,18 @@ public class ViewMapActivity extends Activity {
     }
 
     private void onDelete(float x, float y) {
-        String[] mSelectionArgs = {
-                String.valueOf(x - 0.0001), String.valueOf(x + 0.0001),
-                String.valueOf(y - 0.0001), String.valueOf(y + 0.0001)
+        // Offset by epsilon to account for floating point weirdness
+        final double epsilon = 0.001;
+
+        final String[] mSelectionArgs = {
+            String.valueOf(x - epsilon), String.valueOf(x + epsilon),
+            String.valueOf(y - epsilon), String.valueOf(y + epsilon)
         };
 
-        getContentResolver().delete(DataProvider.READINGS_URI,
-                "mapx>? and mapx<? and mapy>? and mapy<?", mSelectionArgs);
+        final String sql = String.format("%s>? and %s<? and %s>? and %s<?",
+            Database.Readings.MAP_X, Database.Readings.MAP_X,
+            Database.Readings.MAP_Y, Database.Readings.MAP_Y
+        );
+        getContentResolver().delete(DataProvider.READINGS_URI, sql, mSelectionArgs);
     }
 }

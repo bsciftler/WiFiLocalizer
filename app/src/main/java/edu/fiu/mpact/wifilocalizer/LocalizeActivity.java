@@ -1,6 +1,5 @@
 package edu.fiu.mpact.wifilocalizer;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -11,6 +10,7 @@ import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,7 +36,7 @@ import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
 
-public class LocalizeActivity extends Activity {
+public class LocalizeActivity extends AppCompatActivity {
     private long mMapId;
     private RelativeLayout mRelative;
     private PhotoViewAttacher mAttacher;
