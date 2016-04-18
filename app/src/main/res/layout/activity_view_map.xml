@@ -20,6 +20,7 @@
 
     <TextView
         android:id="@+id/marker_location_text"
+        android:text="@string/train_point_data_info"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_gravity="center_horizontal"

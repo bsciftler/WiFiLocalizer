@@ -14,6 +14,7 @@
         wifilocalizer:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_export_data"
+        android:icon="@android:drawable/ic_menu_share"
         android:title="@string/action_export_data"
         wifilocalizer:showAsAction="ifRoom" />
 
