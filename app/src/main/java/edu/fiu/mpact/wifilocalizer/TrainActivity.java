@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.media.audiofx.BassBoost;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
@@ -55,32 +54,32 @@ public class TrainActivity extends AppCompatActivity {
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-//            if (!mSaveScanData) return;
+            //            if (!mSaveScanData) return;
 
-//            if (mPineappleData != null)
-//                Toast.makeText(getApplicationContext(), "got " + mPineappleData.count + " " +
-//                    "results", Toast.LENGTH_SHORT).show();
-//            else
-//                Toast.makeText(getApplicationContext(), "got no pineapple results", Toast
-//                    .LENGTH_SHORT).show();
+            //            if (mPineappleData != null)
+            //                Toast.makeText(getApplicationContext(), "got " + mPineappleData.count + " " +
+            //                    "results", Toast.LENGTH_SHORT).show();
+            //            else
+            //                Toast.makeText(getApplicationContext(), "got no pineapple results", Toast
+            //                    .LENGTH_SHORT).show();
             System.out.println(mWifiManager.getScanResults());
             final int newRows = mDataBuffer.stashScanResults(mWifiManager.getScanResults(),
                 mImgLocation, mPineappleData);
             final boolean keepCapturing = updateProgressDialog(newRows);
             mWifiManager.startScan();
 
-//            if (keepCapturing) {
-//                mWifiManager.startScan();
-//                sendPineappleGet();
-//                return;
-//            }
-//
-//            resetProgressDialog();
-//            mSaveScanData = false;
-//            mPrgBarDialog.cancel();
-//            mDataBuffer.saveStash();
-//
-//            addPermanentMarker();
+            //            if (keepCapturing) {
+            //                mWifiManager.startScan();
+            //                sendPineappleGet();
+            //                return;
+            //            }
+            //
+            //            resetProgressDialog();
+            //            mSaveScanData = false;
+            //            mPrgBarDialog.cancel();
+            //            mDataBuffer.saveStash();
+            //
+            //            addPermanentMarker();
         }
     };
 
