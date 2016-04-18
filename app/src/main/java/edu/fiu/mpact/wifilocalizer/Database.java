@@ -3,8 +3,6 @@ package edu.fiu.mpact.wifilocalizer;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.MatrixCursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
@@ -20,9 +18,9 @@ public class Database extends SQLiteOpenHelper {
     protected static final String DB_NAME = "LocalizationData.db";
     protected static final int DB_VERSION = 5;
     public static final String[] TABLES = {Maps.TABLE_NAME, Readings.TABLE_NAME, Meta.TABLE_NAME,
-            Probes.TABLE_NAME};
+        Probes.TABLE_NAME};
     private static final String[] SCHEMAS = {Maps.SCHEMA, Readings.SCHEMA, Meta.SCHEMA, Probes
-            .SCHEMA};
+        .SCHEMA};
 
 
     public static class Maps {
@@ -36,7 +34,7 @@ public class Database extends SQLiteOpenHelper {
         private static final String DATE_ADDED_COLUMN = DATE_ADDED + " INTEGER NOT NULL";
         private static final String DATA_COLUMN = DATA + " TEXT NOT NULL";
         private static final String SCHEMA = generateSchema(TABLE_NAME, ID_COLUMN, NAME_COLUMN,
-                DATE_ADDED_COLUMN, DATA_COLUMN);
+            DATE_ADDED_COLUMN, DATA_COLUMN);
     }
 
 
@@ -71,11 +69,11 @@ public class Database extends SQLiteOpenHelper {
         private static final String MAP_ID_COLUMN = MAP_ID + " INTEGER NOT NULL";
         private static final String UPDATE_STATUS_COLUMN = UPDATE_STATUS + " INTEGER NOT NULL";
         private static final String MAP_ID_FOREIGN_COLUMN = generateForeignKeyColumn(MAP_ID, Maps
-                .TABLE_NAME, Maps.ID);
+            .TABLE_NAME, Maps.ID);
         private static final String SCHEMA = generateSchema(TABLE_NAME, ID_COLUMN,
-                DATETIME_COLUMN, MAP_X_COLUMN, MAP_Y_COLUMN, SIGNAL_STRENGTH_COLUMN,
-                AP_NAME_COLUMN, MAC_COLUMN, MAP_ID_COLUMN, UPDATE_STATUS_COLUMN,
-                MAP_ID_FOREIGN_COLUMN);
+            DATETIME_COLUMN, MAP_X_COLUMN, MAP_Y_COLUMN, SIGNAL_STRENGTH_COLUMN,
+            AP_NAME_COLUMN, MAC_COLUMN, MAP_ID_COLUMN, UPDATE_STATUS_COLUMN,
+            MAP_ID_FOREIGN_COLUMN);
     }
 
 
@@ -94,10 +92,10 @@ public class Database extends SQLiteOpenHelper {
         private static final String FINGERPRINT_COLUMN = FINGERPRINT + " TEXT";
         private static final String MAP_ID_COLUMN = MAP_ID + " INTEGER NOT NULL";
         private static final String MAP_ID_FOREIGN_COLUMN = generateForeignKeyColumn(MAP_ID, Maps
-                .TABLE_NAME, Maps.ID);
+            .TABLE_NAME, Maps.ID);
         private static final String SCHEMA = generateSchema(TABLE_NAME, ID_COLUMN,
-                MAP_X_COLUMN, MAP_Y_COLUMN, SIGNAL_STRENGTH_COLUMN,
-                FINGERPRINT_COLUMN, MAP_ID_COLUMN, MAP_ID_FOREIGN_COLUMN);
+            MAP_X_COLUMN, MAP_Y_COLUMN, SIGNAL_STRENGTH_COLUMN,
+            FINGERPRINT_COLUMN, MAP_ID_COLUMN, MAP_ID_FOREIGN_COLUMN);
     }
 
     // ***********************************************************************
@@ -153,8 +151,8 @@ public class Database extends SQLiteOpenHelper {
     }
 
     public Cursor getNonUploadedReadings() {
-        return getReadableDatabase().query(Readings.TABLE_NAME, null, "up_status=?",
-                new String[] {"0"}, null, null, null);
+        return getReadableDatabase().query(Readings.TABLE_NAME, null, Readings.UPDATE_STATUS + "=?",
+            new String[] {"0"}, null, null, null);
     }
 
     public String readingsCursorToJson(Cursor cursor) {
@@ -183,55 +181,9 @@ public class Database extends SQLiteOpenHelper {
         Log.d("updateSyncStatus", "id = " + id + " status = " + status);
 
         final ContentValues values = new ContentValues();
-        values.put("up_status", status);
+        values.put(Readings.UPDATE_STATUS, status);
 
         getWritableDatabase().update(Readings.TABLE_NAME, values, Readings.ID_COLUMN + "=?",
-                new String[] {id});
-    }
-
-    // todo refactor
-    public ArrayList<Cursor> getData(String maxQuery) {
-        SQLiteDatabase sqlDB = getWritableDatabase();
-        String[] columns = new String[] {"mesage"};
-        //an array list of cursor to save three cursors ec_1 has results from the query
-        //other cursor stores error message if any errors are triggered
-        ArrayList<Cursor> alc = new ArrayList<>(2);
-        MatrixCursor Cursor2 = new MatrixCursor(columns);
-        alc.add(null);
-        alc.add(null);
-
-        try {
-            //execute the query results will be save in Cursor c
-            Cursor c = sqlDB.rawQuery(maxQuery, null);
-
-            //add value to cursor2
-            Cursor2.addRow(new Object[] {"Success"});
-
-            alc.set(1, Cursor2);
-            if (null != c && c.getCount() > 0) {
-
-                alc.set(0, c);
-                c.moveToFirst();
-
-                return alc;
-            }
-            return alc;
-        } catch (SQLException sqlEx) {
-            Log.d("printing exception", sqlEx.getMessage());
-            //if any exceptions are triggered save the error message to cursor an return the
-            // arraylist
-            Cursor2.addRow(new Object[] {"" + sqlEx.getMessage()});
-            alc.set(1, Cursor2);
-            return alc;
-        } catch (Exception ex) {
-
-            Log.d("printing exception", ex.getMessage());
-
-            //if any exceptions are triggered save the error message to cursor an return the
-            // arraylist
-            Cursor2.addRow(new Object[] {"" + ex.getMessage()});
-            alc.set(1, Cursor2);
-            return alc;
-        }
+            new String[] {id});
     }
 }
