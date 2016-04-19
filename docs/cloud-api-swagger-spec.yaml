@@ -1,0 +1,342 @@
+swagger: '2.0'
+info:
+  title: WiFi Localizer API
+  description: Synchronize local app data to the FIU cloud server
+  version: "1.0.0"
+  contact:
+    name: Oliver Chang
+    url: https://fiu.edu
+    email: o.chang@umiami.edu
+host: 192.168.1.123
+schemes:
+  - http
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /maps:
+    get:
+      summary: Get a map by ID or exact name
+      parameters:
+        - name: id
+          in: query
+          description: Cloud Map ID
+          required: false
+          type: integer
+        - name: name
+          in: query
+          description: Exact name of Map
+          required: false
+          type: string
+      tags:
+        - WifiMap
+      responses:
+        200:
+          description: Maps matching the query
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/WifiMap"
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+    post:
+      summary: Add a new map name
+      parameters:
+        - name: map_name
+          in: query
+          required: true
+          type: string
+      tags:
+        - WifiMap
+      responses:
+        200:
+          description: Newly inserted map
+          schema:
+            $ref: "#/definitions/WifiMap"
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError' 
+      
+  /maps/search:
+    get:
+      summary: Search for a map given an idea of its name
+      parameters:
+        - name: keywords
+          in: query
+          description: case-insensitive keywords
+          required: true
+          type: string
+      tags:
+        - WifiMap
+      responses:
+        200:
+          description: |
+            List of maps fitting the keywords. Will try to return something,
+            even if very inaccurate match. Results will be in sorted order,
+            best match descending, i.e. best match first.
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/WifiMap"
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+  /maps/_all:
+    get:
+      summary: Get all of the maps the cloud server knows about
+      tags:
+        - WifiMap
+      responses:
+        200:
+          description: List of all available maps
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/WifiMap"
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+  /bitmap:
+    get:
+      summary: Get a base64 encoded string of a map's bitmap image
+      parameters:
+        - name: id
+          in: query
+          description: Valid Map ID
+          required: true
+          type: integer
+      tags:
+        - WifiBitmap
+      responses:
+        200:
+          description: Bitmap for ID
+          schema:
+            $ref: "#/definitions/WifiBitmap"
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+    post:
+      summary: Add a new bitmap for an image. There can only be at max one bitmap per image.
+      parameters:
+        - name: data
+          in: body
+          schema:
+            $ref: '#/definitions/WifiBitmap'
+      tags:
+        - WifiBitmap
+      responses:
+        200:
+          description: Inserted Bitmap 
+          schema:
+            $ref: "#/definitions/WifiBitmap"
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+  /access_points:
+    get:
+      summary: Get a listing of all available access points for a map
+      parameters:
+        - name: map_id
+          in: query
+          description: Valid Map ID
+          required: true
+          type: integer
+      tags:
+        - AccessPoint
+      responses:
+        200:
+          description: All access points
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/AccessPoint"
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+  /readings:
+    get:
+      summary: Get a list of readings for a map ID
+      parameters:
+        - name: map_id
+          in: query
+          type: integer
+          required: true
+          description: Map ID
+        - name: data_since
+          in: query
+          type: string
+          format: dateTime
+          required: false
+          description: ISO-formatted date string to get readings sent to cloud after date
+      tags:
+        - Reading
+      responses:
+        200:
+          description: List of readings
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Reading'
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+    post:
+      summary: Insert readings
+      parameters:
+        - name: data
+          in: body
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Reading'
+          required: true
+          description: Readings to append
+      tags:
+        - Reading
+      responses:
+        200:
+          description: "Two-tuple of (inserted, failed)" 
+          schema:
+            type: array
+            items:
+             type: integer
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+  /probes:
+    get:
+      summary: Get a list of probe requests for a map ID
+      parameters:
+        - name: map_id
+          in: query
+          type: integer
+          required: true
+          description: Map ID
+        - name: data_since
+          in: query
+          type: string
+          format: dateTime
+          required: false
+          description: ISO-formatted date string to get probes sent to cloud after date
+      tags:
+        - ProbeRequest
+      responses:
+        200:
+          description: List of probe requests
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ProbeRequest'
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+    post:
+      summary: Insert probe requests
+      parameters:
+        - name: data
+          in: body
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ProbeRequest'
+          required: true
+          description: Probe requests to append
+      tags:
+        - ProbeRequest
+      responses:
+        200:
+          description: "Two-tuple of (inserted, failed)" 
+          schema:
+            type: array
+            items:
+             type: integer
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/ApiError'
+definitions:
+  WifiMap:
+    type: object
+    properties:
+      map_id:
+        type: integer
+        description: global unique id of a specific map
+      name:
+        type: string
+        description: human readable name of the map
+  WifiBitmap:
+    type: object
+    properties:
+      map_id:
+        type: integer
+        description: global unique id of a specific map
+      data:
+        type: string
+        description: base64 encoding of an ImageView compatible image e.g. jpg
+  AccessPoint:
+    type: object
+    properties:
+      mac_address:
+        type: string
+        description: Media Access Control (MAC) Address of an access point
+  Reading:
+    type: object
+    properties:
+      timestamp:
+        type: string
+        format: dateTime
+        description: Time of capture
+      map_x:
+        type: number
+        format: double
+        description: x-coordinate in pixels on corresponding bitmap
+      map_y:
+        type: number
+        format: double
+        description: y-coordinate in pixels on corresponding bitman
+      rssi:
+        type: integer
+        description: received signal strength intensity of reading
+      mac_address:
+        type: string
+        description: Media Access Control (MAC) address of reading
+      map_id:
+        type: integer
+        description: valid global unique id of a specific map
+  ProbeRequest:
+    type: object
+    properties:
+      map_x:
+        type: number
+        format: double
+        description: x-coordinate in pixels on corresponding bitmap
+      map_y:
+        type: number
+        format: double
+        description: y-coordinate in pixels on corresponding bitman
+      fingerprint:
+        type: string
+        description: device Media Access Control address
+      rssi:
+        type: integer
+        description: received signal strength intensity of probe request
+      map_id:
+        type: integer
+        description: valid global unique id of a specific map
+  ApiError:
+    type: object
+    properties:
+      message:
+        type: string
+        description: human readable description of what went wrong

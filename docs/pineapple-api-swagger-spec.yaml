@@ -1,0 +1,33 @@
+swagger: '2.0'
+
+info:
+  version: "1.0.0"
+  title: Pineapple API
+
+host: 172.16.42.1:8000
+
+paths:
+  /probes:
+    get:
+      summary: |
+        Gets probes since last time endpoint was hit. Note, since the 
+        Pineapple is not connected to the internet, any timestamp-based 
+        code or data is not reliable since the clock drifts a lot.
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: Number of probes
+              data:
+                $ref:  '#/definitions/Probe'
+              
+definitions:
+  Probe:
+    type: object
+    properties:
+      fingerprint:
+        type: string

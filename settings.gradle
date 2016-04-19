@@ -1,1 +1,3 @@
 include ':app', ':server'
+include ':libs:android-client'
+include ':libs:pineapple-client'
