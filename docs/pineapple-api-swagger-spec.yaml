@@ -23,7 +23,9 @@ paths:
                 type: integer
                 description: Number of probes
               data:
-                $ref:  '#/definitions/Probe'
+                type: array
+                items:
+                  $ref:  '#/definitions/Probe'
               
 definitions:
   Probe:
