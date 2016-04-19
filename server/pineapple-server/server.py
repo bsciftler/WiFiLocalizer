@@ -9,7 +9,7 @@ from Queue import Queue, Empty
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 
 path = '/tmp/pineap.log'
-tailq = Queue(maxsize=30)
+tailq = Queue(maxsize=999)
 
 
 class RequestHandler(BaseHTTPRequestHandler):
