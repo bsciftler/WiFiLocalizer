@@ -5,22 +5,16 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.github.amlcurran.showcaseview.ShowcaseView;
 
 import java.math.BigInteger;
-import java.util.HashSet;
-import java.util.Set;
 
 import uk.co.senab.photoview.PhotoMarker;
 
@@ -213,25 +207,5 @@ public class Utils {
 
     public static PhotoMarker createNewMarker(Context context, RelativeLayout wrapper, float x, float y) {
         return createNewMarker(context, wrapper, x, y, R.drawable.x);
-    }
-
-    @NonNull
-    public static Set<String> gatherMetaMacs(ContentResolver cr) {
-        final Set<String> macs = new HashSet<>();
-
-        final Cursor cursor = cr.query(DataProvider.META_URI, null, null, null, null);
-        if (cursor == null) return macs;
-        final int macColumn = cursor.getColumnIndex(Database.Meta.MAC);
-
-        while (cursor.moveToNext()) {
-            if (cursor.isNull(macColumn)) {
-                continue;
-            }
-
-            macs.add(cursor.getString(macColumn));
-        }
-        cursor.close();
-
-        return macs;
     }
 }

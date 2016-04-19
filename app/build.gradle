@@ -53,4 +53,5 @@ dependencies {
     compile 'com.google.guava:guava:18.0'
     compile 'me.villani.lorenzo.android:android-cropimage:1.1.2'
     compile 'com.github.amlcurran.showcaseview:library:5.4.3'
+    compile 'com.mashape.unirest:unirest-java:1.4.9'
 }
