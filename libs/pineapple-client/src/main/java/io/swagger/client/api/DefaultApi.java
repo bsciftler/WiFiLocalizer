@@ -8,8 +8,7 @@ import io.swagger.client.model.*;
 
 import java.util.*;
 
-import io.swagger.client.model.AccessPoint;
-import io.swagger.client.model.ApiError;
+import io.swagger.client.model.InlineResponse200;
 
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 
@@ -17,8 +16,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.io.File;
 
-public class AccessPointApi {
-  String basePath = "http://192.168.1.123/v1";
+public class DefaultApi {
+  String basePath = "https://172.16.42.1:8000";
   ApiInvoker apiInvoker = ApiInvoker.getInstance();
 
   public void addHeader(String key, String value) {
@@ -38,22 +37,16 @@ public class AccessPointApi {
   }
 
   /**
-   * Get a listing of all available access points for a map
+   * Gets probes since last time endpoint was hit. Note, since the \nPineapple is not connected to the internet, any timestamp-based \ncode or data is not reliable since the clock drifts a lot.\n
    * 
-   * @param mapId Valid Map ID
-   * @return List<AccessPoint>
+   * @return InlineResponse200
    */
-  public List<AccessPoint>  accessPointsGet (Integer mapId) throws ApiException {
+  public InlineResponse200  probesGet () throws ApiException {
     Object localVarPostBody = null;
-    
-    // verify the required parameter 'mapId' is set
-    if (mapId == null) {
-       throw new ApiException(400, "Missing the required parameter 'mapId' when calling accessPointsGet");
-    }
     
 
     // create path and map variables
-    String localVarPath = "/access_points".replaceAll("\\{format\\}","json");
+    String localVarPath = "/probes".replaceAll("\\{format\\}","json");
 
     // query params
     List<Pair> localVarQueryParams = new ArrayList<Pair>();
@@ -62,7 +55,6 @@ public class AccessPointApi {
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
 
-    localVarQueryParams.addAll(ApiInvoker.parameterToPairs("", "map_id", mapId));
 
 
     String[] localVarContentTypes = {
@@ -83,7 +75,7 @@ public class AccessPointApi {
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
       if(localVarResponse != null){
-        return (List<AccessPoint>) ApiInvoker.deserialize(localVarResponse, "array", AccessPoint.class);
+        return (InlineResponse200) ApiInvoker.deserialize(localVarResponse, "", InlineResponse200.class);
       }
       else {
         return null;

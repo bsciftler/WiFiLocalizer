@@ -89,7 +89,3 @@ task sourcesJar(type: Jar) {
 artifacts {
     archives sourcesJar
 }
-
-configurations {
-    all*.exclude module: 'httpclient'
-}

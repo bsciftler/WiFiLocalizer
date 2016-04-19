@@ -35,28 +35,12 @@ public class JsonUtil {
   public static Type getListTypeForDeserialization(Class cls) {
     String className = cls.getSimpleName();
     
-    if ("AccessPoint".equalsIgnoreCase(className)) {
-      return new TypeToken<List<AccessPoint>>(){}.getType();
+    if ("InlineResponse200".equalsIgnoreCase(className)) {
+      return new TypeToken<List<InlineResponse200>>(){}.getType();
     }
     
-    if ("ApiError".equalsIgnoreCase(className)) {
-      return new TypeToken<List<ApiError>>(){}.getType();
-    }
-    
-    if ("ProbeRequest".equalsIgnoreCase(className)) {
-      return new TypeToken<List<ProbeRequest>>(){}.getType();
-    }
-    
-    if ("Reading".equalsIgnoreCase(className)) {
-      return new TypeToken<List<Reading>>(){}.getType();
-    }
-    
-    if ("WifiBitmap".equalsIgnoreCase(className)) {
-      return new TypeToken<List<WifiBitmap>>(){}.getType();
-    }
-    
-    if ("WifiMap".equalsIgnoreCase(className)) {
-      return new TypeToken<List<WifiMap>>(){}.getType();
+    if ("Probe".equalsIgnoreCase(className)) {
+      return new TypeToken<List<Probe>>(){}.getType();
     }
     
     return new TypeToken<List<Object>>(){}.getType();
@@ -65,28 +49,12 @@ public class JsonUtil {
   public static Type getTypeForDeserialization(Class cls) {
     String className = cls.getSimpleName();
     
-    if ("AccessPoint".equalsIgnoreCase(className)) {
-      return new TypeToken<AccessPoint>(){}.getType();
+    if ("InlineResponse200".equalsIgnoreCase(className)) {
+      return new TypeToken<InlineResponse200>(){}.getType();
     }
     
-    if ("ApiError".equalsIgnoreCase(className)) {
-      return new TypeToken<ApiError>(){}.getType();
-    }
-    
-    if ("ProbeRequest".equalsIgnoreCase(className)) {
-      return new TypeToken<ProbeRequest>(){}.getType();
-    }
-    
-    if ("Reading".equalsIgnoreCase(className)) {
-      return new TypeToken<Reading>(){}.getType();
-    }
-    
-    if ("WifiBitmap".equalsIgnoreCase(className)) {
-      return new TypeToken<WifiBitmap>(){}.getType();
-    }
-    
-    if ("WifiMap".equalsIgnoreCase(className)) {
-      return new TypeToken<WifiMap>(){}.getType();
+    if ("Probe".equalsIgnoreCase(className)) {
+      return new TypeToken<Probe>(){}.getType();
     }
     
     return new TypeToken<Object>(){}.getType();
