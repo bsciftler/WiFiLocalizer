@@ -47,7 +47,7 @@
     <string name="title_activity_settings">Settings</string>
 
     <string name="dialog_scanning_title">Scanning Wi-Fi Access Points&#8230;</string>
-    <string name="dialog_save">Save</string>
+    <string name="dialog_done">Done</string>
     <string name="dialog_scanning_description">Please do not move device&#8230;</string>
     <string name="dialog_scanning_continuous_message">Have %d readings&#8230;</string>
 

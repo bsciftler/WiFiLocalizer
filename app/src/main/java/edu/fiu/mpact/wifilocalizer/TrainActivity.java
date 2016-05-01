@@ -284,11 +284,10 @@ public class TrainActivity extends AppCompatActivity {
         case CONTINUOUS:
             mPrgBarDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             mPrgBarDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string
-                .dialog_save), new DialogInterface.OnClickListener() {
+                .dialog_done), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     mDataBuffer.saveStash();
-                    mDataBuffer.saveTrainingToDatabase(getContentResolver());
 
                     addPermanentMarker();
                     mSaveScanData = false;
