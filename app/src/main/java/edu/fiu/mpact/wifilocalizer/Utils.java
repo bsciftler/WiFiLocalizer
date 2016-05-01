@@ -140,30 +140,6 @@ public class Utils {
         }
     }
 
-
-    public class PineappleResponse {
-        public int count = 0;
-        public String[] results;
-
-        PineappleResponse() {
-        }
-
-        public String[] parse(String s) {
-            final String[] split = s.split(" ", 2);
-            return new String[] {split[0], split[1]};
-        }
-
-        public String[][] getData() {
-            String[][] ret = new String[results.length][];
-
-            for (int i = 0; i < ret.length; i++) {
-                ret[i] = parse(results[i]);
-            }
-
-            return ret;
-        }
-    }
-
     // ************************************************************************
 
     /**
