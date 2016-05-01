@@ -14,7 +14,7 @@ tailq = Queue(maxsize=999)
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path != '/':
+        if self.path != '/probes':
             # send an HTTP 204, NO CONTENT
             self.send_response(204)
             return
