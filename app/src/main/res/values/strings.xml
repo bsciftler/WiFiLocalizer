@@ -92,5 +92,20 @@
     <string name="pref_data_header">Training Options</string>
     <string name="pref_pineapple_description">The WiFi Pineapple is a piece of third-party wireless network hardware that can be used to gather 802.11 Probe Requests. For more information, visit https://www.wifipineapple.com/.</string>
     <string name="pref_pineapple_enabled">Enable WiFi Pineapple functionality</string>
+    <string name="hint_train_title">Instructions for training</string>
+    <string name="hint_localize_title">Instructions for localization</string>
+    <string name="menu_localize_help">Help</string>
+    <string name="dialog_localize_help_title">Localization Modes</string>
+    <string name="dialog_localize_help_message">
+        * Local\n
+        Use local database and choose best 3 points with global minimal euclidean distance.\n
+        * Local2\n
+        Alternative implementation of Local algorithm better suited for large sample sets.\n
+        * File\n
+        (DEBUG) Use data held in R.raw.readings instead of local database.\n
+        * File2\n
+        (DEBUG) Use alternative implementation on data held in R.raw.readings instead of local database.\n
+        \nFor more information, consult the Javadoc in LocalizationEuclideanDistance.java
+    </string>
 
 </resources>

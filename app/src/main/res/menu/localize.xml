@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools"
+      xmlns:wifilocalizer="http://schemas.android.com/apk/res-auto"
+      tools:context="edu.fiu.mpact.wifilocalizer.LocalizeActivity">
+
+    <item
+        android:id="@+id/localize_help"
+        android:icon="@android:drawable/ic_menu_help"
+        android:title="@string/menu_localize_help"
+        wifilocalizer:showAsAction="always" />
+</menu>

@@ -12,6 +12,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -143,6 +144,7 @@ public class LocalizeActivity extends AppCompatActivity {
 
         mAlgo.setup(mCachedMapData, mFileData, LocalizeActivity.this);
 
+    // ***********************************************************************
 
         ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
             .withMaterialShowcase()
@@ -151,7 +153,30 @@ public class LocalizeActivity extends AppCompatActivity {
             .setContentText(R.string.hint_localize)
             .hideOnTouchOutside();
         Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_LOCALIZE_HINT, builder);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.localize, menu);
+        return true;
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.localize_help:
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.dialog_localize_help_title)
+                .setMessage(R.string.dialog_localize_help_message)
+                .setCancelable(true)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+    // ***********************************************************************
 
     @Override
     protected void onDestroy() {
