@@ -271,6 +271,25 @@ public class DataProvider extends ContentProvider {
 
             getContext().getContentResolver().notifyChange(uri, null);
             return rows;
+        case PROBES:
+            rows = 0;
+            db.beginTransaction();
+
+            try {
+                for (ContentValues value : values) {
+                    final long rowId = db.insertOrThrow(Database.Probes.TABLE_NAME, null, value);
+                    if (rowId != -1) rows++;
+                }
+
+                db.setTransactionSuccessful();
+            } catch (SQLException e) {
+                Log.w("bulkInsert", "failed to insert row at row #" + rows);
+            } finally {
+                db.endTransaction();
+            }
+
+            getContext().getContentResolver().notifyChange(uri, null);
+            return rows;
         default:
             return super.bulkInsert(uri, values);
         }
