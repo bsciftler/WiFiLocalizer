@@ -221,10 +221,12 @@ public class ApiInvoker {
           return json;
       }
       else {
-        return JsonUtil.deserializeToObject(json, cls);
+        return json;
+//        return JsonUtil.deserializeToObject(json, cls);
       }
     }
     catch (JsonParseException e) {
+      e.printStackTrace();
       throw new ApiException(500, e.getMessage());
     }
   }
