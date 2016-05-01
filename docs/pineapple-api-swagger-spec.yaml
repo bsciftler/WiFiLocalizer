@@ -3,7 +3,8 @@ swagger: '2.0'
 info:
   version: "1.0.0"
   title: Pineapple API
-
+schemes:
+  - http
 host: 172.16.42.1:8000
 
 paths:
@@ -29,7 +30,4 @@ paths:
               
 definitions:
   Probe:
-    type: object
-    properties:
-      fingerprint:
-        type: string
+    type: string
