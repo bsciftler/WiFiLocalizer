@@ -92,6 +92,12 @@
     <string name="pref_data_header">Training Options</string>
     <string name="pref_pineapple_description">The WiFi Pineapple is a piece of third-party wireless network hardware that can be used to gather 802.11 Probe Requests. For more information, visit https://www.wifipineapple.com/.</string>
     <string name="pref_pineapple_enabled">Enable WiFi Pineapple functionality</string>
+    <string name="btn_localize_local">Local</string>
+    <string name="description_localize_map">Map to localize against</string>
+    <string name="btn_localize_local2">Local2</string>
+    <string name="btn_localize_file">File</string>
+    <string name="btn_localize_file2">File2</string>
+    <string name="btn_auto_localize">Auto-Localize</string>
     <string name="hint_train_title">Instructions for training</string>
     <string name="hint_localize_title">Instructions for localization</string>
     <string name="menu_localize_help">Help</string>

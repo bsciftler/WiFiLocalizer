@@ -13,7 +13,7 @@
             android:id="@+id/image_map"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="Map!" />
+            android:contentDescription="@string/description_localize_map" />
 
     </RelativeLayout>
 
@@ -23,7 +23,7 @@
         android:layout_height="wrap_content">
 
         <RadioGroup
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
@@ -33,28 +33,28 @@
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:onClick="onClickedCheckBox"
-                android:text="Local" />
+                android:text="@string/btn_localize_local" />
 
             <RadioButton
                 android:id="@+id/rbLocal2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:onClick="onClickedCheckBox"
-                android:text="Local2" />
+                android:text="@string/btn_localize_local2" />
 
             <RadioButton
                 android:id="@+id/rbFile"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:onClick="onClickedCheckBox"
-                android:text="File" />
+                android:text="@string/btn_localize_file" />
 
             <RadioButton
                 android:id="@+id/rbFile2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:onClick="onClickedCheckBox"
-                android:text="File2" />
+                android:text="@string/btn_localize_file2" />
 
             <!--<RadioButton-->
             <!--android:layout_width="wrap_content"-->
@@ -99,21 +99,18 @@
             android:layout_weight="1"
             android:onClick="localizeNow"
             android:text="@string/btn_localize"
-            android:textSize="20dp" />
+            android:textSize="20sp" />
 
         <ToggleButton
             android:id="@+id/toggleButton"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:nestedScrollingEnabled="false"
             android:onClick="onToggleClickedAuto"
             android:singleLine="false"
-            android:text="Auto-Localize"
+            android:text="@string/btn_auto_localize"
             android:textOff="Auto-Localize Off"
             android:textOn="Auto-Localize On"
-            android:textSize="20dp" />
-
+            android:textSize="20sp" />
     </LinearLayout>
-
 </LinearLayout>

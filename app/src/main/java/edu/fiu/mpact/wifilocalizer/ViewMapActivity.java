@@ -77,6 +77,14 @@ public class ViewMapActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_map);
 
+        final ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
+            .withMaterialShowcase()
+            .setStyle(R.style.CustomShowcaseTheme2)
+            .setContentTitle("View Map details here")
+            .setContentText("Click on the train button to start a new training session")
+            .hideOnTouchOutside();
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_VIEW_HINT, builder);
+
         // Setup activity data
         mMapId = getIntent().getExtras().getLong(Utils.Constants.MAP_ID_EXTRA);
         mTextView = (TextView) findViewById(R.id.marker_location_text);
@@ -108,14 +116,6 @@ public class ViewMapActivity extends AppCompatActivity {
 
         // Set markers
         setupMarkers();
-
-        ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
-            .withMaterialShowcase()
-            .setStyle(R.style.CustomShowcaseTheme2)
-            .setContentTitle("View Map details here")
-            .setContentText("Click on the train button to start a new training session")
-            .hideOnTouchOutside();
-        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_VIEW_HINT, builder);
     }
 
     private void setupMarkers() {
@@ -176,7 +176,7 @@ public class ViewMapActivity extends AppCompatActivity {
         Intent intent;
 
         switch (item.getItemId()) {
-        case R.id.action_new_session:
+        case R.id.action_train:
             intent = new Intent(this, TrainActivity.class);
             intent.putExtra(Utils.Constants.MAP_ID_EXTRA, mMapId);
             startActivityForResult(intent, 1);

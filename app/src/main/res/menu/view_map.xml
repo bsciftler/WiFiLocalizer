@@ -7,11 +7,12 @@
         android:id="@+id/action_localize"
         android:icon="@android:drawable/ic_menu_mylocation"
         android:title="@string/action_localize"
-        wifilocalizer:showAsAction="ifRoom" />
+        wifilocalizer:showAsAction="always" />
     <item
-        android:id="@+id/action_new_session"
+        android:id="@+id/action_train"
+        android:icon="@android:drawable/ic_menu_add"
         android:title="@string/action_new_session"
-        wifilocalizer:showAsAction="ifRoom" />
+        wifilocalizer:showAsAction="always" />
     <item
         android:id="@+id/action_export_data"
         android:icon="@android:drawable/ic_menu_share"
