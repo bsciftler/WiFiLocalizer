@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -27,10 +29,6 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.List;
 
@@ -61,7 +59,7 @@ public class LocalizeActivity extends AppCompatActivity {
             if (!mScanRequested) return;
             if (mAutoLocalizeEnabled) mWifiManager.startScan();
 
-            List<ScanResult> results = mWifiManager.getScanResults();
+            final List<ScanResult> results = mWifiManager.getScanResults();
 
             switch (mLocalizationMode) {
             case R.id.rbLocal:
@@ -99,60 +97,63 @@ public class LocalizeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_localize);
 
+        final ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
+            .withMaterialShowcase()
+            .setStyle(R.style.CustomShowcaseTheme2)
+            .setContentTitle(R.string.hint_localize_title)
+            .setContentText(R.string.hint_localize)
+            .hideOnTouchOutside();
+        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_LOCALIZE_HINT, builder);
+
         mAlgo = new LocalizationEuclideanDistance();
         mMapId = getIntent().getExtras().getLong(Utils.Constants.MAP_ID_EXTRA);
         mRelative = (RelativeLayout) findViewById(R.id.image_map_container);
-        final ImageView mapImage = (ImageView) findViewById(R.id.image_map);
 
         // Check mMapId is valid
         final Cursor cursor = getContentResolver().query(
             ContentUris.withAppendedId(DataProvider.MAPS_URI, mMapId), null, null, null, null);
-        if (cursor == null) {
-            Toast.makeText(this, "Invalid mapId", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        } else if (!cursor.moveToFirst()) {
+        if (cursor == null || !cursor.moveToFirst()) {
             Toast.makeText(this, getResources().getText(R.string.toast_map_id_warning), Toast.LENGTH_LONG).show();
-            cursor.close();
+            if (cursor != null) cursor.close();
             finish();
             return;
         }
 
         // Get and display map image
         final Uri img = Uri.parse(cursor.getString(cursor.getColumnIndex(Database.Maps.DATA)));
-        cursor.close();
-        mapImage.setImageURI(img);
+        final String mapName = cursor.getString(cursor.getColumnIndex(Database.Maps.NAME));
+        final ImageView mapImage = (ImageView) findViewById(R.id.image_map);
+        if (mapImage != null) mapImage.setImageURI(img);
         mAttacher = new PhotoViewAttacher(mapImage, Utils.getImageSize(img, getApplicationContext()));
+        cursor.close();
+
+        // Try to change action bar title
+        final ActionBar ab = getSupportActionBar();
+        if (ab != null) ab.setTitle(mapName);
 
         // Add existing map data to the view
-        mCachedMapData = new LocalizationData(getContentResolver(), mMapId);
-        mAttacher.addData(mCachedMapData.generateMarkers(getApplicationContext(), mRelative));
+        //        mCachedMapData = new LocalizationData(getContentResolver(), mMapId);
+        //        mAttacher.addData(mCachedMapData.generateMarkers(getApplicationContext(), mRelative));
 
         // Setup WifiManager
-        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-        registerReceiver(mReceiver, filter);
+        //        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        //        IntentFilter filter = new IntentFilter();
+        //        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        //        registerReceiver(mReceiver, filter);
 
         // Load in data from alternative sources than the database
-        mFileData = new LocalizationData(getResources().openRawResource(R.raw.readings), mMapId);
-        getPoints();
+        //        mFileData = new LocalizationData(getResources().openRawResource(R.raw.readings), mMapId);
+        //        getPoints();
 
         sk = new PrivateKey(1024);
         pk = new PublicKey();
         Paillier.keyGen(sk, pk);
 
-        mAlgo.setup(mCachedMapData, mFileData, LocalizeActivity.this);
+        //        mAlgo.setup(mCachedMapData, mFileData, LocalizeActivity.this);
+    }
 
     // ***********************************************************************
 
-        ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
-            .withMaterialShowcase()
-            .setStyle(R.style.CustomShowcaseTheme2)
-            .setContentTitle("Instructions for localization")
-            .setContentText(R.string.hint_localize)
-            .hideOnTouchOutside();
-        Utils.showHelpOnFirstRun(this, Utils.Constants.PREF_LOCALIZE_HINT, builder);
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.localize, menu);
@@ -181,7 +182,11 @@ public class LocalizeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(mReceiver);
+        try {
+            unregisterReceiver(mReceiver);
+        } catch (RuntimeException e) {
+            // intentionally blank
+        }
     }
 
     public void onClickedCheckBox(View view) {
@@ -340,30 +345,30 @@ public class LocalizeActivity extends AppCompatActivity {
      * Download the server's copy of points.
      */
     public void getPoints() {
-        Unirest.post(Utils.Constants.POINTS_URL)
-            .header("accept", "application/json")
-            .asJsonAsync(new Callback<JsonNode>() {
-                public void failed(UnirestException e) {
-                    Toast.makeText(getApplicationContext(), "Couldn't get points", Toast.LENGTH_SHORT).show();
-                    Log.e("getPoints", "couldn't update; http code = " + e.getMessage());
-                }
-
-                public void completed(HttpResponse<JsonNode> response) {
-                    try {
-                        JSONArray arr = response.getBody().getArray();
-                        if (arr.length() != 0) {
-                            for (int i = 0; i < arr.length(); i++) {
-                                JSONObject obj = (JSONObject) arr.get(i);
-                                mAttacher.addData(Utils.createNewMarker(getApplicationContext(),
-                                    mRelative, (float) obj.getDouble("mapx"), (float) obj.getDouble("mapy"), R.drawable.grey_x));
-                            }
-                        }
-                    } catch (JSONException e) {
-                        Log.w("getPoints", e);
-                    }
-                }
-
-                public void cancelled() {}
-            });
+        //        Unirest.post(Utils.Constants.POINTS_URL)
+        //            .header("accept", "application/json")
+        //            .asJsonAsync(new Callback<JsonNode>() {
+        //                public void failed(UnirestException e) {
+        //                    Toast.makeText(getApplicationContext(), "Couldn't get points", Toast.LENGTH_SHORT).show();
+        //                    Log.e("getPoints", "couldn't update; http code = " + e.getMessage());
+        //                }
+        //
+        //                public void completed(HttpResponse<JsonNode> response) {
+        //                    try {
+        //                        JSONArray arr = response.getBody().getArray();
+        //                        if (arr.length() != 0) {
+        //                            for (int i = 0; i < arr.length(); i++) {
+        //                                JSONObject obj = (JSONObject) arr.get(i);
+        //                                mAttacher.addData(Utils.createNewMarker(getApplicationContext(),
+        //                                    mRelative, (float) obj.getDouble("mapx"), (float) obj.getDouble("mapy"), R.drawable.grey_x));
+        //                            }
+        //                        }
+        //                    } catch (JSONException e) {
+        //                        Log.w("getPoints", e);
+        //                    }
+        //                }
+        //
+        //                public void cancelled() {}
+        //            });
     }
 }
