@@ -4,7 +4,9 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Pair;
@@ -14,32 +16,32 @@ import android.widget.Toast;
 
 import com.github.amlcurran.showcaseview.ShowcaseView;
 import com.google.common.collect.ImmutableList;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import io.swagger.client.ApiExceptionAndroid;
+import io.swagger.client.api.AccessPointApi;
+import io.swagger.client.api.ReadingApi;
+import io.swagger.client.model.AccessPoint;
+import io.swagger.client.model.Reading;
+import uk.co.senab.photoview.PhotoMarker;
 
 
 public class MainActivity extends AppCompatActivity {
     private Database mDb;
     private ProgressDialog mDialog;
+    private AccessPointApi mApApi;
+    private ReadingApi mReadingApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        mDialog = new ProgressDialog(this);
-        mDialog.setCancelable(false);
-
-        mDb = new Database(this);
 
         ShowcaseView.Builder builder = new ShowcaseView.Builder(this)
             .withMaterialShowcase()
@@ -51,6 +53,14 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize to EC maps if there are no maps
         if (noMaps()) loadDefaultMaps();
+
+        mDialog = new ProgressDialog(this);
+        mDialog.setCancelable(false);
+
+        mDb = new Database(this);
+
+        mApApi = new AccessPointApi();
+        mReadingApi = new ReadingApi();
     }
 
     @Override
@@ -89,48 +99,38 @@ public class MainActivity extends AppCompatActivity {
         mDialog.setMessage(getString(R.string.retrieve_in_progress));
         mDialog.show();
 
-        Unirest.post(Utils.Constants.METADATA_URL)
-            .header("accept", "application/json")
-            .asJsonAsync(new Callback<JsonNode>() {
-                public void failed(UnirestException e) {
-                    mDialog.hide();
-                    Toast.makeText(getApplicationContext(), "Couldn't update metadata", Toast.LENGTH_SHORT).show();
-                    Log.e("metadataUpdate", "couldn't update; http code = " + e.getMessage());
-                }
-
-                public void completed(HttpResponse<JsonNode> response) {
-                    mDialog.hide();
-                    updateSQLite(response.getBody().getArray());
-                }
-
-                public void cancelled() {}
-            });
+        new MetadataTask().execute();
     }
 
-    /**
-     * Update metadata database with new mac addresses.
-     *
-     * @param arr a valid JSON array
-     */
-    public void updateSQLite(JSONArray arr) {
-        final ArrayList<ContentValues> toInsert = new ArrayList<>();
+    class MetadataTask extends AsyncTask<Void, Void, List<AccessPoint>> {
+        protected List<AccessPoint> doInBackground(Void... nothing) {
+            try {
+                return mApApi.accessPointsGet(-1);
+            } catch (ApiExceptionAndroid apiExceptionAndroid) {
+                apiExceptionAndroid.printStackTrace();
+                return null;
+            }
+        }
 
-        try {
-            for (int i = 0; i < arr.length(); i++) {
-                JSONObject obj = (JSONObject) arr.get(i);
+        /**
+         * Update metadata database with new mac addresses.
+         */
+        protected void onPostExecute(@Nullable List<AccessPoint> data) {
+            if (data == null) {
+                Log.e("onPostExecute", "got null data");
+                return;
+            }
 
-                ContentValues cv = new ContentValues();
-                cv.put("mac", obj.get("mac").toString());
-
-                toInsert.add(cv);
+            final List<ContentValues> toInsert = new ArrayList<>();
+            for (AccessPoint ap : data) {
+                final ContentValues cv = new ContentValues();
+                cv.put("mac", ap.getMacAddress());
             }
 
             if (toInsert.isEmpty()) return;
             getContentResolver().delete(DataProvider.META_URI, null, null);
             getContentResolver().bulkInsert(DataProvider.META_URI,
-                toInsert.toArray(new ContentValues[arr.length()]));
-        } catch (JSONException e) {
-            Log.e("metadataUpdate", "malformed JSON");
+                toInsert.toArray(new ContentValues[toInsert.size()]));
         }
     }
 
@@ -139,49 +139,46 @@ public class MainActivity extends AppCompatActivity {
      * the readings returned in the response as uploaded.
      */
     private void syncDatabase() {
-        final Cursor cursor = mDb.getNonUploadedReadings();
-        if (cursor.getCount() == 0) {
-            Toast.makeText(this, "Already synced!", Toast.LENGTH_LONG).show();
-            cursor.close();
-            return;
-        }
-        final String nonUploadedReadings = mDb.readingsCursorToJson(cursor);
-        cursor.close();
-
         mDialog.setMessage(getString(R.string.sync_in_progress));
         mDialog.show();
 
-        Unirest.post(Utils.Constants.INSERT_URL)
-            .header("accept", "application/json")
-            .field("readingsJSON", nonUploadedReadings)
-            .asJsonAsync(new Callback<JsonNode>() {
-                public void failed(UnirestException e) {
-                    mDialog.hide();
+        new ReadingsTask().execute();
+    }
 
-                    Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
-                    Log.e("syncUpdate", "couldn't update; http code = " + e.getMessage());
-                }
+    class ReadingsTask extends AsyncTask<Void, Void, List<Integer>> {
+        protected List<Integer> doInBackground(Void... nothing) {
+            try {
+                final Cursor cursor = mDb.getNonUploadedReadings();
+                if (cursor == null) return null;
+                final List<Reading> nonUploadedReadings = mDb.readingsCursorToJson(cursor);
+                cursor.close();
 
-                public void completed(HttpResponse<JsonNode> response) {
-                    JsonNode body = response.getBody();
-                    body.getArray();
+                return mReadingApi.readingsPost(nonUploadedReadings);
 
-                    try {
-                        JSONArray arr = body.getArray();
-                        for (int i = 0; i < arr.length(); i++) {
-                            JSONObject obj = (JSONObject) arr.get(i);
-                            mDb.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
-                        }
+            } catch (ApiExceptionAndroid apiExceptionAndroid) {
+                apiExceptionAndroid.printStackTrace();
+                return null;
+            }
+        }
 
-                        Toast.makeText(getApplicationContext(), "Sync complete!", Toast.LENGTH_LONG).show();
-                    } catch (JSONException e) {
-                        Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
-                        Log.e("syncUpdate", "couldn't update");
-                    }
-                }
+        protected void onPostExecute(@Nullable List<Integer> data) {
+            if (data == null) {
+                Log.e("onPostExecute", "got null data");
+                return;
+            }
 
-                public void cancelled() {}
-            });
+            //                        JSONArray arr = body.getArray();
+            //                        for (int i = 0; i < arr.length(); i++) {
+            //                            JSONObject obj = (JSONObject) arr.get(i);
+            //                            mDb.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
+            //                        }
+            //
+            //                        Toast.makeText(getApplicationContext(), "Sync complete!", Toast.LENGTH_LONG).show();
+            //                    } catch (JSONException e) {
+            //                        Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
+            //                        Log.e("syncUpdate", "couldn't update");
+            //                    }
+        }
     }
 
     /**

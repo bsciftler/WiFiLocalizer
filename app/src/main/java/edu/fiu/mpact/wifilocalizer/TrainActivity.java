@@ -36,7 +36,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
 
-import io.swagger.client.ApiException;
+import io.swagger.client.ApiExceptionPineapple;
 import io.swagger.client.api.PineappleApi;
 import io.swagger.client.model.Probe;
 import uk.co.senab.photoview.PhotoMarker;
@@ -369,7 +369,7 @@ public class TrainActivity extends AppCompatActivity {
             try {
                 final List<Probe> data = mPineapple.probesGet().getData();
                 return data;
-            } catch (ApiException e) {
+            } catch (ApiExceptionPineapple e) {
                 e.printStackTrace();
                 return null;
             }

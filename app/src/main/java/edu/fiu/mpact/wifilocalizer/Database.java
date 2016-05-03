@@ -11,7 +11,10 @@ import android.util.Log;
 import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+
+import io.swagger.client.model.Reading;
 
 
 public class Database extends SQLiteOpenHelper {
@@ -155,12 +158,14 @@ public class Database extends SQLiteOpenHelper {
             new String[] {"0"}, null, null, null);
     }
 
-    public String readingsCursorToJson(Cursor cursor) {
-        final ArrayList<ContentValues> wordList = new ArrayList<>();
+    public List<Reading> readingsCursorToJson(Cursor cursor) {
+        final List<Reading> readingList = new ArrayList<>();
 
         while (cursor.moveToNext()) {
-            ContentValues cv = new ContentValues();
-            cv.put("id", cursor.getLong(cursor.getColumnIndex(Readings.ID)));
+            final Reading reading = new Reading();
+            reading.setMapId((int)cursor.getLong(cursor.getColumnIndex(Readings.ID)));
+            reading.setTimestamp();
+
             cv.put("datetime", cursor.getLong(cursor.getColumnIndex(Readings.DATETIME)));
             cv.put("mapx", cursor.getFloat(cursor.getColumnIndex(Readings.MAP_X)));
             cv.put("mapy", cursor.getFloat(cursor.getColumnIndex(Readings.MAP_Y)));
@@ -171,10 +176,10 @@ public class Database extends SQLiteOpenHelper {
             cv.put("sdk", Build.VERSION.SDK_INT);
             cv.put("manufacturer", Build.MANUFACTURER);
             cv.put("model", Build.MODEL);
-            wordList.add(cv);
+            readingList.add(cv);
         }
 
-        return new GsonBuilder().create().toJson(wordList);
+        return readingList;
     }
 
     public void updateSyncStatus(String id, String status) {

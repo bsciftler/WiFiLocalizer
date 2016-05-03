@@ -9,7 +9,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -24,14 +26,12 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.github.amlcurran.showcaseview.ShowcaseView;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
 import java.util.List;
 
+import io.swagger.client.ApiExceptionAndroid;
+import io.swagger.client.api.ReadingApi;
+import io.swagger.client.model.Reading;
 import uk.co.senab.photoview.PhotoMarker;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -51,6 +51,8 @@ public class LocalizeActivity extends AppCompatActivity {
     protected LocalizationData mCachedMapData;
     protected LocalizationData mFileData;
     protected LocalizationEuclideanDistance mAlgo = null;
+
+    final ReadingApi mReadingApi = new ReadingApi();
 
     private WifiManager mWifiManager;
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -74,18 +76,18 @@ public class LocalizeActivity extends AppCompatActivity {
             case R.id.rbFile2:
                 mAlgo.fileLocalize2(results);
                 break;
-/*            case 5:
+            case R.id.rbRemote:
                 mAlgo.remoteLocalize(results, mMapId);
                 break;
-            case 6:
+            case R.id.rbRemote2:
                 mAlgo.remoteLocalize2(results, mMapId);
                 break;
-            case 7:
+            case R.id.rbPrivate:
                 mAlgo.remotePrivLocalize(results, mMapId, sk, pk);
                 break;
-            case 8:
+            case R.id.rbPrivate2:
                 mAlgo.remotePrivLocalize2(results, mMapId, sk, pk);
-                break;*/
+                break;
             default:
                 break;
             }
@@ -132,24 +134,22 @@ public class LocalizeActivity extends AppCompatActivity {
         if (ab != null) ab.setTitle(mapName);
 
         // Add existing map data to the view
-        //        mCachedMapData = new LocalizationData(getContentResolver(), mMapId);
-        //        mAttacher.addData(mCachedMapData.generateMarkers(getApplicationContext(), mRelative));
+        mCachedMapData = new LocalizationData(getContentResolver(), mMapId);
+        mAttacher.addData(mCachedMapData.generateMarkers(getApplicationContext(), mRelative));
+        // Load in data from alternative sources
+        mFileData = new LocalizationData(getResources().openRawResource(R.raw.readings), mMapId);
+        getPoints();
+        mAlgo.setup(mCachedMapData, mFileData, LocalizeActivity.this);
 
         // Setup WifiManager
-        //        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        //        IntentFilter filter = new IntentFilter();
-        //        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-        //        registerReceiver(mReceiver, filter);
-
-        // Load in data from alternative sources than the database
-        //        mFileData = new LocalizationData(getResources().openRawResource(R.raw.readings), mMapId);
-        //        getPoints();
+        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        registerReceiver(mReceiver, filter);
 
         sk = new PrivateKey(1024);
         pk = new PublicKey();
         Paillier.keyGen(sk, pk);
-
-        //        mAlgo.setup(mCachedMapData, mFileData, LocalizeActivity.this);
     }
 
     // ***********************************************************************
@@ -323,52 +323,56 @@ public class LocalizeActivity extends AppCompatActivity {
     private void deletePoint(float x, float y) {
         Log.d("deletePoint", "trying to delete " + x + "," + y);
 
-        Unirest.post(Utils.Constants.DELETE_URL)
-            .field("x", x)
-            .field("y", y)
-            .asJsonAsync(new Callback<JsonNode>() {
-                public void failed(UnirestException e) {
-                    Toast.makeText(getApplicationContext(), "Couldn't delete point", Toast.LENGTH_SHORT).show();
-                    Log.e("deletePoint", "couldn't delete; http code = " + e.getMessage());
-                }
-
-                public void completed(HttpResponse<JsonNode> response) {
-                    Toast.makeText(getApplicationContext(), "message = " + response.getStatusText(), Toast
-                        .LENGTH_LONG).show();
-                }
-
-                public void cancelled() {}
-            });
+//        Unirest.post(Utils.Constants.DELETE_URL)
+//            .field("x", x)
+//            .field("y", y)
+//            .asJsonAsync(new Callback<JsonNode>() {
+//                public void failed(UnirestException e) {
+//                    Toast.makeText(getApplicationContext(), "Couldn't delete point", Toast.LENGTH_SHORT).show();
+//                    Log.e("deletePoint", "couldn't delete; http code = " + e.getMessage());
+//                }
+//
+//                public void completed(HttpResponse<JsonNode> response) {
+//                    Toast.makeText(getApplicationContext(), "message = " + response.getStatusText(), Toast
+//                        .LENGTH_LONG).show();
+//                }
+//
+//                public void cancelled() {}
+//            });
     }
 
     /**
      * Download the server's copy of points.
      */
     public void getPoints() {
-        //        Unirest.post(Utils.Constants.POINTS_URL)
-        //            .header("accept", "application/json")
-        //            .asJsonAsync(new Callback<JsonNode>() {
-        //                public void failed(UnirestException e) {
-        //                    Toast.makeText(getApplicationContext(), "Couldn't get points", Toast.LENGTH_SHORT).show();
-        //                    Log.e("getPoints", "couldn't update; http code = " + e.getMessage());
-        //                }
-        //
-        //                public void completed(HttpResponse<JsonNode> response) {
-        //                    try {
-        //                        JSONArray arr = response.getBody().getArray();
-        //                        if (arr.length() != 0) {
-        //                            for (int i = 0; i < arr.length(); i++) {
-        //                                JSONObject obj = (JSONObject) arr.get(i);
-        //                                mAttacher.addData(Utils.createNewMarker(getApplicationContext(),
-        //                                    mRelative, (float) obj.getDouble("mapx"), (float) obj.getDouble("mapy"), R.drawable.grey_x));
-        //                            }
-        //                        }
-        //                    } catch (JSONException e) {
-        //                        Log.w("getPoints", e);
-        //                    }
-        //                }
-        //
-        //                public void cancelled() {}
-        //            });
+        new RetrieveReadingsTask().execute();
+    }
+
+    class RetrieveReadingsTask extends AsyncTask<Void, Void, List<Reading>> {
+        protected List<Reading> doInBackground(Void... nothing) {
+            try {
+                final int mapId = (int) mMapId;
+                return mReadingApi.readingsGet(mapId, null);
+            } catch (ApiExceptionAndroid apiExceptionAndroid) {
+                apiExceptionAndroid.printStackTrace();
+                return null;
+            }
+        }
+
+        protected void onPostExecute(@Nullable List<Reading> data) {
+            if (data == null) {
+                Log.e("onPostExecute", "got null data");
+                return;
+            }
+
+            Log.d("onPostExecute", "got " + data.size() + " readings");
+            for (Reading r : data) {
+                double x = r.getMapX();
+                double y = r.getMapY();
+                final PhotoMarker marker = Utils.createNewMarker(getApplicationContext(), mRelative,
+                    (float) x, (float) y, R.drawable.grey_x);
+                mAttacher.addData(marker);
+            }
+        }
     }
 }
