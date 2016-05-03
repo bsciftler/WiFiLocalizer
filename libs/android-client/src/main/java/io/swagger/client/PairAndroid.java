@@ -1,10 +1,10 @@
 package io.swagger.client;
 
-public class Pair {
+public class PairAndroid {
     private String name = "";
     private String value = "";
 
-    public Pair(String name, String value) {
+    public PairAndroid(String name, String value) {
         setName(name);
         setValue(value);
     }

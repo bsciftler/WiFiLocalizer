@@ -1,10 +1,8 @@
 package io.swagger.client.api;
 
-import io.swagger.client.ApiException;
-import io.swagger.client.ApiInvoker;
-import io.swagger.client.Pair;
-
-import io.swagger.client.model.*;
+import io.swagger.client.ApiExceptionPineapple;
+import io.swagger.client.ApiInvokerPineapple;
+import io.swagger.client.PairPineapple;
 
 import java.util.*;
 
@@ -14,17 +12,17 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.io.File;
+
 
 public class PineappleApi {
   String basePath = "http://172.16.42.1:8000";
-  ApiInvoker apiInvoker = ApiInvoker.getInstance();
+  ApiInvokerPineapple apiInvoker = ApiInvokerPineapple.getInstance();
 
   public void addHeader(String key, String value) {
     getInvoker().addDefaultHeader(key, value);
   }
 
-  public ApiInvoker getInvoker() {
+  public ApiInvokerPineapple getInvoker() {
     return apiInvoker;
   }
 
@@ -41,7 +39,7 @@ public class PineappleApi {
    *
    * @return InlineResponse200
    */
-  public InlineResponse200  probesGet () throws ApiException {
+  public InlineResponse200  probesGet () throws ApiExceptionPineapple {
     Object localVarPostBody = null;
 
 
@@ -49,7 +47,7 @@ public class PineappleApi {
     String localVarPath = "/probes".replaceAll("\\{format\\}","json");
 
     // query params
-    List<Pair> localVarQueryParams = new ArrayList<Pair>();
+    List<PairPineapple> localVarQueryParams = new ArrayList<PairPineapple>();
     // header params
     Map<String, String> localVarHeaderParams = new HashMap<String, String>();
     // form params
@@ -75,12 +73,12 @@ public class PineappleApi {
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
       if(localVarResponse != null){
-        return (InlineResponse200) ApiInvoker.deserialize(localVarResponse, "", InlineResponse200.class);
+        return (InlineResponse200) ApiInvokerPineapple.deserialize(localVarResponse, "", InlineResponse200.class);
       }
       else {
         return null;
       }
-    } catch (ApiException ex) {
+    } catch (ApiExceptionPineapple ex) {
       throw ex;
     }
   }

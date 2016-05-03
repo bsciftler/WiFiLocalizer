@@ -2,10 +2,10 @@ package io.swagger.client;
 
 import org.apache.http.client.methods.*;
 
-public class HttpPatch extends HttpPost {
+public class HttpPatchAndroid extends HttpPost {
     public static final String METHOD_PATCH = "PATCH";
 
-    public HttpPatch(final String url) {
+    public HttpPatchAndroid(final String url) {
         super(url);
     }
 

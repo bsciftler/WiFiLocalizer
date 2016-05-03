@@ -7,7 +7,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import io.swagger.client.model.*;
 
-public class JsonUtil {
+public class JsonUtilAndroid {
   public static GsonBuilder gsonBuilder;
 
   static {
@@ -34,61 +34,61 @@ public class JsonUtil {
 
   public static Type getListTypeForDeserialization(Class cls) {
     String className = cls.getSimpleName();
-    
+
     if ("AccessPoint".equalsIgnoreCase(className)) {
       return new TypeToken<List<AccessPoint>>(){}.getType();
     }
-    
+
     if ("ApiError".equalsIgnoreCase(className)) {
       return new TypeToken<List<ApiError>>(){}.getType();
     }
-    
+
     if ("ProbeRequest".equalsIgnoreCase(className)) {
       return new TypeToken<List<ProbeRequest>>(){}.getType();
     }
-    
+
     if ("Reading".equalsIgnoreCase(className)) {
       return new TypeToken<List<Reading>>(){}.getType();
     }
-    
+
     if ("WifiBitmap".equalsIgnoreCase(className)) {
       return new TypeToken<List<WifiBitmap>>(){}.getType();
     }
-    
+
     if ("WifiMap".equalsIgnoreCase(className)) {
       return new TypeToken<List<WifiMap>>(){}.getType();
     }
-    
+
     return new TypeToken<List<Object>>(){}.getType();
   }
 
   public static Type getTypeForDeserialization(Class cls) {
     String className = cls.getSimpleName();
-    
+
     if ("AccessPoint".equalsIgnoreCase(className)) {
       return new TypeToken<AccessPoint>(){}.getType();
     }
-    
+
     if ("ApiError".equalsIgnoreCase(className)) {
       return new TypeToken<ApiError>(){}.getType();
     }
-    
+
     if ("ProbeRequest".equalsIgnoreCase(className)) {
       return new TypeToken<ProbeRequest>(){}.getType();
     }
-    
+
     if ("Reading".equalsIgnoreCase(className)) {
       return new TypeToken<Reading>(){}.getType();
     }
-    
+
     if ("WifiBitmap".equalsIgnoreCase(className)) {
       return new TypeToken<WifiBitmap>(){}.getType();
     }
-    
+
     if ("WifiMap".equalsIgnoreCase(className)) {
       return new TypeToken<WifiMap>(){}.getType();
     }
-    
+
     return new TypeToken<Object>(){}.getType();
   }
 

@@ -7,7 +7,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import io.swagger.client.model.*;
 
-public class JsonUtil {
+public class JsonUtilPineapple {
   public static GsonBuilder gsonBuilder;
 
   static {
@@ -34,29 +34,29 @@ public class JsonUtil {
 
   public static Type getListTypeForDeserialization(Class cls) {
     String className = cls.getSimpleName();
-    
+
     if ("InlineResponse200".equalsIgnoreCase(className)) {
       return new TypeToken<List<InlineResponse200>>(){}.getType();
     }
-    
+
     if ("Probe".equalsIgnoreCase(className)) {
       return new TypeToken<List<Probe>>(){}.getType();
     }
-    
+
     return new TypeToken<List<Object>>(){}.getType();
   }
 
   public static Type getTypeForDeserialization(Class cls) {
     String className = cls.getSimpleName();
-    
+
     if ("InlineResponse200".equalsIgnoreCase(className)) {
       return new TypeToken<InlineResponse200>(){}.getType();
     }
-    
+
     if ("Probe".equalsIgnoreCase(className)) {
       return new TypeToken<Probe>(){}.getType();
     }
-    
+
     return new TypeToken<Object>(){}.getType();
   }
 

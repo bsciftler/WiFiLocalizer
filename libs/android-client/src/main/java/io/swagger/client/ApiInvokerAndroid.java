@@ -1,59 +1,52 @@
 package io.swagger.client;
 
-import org.apache.http.*;
-import org.apache.http.client.*;
-import org.apache.http.client.methods.*;
-import org.apache.http.conn.*;
-import org.apache.http.conn.scheme.*;
-import org.apache.http.conn.ssl.*;
+import com.google.gson.JsonParseException;
+
+import org.apache.http.Consts;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.*;
-import org.apache.http.impl.conn.*;
-import org.apache.http.impl.conn.tsccm.*;
-import org.apache.http.params.*;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
 import org.apache.http.util.EntityUtils;
 
-import java.io.File;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.net.URLEncoder;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-
+import java.net.Socket;
+import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.cert.*;
-
-import java.text.DateFormat;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
-
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import com.google.gson.JsonParseException;
-
-public class ApiInvoker {
-  private static ApiInvoker INSTANCE = new ApiInvoker();
+public class ApiInvokerAndroid {
+  private static ApiInvokerAndroid INSTANCE = new ApiInvokerAndroid();
   private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
 
   private HttpClient client = null;
@@ -67,13 +60,11 @@ public class ApiInvoker {
 
   /**
    * ISO 8601 date time format.
-   * @see https://en.wikipedia.org/wiki/ISO_8601
    */
   public static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
   /**
    * ISO 8601 date format.
-   * @see https://en.wikipedia.org/wiki/ISO_8601
    */
   public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -134,10 +125,10 @@ public class ApiInvoker {
   }
 
   /*
-    Format to {@code Pair} objects.
+    Format to {@code PairAndroid} objects.
   */
-  public static List<Pair> parameterToPairs(String collectionFormat, String name, Object value){
-    List<Pair> params = new ArrayList<Pair>();
+  public static List<PairAndroid> parameterToPairs(String collectionFormat, String name, Object value){
+    List<PairAndroid> params = new ArrayList<PairAndroid>();
 
     // preconditions
     if (name == null || name.isEmpty() || value == null) return params;
@@ -146,7 +137,7 @@ public class ApiInvoker {
     if (value instanceof Collection) {
       valueCollection = (Collection) value;
     } else {
-      params.add(new Pair(name, parameterToString(value)));
+      params.add(new PairAndroid(name, parameterToString(value)));
       return params;
     }
 
@@ -160,7 +151,7 @@ public class ApiInvoker {
     // create the params based on the collection format
     if (collectionFormat.equals("multi")) {
       for (Object item : valueCollection) {
-        params.add(new Pair(name, parameterToString(item)));
+        params.add(new PairAndroid(name, parameterToString(item)));
       }
 
       return params;
@@ -184,16 +175,16 @@ public class ApiInvoker {
       sb.append(parameterToString(item));
     }
 
-    params.add(new Pair(name, sb.substring(1)));
+    params.add(new PairAndroid(name, sb.substring(1)));
 
     return params;
   }
 
-  public ApiInvoker() {
+  public ApiInvokerAndroid() {
     initConnectionManager();
   }
 
-  public static ApiInvoker getInstance() {
+  public static ApiInvokerAndroid getInstance() {
     return INSTANCE;
   }
 
@@ -209,10 +200,10 @@ public class ApiInvoker {
     return str;
   }
 
-  public static Object deserialize(String json, String containerType, Class cls) throws ApiException {
+  public static Object deserialize(String json, String containerType, Class cls) throws ApiExceptionAndroid {
     try{
       if("list".equalsIgnoreCase(containerType) || "array".equalsIgnoreCase(containerType)) {
-        return JsonUtil.deserializeToList(json, cls);
+        return JsonUtilAndroid.deserializeToList(json, cls);
       }
       else if(String.class.equals(cls)) {
         if(json != null && json.startsWith("\"") && json.endsWith("\"") && json.length() > 1)
@@ -221,35 +212,33 @@ public class ApiInvoker {
           return json;
       }
       else {
-        return json;
-//        return JsonUtil.deserializeToObject(json, cls);
+        return JsonUtilAndroid.deserializeToObject(json, cls);
       }
     }
     catch (JsonParseException e) {
-      e.printStackTrace();
-      throw new ApiException(500, e.getMessage());
+      throw new ApiExceptionAndroid(500, e.getMessage());
     }
   }
 
-  public static String serialize(Object obj) throws ApiException {
+  public static String serialize(Object obj) throws ApiExceptionAndroid {
     try {
       if (obj != null)
-        return JsonUtil.serialize(obj);
+        return JsonUtilAndroid.serialize(obj);
       else
         return null;
     }
     catch (Exception e) {
-      throw new ApiException(500, e.getMessage());
+      throw new ApiExceptionAndroid(500, e.getMessage());
     }
   }
 
-  public String invokeAPI(String host, String path, String method, List<Pair> queryParams, Object body, Map<String, String> headerParams, Map<String, String> formParams, String contentType) throws ApiException {
+  public String invokeAPI(String host, String path, String method, List<PairAndroid> queryParams, Object body, Map<String, String> headerParams, Map<String, String> formParams, String contentType) throws ApiExceptionAndroid {
     HttpClient client = getClient(host);
 
     StringBuilder b = new StringBuilder();
     b.append("?");
     if (queryParams != null){
-      for (Pair queryParam : queryParams){
+      for (PairAndroid queryParam : queryParams){
         if (!queryParam.getName().isEmpty()) {
           b.append(escapeString(queryParam.getName()));
           b.append("=");
@@ -351,7 +340,7 @@ public class ApiInvoker {
         response = client.execute(delete);
       }
       else if ("PATCH".equals(method)) {
-        HttpPatch patch = new HttpPatch(url);
+        HttpPatchAndroid patch = new HttpPatchAndroid(url);
         if (formParamStr != null) {
           patch.setHeader("Content-Type", contentType);
           patch.setEntity(new StringEntity(formParamStr, "UTF-8"));
@@ -386,10 +375,10 @@ public class ApiInvoker {
         else
           responseString = "no data";
       }
-      throw new ApiException(code, responseString);
+      throw new ApiExceptionAndroid(code, responseString);
     }
     catch(IOException e) {
-      throw new ApiException(500, e.getMessage());
+      throw new ApiExceptionAndroid(500, e.getMessage());
     }
   }
 

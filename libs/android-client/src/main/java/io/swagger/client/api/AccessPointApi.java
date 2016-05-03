@@ -1,31 +1,28 @@
 package io.swagger.client.api;
 
-import io.swagger.client.ApiException;
-import io.swagger.client.ApiInvoker;
-import io.swagger.client.Pair;
-
-import io.swagger.client.model.*;
+import io.swagger.client.ApiExceptionAndroid;
+import io.swagger.client.ApiInvokerAndroid;
+import io.swagger.client.PairAndroid;
 
 import java.util.*;
 
 import io.swagger.client.model.AccessPoint;
-import io.swagger.client.model.ApiError;
 
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.io.File;
+
 
 public class AccessPointApi {
   String basePath = "http://192.168.1.123/v1";
-  ApiInvoker apiInvoker = ApiInvoker.getInstance();
+  ApiInvokerAndroid apiInvoker = ApiInvokerAndroid.getInstance();
 
   public void addHeader(String key, String value) {
     getInvoker().addDefaultHeader(key, value);
   }
 
-  public ApiInvoker getInvoker() {
+  public ApiInvokerAndroid getInvoker() {
     return apiInvoker;
   }
 
@@ -39,41 +36,41 @@ public class AccessPointApi {
 
   /**
    * Get a listing of all available access points for a map
-   * 
+   *
    * @param mapId Valid Map ID
    * @return List<AccessPoint>
    */
-  public List<AccessPoint>  accessPointsGet (Integer mapId) throws ApiException {
+  public List<AccessPoint>  accessPointsGet (Integer mapId) throws ApiExceptionAndroid {
     Object localVarPostBody = null;
-    
+
     // verify the required parameter 'mapId' is set
     if (mapId == null) {
-       throw new ApiException(400, "Missing the required parameter 'mapId' when calling accessPointsGet");
+       throw new ApiExceptionAndroid(400, "Missing the required parameter 'mapId' when calling accessPointsGet");
     }
-    
+
 
     // create path and map variables
     String localVarPath = "/access_points".replaceAll("\\{format\\}","json");
 
     // query params
-    List<Pair> localVarQueryParams = new ArrayList<Pair>();
+    List<PairAndroid> localVarQueryParams = new ArrayList<PairAndroid>();
     // header params
     Map<String, String> localVarHeaderParams = new HashMap<String, String>();
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
 
-    localVarQueryParams.addAll(ApiInvoker.parameterToPairs("", "map_id", mapId));
+    localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "map_id", mapId));
 
 
     String[] localVarContentTypes = {
-      
+
     };
     String localVarContentType = localVarContentTypes.length > 0 ? localVarContentTypes[0] : "application/json";
 
     if (localVarContentType.startsWith("multipart/form-data")) {
       // file uploading
       MultipartEntityBuilder localVarBuilder = MultipartEntityBuilder.create();
-      
+
 
       localVarPostBody = localVarBuilder.build();
     } else {
@@ -83,12 +80,12 @@ public class AccessPointApi {
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
       if(localVarResponse != null){
-        return (List<AccessPoint>) ApiInvoker.deserialize(localVarResponse, "array", AccessPoint.class);
+        return (List<AccessPoint>) ApiInvokerAndroid.deserialize(localVarResponse, "array", AccessPoint.class);
       }
       else {
         return null;
       }
-    } catch (ApiException ex) {
+    } catch (ApiExceptionAndroid ex) {
       throw ex;
     }
   }

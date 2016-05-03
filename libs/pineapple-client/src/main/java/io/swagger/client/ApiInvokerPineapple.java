@@ -9,12 +9,10 @@ import org.apache.http.conn.ssl.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.*;
-import org.apache.http.impl.conn.*;
 import org.apache.http.impl.conn.tsccm.*;
 import org.apache.http.params.*;
 import org.apache.http.util.EntityUtils;
 
-import java.io.File;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.net.URLEncoder;
@@ -25,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
@@ -34,17 +31,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.*;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -52,8 +42,8 @@ import javax.net.ssl.X509TrustManager;
 
 import com.google.gson.JsonParseException;
 
-public class ApiInvoker {
-  private static ApiInvoker INSTANCE = new ApiInvoker();
+public class ApiInvokerPineapple {
+  private static ApiInvokerPineapple INSTANCE = new ApiInvokerPineapple();
   private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
 
   private HttpClient client = null;
@@ -134,10 +124,10 @@ public class ApiInvoker {
   }
 
   /*
-    Format to {@code Pair} objects.
+    Format to {@code PairPineapple} objects.
   */
-  public static List<Pair> parameterToPairs(String collectionFormat, String name, Object value){
-    List<Pair> params = new ArrayList<Pair>();
+  public static List<PairPineapple> parameterToPairs(String collectionFormat, String name, Object value){
+    List<PairPineapple> params = new ArrayList<PairPineapple>();
 
     // preconditions
     if (name == null || name.isEmpty() || value == null) return params;
@@ -146,7 +136,7 @@ public class ApiInvoker {
     if (value instanceof Collection) {
       valueCollection = (Collection) value;
     } else {
-      params.add(new Pair(name, parameterToString(value)));
+      params.add(new PairPineapple(name, parameterToString(value)));
       return params;
     }
 
@@ -160,7 +150,7 @@ public class ApiInvoker {
     // create the params based on the collection format
     if (collectionFormat.equals("multi")) {
       for (Object item : valueCollection) {
-        params.add(new Pair(name, parameterToString(item)));
+        params.add(new PairPineapple(name, parameterToString(item)));
       }
 
       return params;
@@ -184,16 +174,16 @@ public class ApiInvoker {
       sb.append(parameterToString(item));
     }
 
-    params.add(new Pair(name, sb.substring(1)));
+    params.add(new PairPineapple(name, sb.substring(1)));
 
     return params;
   }
 
-  public ApiInvoker() {
+  public ApiInvokerPineapple() {
     initConnectionManager();
   }
 
-  public static ApiInvoker getInstance() {
+  public static ApiInvokerPineapple getInstance() {
     return INSTANCE;
   }
 
@@ -209,10 +199,10 @@ public class ApiInvoker {
     return str;
   }
 
-  public static Object deserialize(String json, String containerType, Class cls) throws ApiException {
+  public static Object deserialize(String json, String containerType, Class cls) throws ApiExceptionPineapple {
     try{
       if("list".equalsIgnoreCase(containerType) || "array".equalsIgnoreCase(containerType)) {
-        return JsonUtil.deserializeToList(json, cls);
+        return JsonUtilPineapple.deserializeToList(json, cls);
       }
       else if(String.class.equals(cls)) {
         if(json != null && json.startsWith("\"") && json.endsWith("\"") && json.length() > 1)
@@ -221,33 +211,35 @@ public class ApiInvoker {
           return json;
       }
       else {
-        return JsonUtil.deserializeToObject(json, cls);
+        return json;
+//        return JsonUtilPineapple.deserializeToObject(json, cls);
       }
     }
     catch (JsonParseException e) {
-      throw new ApiException(500, e.getMessage());
+      e.printStackTrace();
+      throw new ApiExceptionPineapple(500, e.getMessage());
     }
   }
 
-  public static String serialize(Object obj) throws ApiException {
+  public static String serialize(Object obj) throws ApiExceptionPineapple {
     try {
       if (obj != null)
-        return JsonUtil.serialize(obj);
+        return JsonUtilPineapple.serialize(obj);
       else
         return null;
     }
     catch (Exception e) {
-      throw new ApiException(500, e.getMessage());
+      throw new ApiExceptionPineapple(500, e.getMessage());
     }
   }
 
-  public String invokeAPI(String host, String path, String method, List<Pair> queryParams, Object body, Map<String, String> headerParams, Map<String, String> formParams, String contentType) throws ApiException {
+  public String invokeAPI(String host, String path, String method, List<PairPineapple> queryParams, Object body, Map<String, String> headerParams, Map<String, String> formParams, String contentType) throws ApiExceptionPineapple {
     HttpClient client = getClient(host);
 
     StringBuilder b = new StringBuilder();
     b.append("?");
     if (queryParams != null){
-      for (Pair queryParam : queryParams){
+      for (PairPineapple queryParam : queryParams){
         if (!queryParam.getName().isEmpty()) {
           b.append(escapeString(queryParam.getName()));
           b.append("=");
@@ -349,7 +341,7 @@ public class ApiInvoker {
         response = client.execute(delete);
       }
       else if ("PATCH".equals(method)) {
-        HttpPatch patch = new HttpPatch(url);
+        HttpPatchPineapple patch = new HttpPatchPineapple(url);
         if (formParamStr != null) {
           patch.setHeader("Content-Type", contentType);
           patch.setEntity(new StringEntity(formParamStr, "UTF-8"));
@@ -384,10 +376,10 @@ public class ApiInvoker {
         else
           responseString = "no data";
       }
-      throw new ApiException(code, responseString);
+      throw new ApiExceptionPineapple(code, responseString);
     }
     catch(IOException e) {
-      throw new ApiException(500, e.getMessage());
+      throw new ApiExceptionPineapple(500, e.getMessage());
     }
   }
 
