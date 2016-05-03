@@ -56,33 +56,33 @@
                 android:onClick="onClickedCheckBox"
                 android:text="@string/btn_localize_file2" />
 
-            <!--<RadioButton-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="Remote"-->
-            <!--android:id="@+id/rbRemote"-->
-            <!--android:onClick="onClickedCheckBox"/>-->
+            <RadioButton
+                android:id="@+id/rbRemote"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClickedCheckBox"
+                android:text="Remote" />
 
-            <!--<RadioButton-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="Remote2"-->
-            <!--android:id="@+id/rbRemote2"-->
-            <!--android:onClick="onClickedCheckBox"/>-->
+            <RadioButton
+                android:id="@+id/rbRemote2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClickedCheckBox"
+                android:text="Remote2" />
 
-            <!--<RadioButton-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="Private"-->
-            <!--android:id="@+id/rbPrivate"-->
-            <!--android:onClick="onClickedCheckBox"/>-->
+            <RadioButton
+                android:id="@+id/rbPrivate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClickedCheckBox"
+                android:text="Private" />
 
-            <!--<RadioButton-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="Private2"-->
-            <!--android:id="@+id/rbPrivate2"-->
-            <!--android:onClick="onClickedCheckBox"/>-->
+            <RadioButton
+                android:id="@+id/rbPrivate2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClickedCheckBox"
+                android:text="Private2" />
         </RadioGroup>
     </HorizontalScrollView>
 
