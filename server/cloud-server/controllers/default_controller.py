@@ -18,7 +18,7 @@ def valid_map_id(id):
 
 #------------------------------------------------------------------------------
 
-def access_points_get(map_id):
+def access_points_get():
     return [
         {"mac_address": mac} for mac in DATA_STORE["access_points"]
     ]

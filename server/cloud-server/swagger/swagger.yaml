@@ -21,12 +21,7 @@ paths:
       - "AccessPoint"
       summary: "Get a listing of all available access points for a map"
       operationId: "controllers.default_controller.access_points_get"
-      parameters:
-      - name: "map_id"
-        in: "query"
-        description: "Valid Map ID"
-        required: true
-        type: "integer"
+      parameters: []
       responses:
         200:
           description: "All access points"
@@ -66,7 +61,8 @@ paths:
     post:
       tags:
       - "WifiBitmap"
-      summary: "Add a new bitmap for an image. There can only be at max one bitmap per image."
+      summary: "Add a new bitmap for an image. There can only be at max one bitmap\
+        \ per image."
       operationId: "controllers.default_controller.bitmap_post"
       parameters:
       - in: "body"
@@ -78,7 +74,7 @@ paths:
         200:
           description: "True if successful Bitmap insert"
           schema:
-            type: boolean
+            type: "boolean"
         default:
           description: "Unexpected Error"
           schema:
@@ -170,7 +166,9 @@ paths:
         type: "string"
       responses:
         200:
-          description: "List of maps fitting the keywords. Will try to return something, even if very inaccurate match. Results will be in sorted order, best match descending, i.e. best match first.\n"
+          description: "List of maps fitting the keywords. Will try to return something,\
+            \ even if very inaccurate match. Results will be in sorted order, best\
+            \ match descending, i.e. best match first.\n"
           schema:
             type: "array"
             items:
@@ -195,7 +193,8 @@ paths:
         type: "integer"
       - name: "data_since"
         in: "query"
-        description: "ISO-formatted date string to get probes sent to cloud after date"
+        description: "ISO-formatted date string to get probes sent to cloud after\
+          \ date"
         required: false
         type: "string"
         format: "dateTime"
@@ -253,7 +252,8 @@ paths:
         type: "integer"
       - name: "data_since"
         in: "query"
-        description: "ISO-formatted date string to get readings sent to cloud after date"
+        description: "ISO-formatted date string to get readings sent to cloud after\
+          \ date"
         required: false
         type: "string"
         format: "dateTime"
@@ -301,8 +301,8 @@ definitions:
   WifiMap:
     type: "object"
     required:
-    - map_id
-    - name
+    - "map_id"
+    - "name"
     properties:
       map_id:
         type: "integer"
@@ -313,8 +313,8 @@ definitions:
   WifiBitmap:
     type: "object"
     required:
-    - map_id
-    - data
+    - "data"
+    - "map_id"
     properties:
       map_id:
         type: "integer"
@@ -325,7 +325,7 @@ definitions:
   AccessPoint:
     type: "object"
     required:
-    - mac_address
+    - "mac_address"
     properties:
       mac_address:
         type: "string"
@@ -333,12 +333,16 @@ definitions:
   Reading:
     type: "object"
     required:
-    - timestamp
-    - map_x
-    - map_y
-    - rssi
-    - mac_address
-    - map_id
+    - "mac_address"
+    - "manufacturer"
+    - "map_id"
+    - "map_x"
+    - "map_y"
+    - "model"
+    - "rssi"
+    - "sdk"
+    - "ssid"
+    - "timestamp"
     properties:
       timestamp:
         type: "string"
@@ -361,14 +365,26 @@ definitions:
       map_id:
         type: "integer"
         description: "valid global unique id of a specific map"
+      ssid:
+        type: "string"
+        description: "human-readable name of mac_address"
+      sdk:
+        type: "integer"
+        description: "phone sdk version; corresponds to Build.VERSION.SDK_INT"
+      manufacturer:
+        type: "string"
+        description: "phone manufacturer; corresponds to Build.Manufacturer"
+      model:
+        type: "string"
+        description: "phone model; corresponds to Build.Model"
   ProbeRequest:
     type: "object"
     required:
-    - map_x
-    - map_y
-    - fingerprint
-    - rssi
-    - map_id
+    - "fingerprint"
+    - "map_id"
+    - "map_x"
+    - "map_y"
+    - "rssi"
     properties:
       map_x:
         type: "number"
