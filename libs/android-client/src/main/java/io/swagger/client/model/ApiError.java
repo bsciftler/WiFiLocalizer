@@ -11,6 +11,7 @@ public class ApiError  {
   @SerializedName("message")
   private String message = null;
 
+  
   /**
    * human readable description of what went wrong
    **/
@@ -22,6 +23,7 @@ public class ApiError  {
     this.message = message;
   }
 
+  
 
   @Override
   public String toString()  {

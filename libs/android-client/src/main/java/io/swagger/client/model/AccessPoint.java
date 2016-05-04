@@ -11,10 +11,11 @@ public class AccessPoint  {
   @SerializedName("mac_address")
   private String macAddress = null;
 
+  
   /**
    * Media Access Control (MAC) Address of an access point
    **/
-  @ApiModelProperty(value = "Media Access Control (MAC) Address of an access point")
+  @ApiModelProperty(required = true, value = "Media Access Control (MAC) Address of an access point")
   public String getMacAddress() {
     return macAddress;
   }
@@ -22,6 +23,7 @@ public class AccessPoint  {
     this.macAddress = macAddress;
   }
 
+  
 
   @Override
   public String toString()  {

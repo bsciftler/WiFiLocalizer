@@ -19,10 +19,11 @@ public class ProbeRequest  {
   @SerializedName("map_id")
   private Integer mapId = null;
 
+  
   /**
    * x-coordinate in pixels on corresponding bitmap
    **/
-  @ApiModelProperty(value = "x-coordinate in pixels on corresponding bitmap")
+  @ApiModelProperty(required = true, value = "x-coordinate in pixels on corresponding bitmap")
   public Double getMapX() {
     return mapX;
   }
@@ -30,10 +31,11 @@ public class ProbeRequest  {
     this.mapX = mapX;
   }
 
+  
   /**
    * y-coordinate in pixels on corresponding bitman
    **/
-  @ApiModelProperty(value = "y-coordinate in pixels on corresponding bitman")
+  @ApiModelProperty(required = true, value = "y-coordinate in pixels on corresponding bitman")
   public Double getMapY() {
     return mapY;
   }
@@ -41,10 +43,11 @@ public class ProbeRequest  {
     this.mapY = mapY;
   }
 
+  
   /**
    * device Media Access Control address
    **/
-  @ApiModelProperty(value = "device Media Access Control address")
+  @ApiModelProperty(required = true, value = "device Media Access Control address")
   public String getFingerprint() {
     return fingerprint;
   }
@@ -52,10 +55,11 @@ public class ProbeRequest  {
     this.fingerprint = fingerprint;
   }
 
+  
   /**
    * received signal strength intensity of probe request
    **/
-  @ApiModelProperty(value = "received signal strength intensity of probe request")
+  @ApiModelProperty(required = true, value = "received signal strength intensity of probe request")
   public Integer getRssi() {
     return rssi;
   }
@@ -63,10 +67,11 @@ public class ProbeRequest  {
     this.rssi = rssi;
   }
 
+  
   /**
    * valid global unique id of a specific map
    **/
-  @ApiModelProperty(value = "valid global unique id of a specific map")
+  @ApiModelProperty(required = true, value = "valid global unique id of a specific map")
   public Integer getMapId() {
     return mapId;
   }
@@ -74,6 +79,7 @@ public class ProbeRequest  {
     this.mapId = mapId;
   }
 
+  
 
   @Override
   public String toString()  {

@@ -15,7 +15,7 @@ import java.util.HashMap;
 
 
 public class WifiMapApi {
-  String basePath = "http://192.168.1.123/v1";
+  String basePath = "http://192.168.1.123:8080/v1";
   ApiInvokerAndroid apiInvoker = ApiInvokerAndroid.getInstance();
 
   public void addHeader(String key, String value) {
@@ -33,6 +33,7 @@ public class WifiMapApi {
   public String getBasePath() {
     return basePath;
   }
+
 
   /**
    * Get all of the maps the cloud server knows about
@@ -55,6 +56,8 @@ public class WifiMapApi {
 
 
 
+
+
     String[] localVarContentTypes = {
 
     };
@@ -68,7 +71,8 @@ public class WifiMapApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -82,6 +86,7 @@ public class WifiMapApi {
       throw ex;
     }
   }
+
   /**
    * Get a map by ID or exact name
    *
@@ -103,8 +108,12 @@ public class WifiMapApi {
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
 
+
     localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "id", id));
+
     localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "name", name));
+
+
 
 
     String[] localVarContentTypes = {
@@ -120,7 +129,8 @@ public class WifiMapApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -134,6 +144,7 @@ public class WifiMapApi {
       throw ex;
     }
   }
+
   /**
    * Add a new map name
    *
@@ -145,7 +156,7 @@ public class WifiMapApi {
 
     // verify the required parameter 'mapName' is set
     if (mapName == null) {
-       throw new ApiExceptionAndroid(400, "Missing the required parameter 'mapName' when calling mapsPost");
+       throw new ApiExceptionAndroid(400, "Missing the required parameter 'mapName' when calling controllersDefaultControllerMapsPost");
     }
 
 
@@ -159,7 +170,10 @@ public class WifiMapApi {
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
 
+
     localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "map_name", mapName));
+
+
 
 
     String[] localVarContentTypes = {
@@ -175,7 +189,8 @@ public class WifiMapApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "POST", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -189,6 +204,7 @@ public class WifiMapApi {
       throw ex;
     }
   }
+
   /**
    * Search for a map given an idea of its name
    *
@@ -200,7 +216,7 @@ public class WifiMapApi {
 
     // verify the required parameter 'keywords' is set
     if (keywords == null) {
-       throw new ApiExceptionAndroid(400, "Missing the required parameter 'keywords' when calling mapsSearchGet");
+       throw new ApiExceptionAndroid(400, "Missing the required parameter 'keywords' when calling controllersDefaultControllerMapsSearchGet");
     }
 
 
@@ -214,7 +230,10 @@ public class WifiMapApi {
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
 
+
     localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "keywords", keywords));
+
+
 
 
     String[] localVarContentTypes = {
@@ -230,7 +249,8 @@ public class WifiMapApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -244,4 +264,5 @@ public class WifiMapApi {
       throw ex;
     }
   }
+
 }

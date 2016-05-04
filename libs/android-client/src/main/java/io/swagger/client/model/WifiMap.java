@@ -13,10 +13,11 @@ public class WifiMap  {
   @SerializedName("name")
   private String name = null;
 
+  
   /**
    * global unique id of a specific map
    **/
-  @ApiModelProperty(value = "global unique id of a specific map")
+  @ApiModelProperty(required = true, value = "global unique id of a specific map")
   public Integer getMapId() {
     return mapId;
   }
@@ -24,10 +25,11 @@ public class WifiMap  {
     this.mapId = mapId;
   }
 
+  
   /**
    * human readable name of the map
    **/
-  @ApiModelProperty(value = "human readable name of the map")
+  @ApiModelProperty(required = true, value = "human readable name of the map")
   public String getName() {
     return name;
   }
@@ -35,6 +37,7 @@ public class WifiMap  {
     this.name = name;
   }
 
+  
 
   @Override
   public String toString()  {

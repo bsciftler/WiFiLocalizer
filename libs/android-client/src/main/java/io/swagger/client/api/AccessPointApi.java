@@ -15,7 +15,7 @@ import java.util.HashMap;
 
 
 public class AccessPointApi {
-  String basePath = "http://192.168.1.123/v1";
+  String basePath = "http://192.168.1.123:8080/v1";
   ApiInvokerAndroid apiInvoker = ApiInvokerAndroid.getInstance();
 
   public void addHeader(String key, String value) {
@@ -34,19 +34,14 @@ public class AccessPointApi {
     return basePath;
   }
 
+
   /**
    * Get a listing of all available access points for a map
    *
-   * @param mapId Valid Map ID
    * @return List<AccessPoint>
    */
-  public List<AccessPoint>  accessPointsGet (Integer mapId) throws ApiExceptionAndroid {
+  public List<AccessPoint>  accessPointsGet () throws ApiExceptionAndroid {
     Object localVarPostBody = null;
-
-    // verify the required parameter 'mapId' is set
-    if (mapId == null) {
-       throw new ApiExceptionAndroid(400, "Missing the required parameter 'mapId' when calling accessPointsGet");
-    }
 
 
     // create path and map variables
@@ -59,7 +54,8 @@ public class AccessPointApi {
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
 
-    localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "map_id", mapId));
+
+
 
 
     String[] localVarContentTypes = {
@@ -75,7 +71,8 @@ public class AccessPointApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -89,4 +86,5 @@ public class AccessPointApi {
       throw ex;
     }
   }
+
 }

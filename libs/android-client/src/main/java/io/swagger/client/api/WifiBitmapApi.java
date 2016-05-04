@@ -15,7 +15,7 @@ import java.util.HashMap;
 
 
 public class WifiBitmapApi {
-  String basePath = "http://192.168.1.123/v1";
+  String basePath = "http://192.168.1.123:8080/v1";
   ApiInvokerAndroid apiInvoker = ApiInvokerAndroid.getInstance();
 
   public void addHeader(String key, String value) {
@@ -34,6 +34,7 @@ public class WifiBitmapApi {
     return basePath;
   }
 
+
   /**
    * Get a base64 encoded string of a map&#39;s bitmap image
    *
@@ -45,7 +46,7 @@ public class WifiBitmapApi {
 
     // verify the required parameter 'id' is set
     if (id == null) {
-       throw new ApiExceptionAndroid(400, "Missing the required parameter 'id' when calling bitmapGet");
+       throw new ApiExceptionAndroid(400, "Missing the required parameter 'id' when calling controllersDefaultControllerBitmapGet");
     }
 
 
@@ -59,7 +60,10 @@ public class WifiBitmapApi {
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
 
+
     localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "id", id));
+
+
 
 
     String[] localVarContentTypes = {
@@ -75,7 +79,8 @@ public class WifiBitmapApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -89,13 +94,14 @@ public class WifiBitmapApi {
       throw ex;
     }
   }
+
   /**
    * Add a new bitmap for an image. There can only be at max one bitmap per image.
    *
    * @param data
-   * @return WifiBitmap
+   * @return Boolean
    */
-  public WifiBitmap  bitmapPost (WifiBitmap data) throws ApiExceptionAndroid {
+  public Boolean  bitmapPost (WifiBitmap data) throws ApiExceptionAndroid {
     Object localVarPostBody = data;
 
 
@@ -111,6 +117,8 @@ public class WifiBitmapApi {
 
 
 
+
+
     String[] localVarContentTypes = {
 
     };
@@ -124,12 +132,13 @@ public class WifiBitmapApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "POST", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
       if(localVarResponse != null){
-        return (WifiBitmap) ApiInvokerAndroid.deserialize(localVarResponse, "", WifiBitmap.class);
+        return (Boolean) ApiInvokerAndroid.deserialize(localVarResponse, "", Boolean.class);
       }
       else {
         return null;
@@ -138,4 +147,5 @@ public class WifiBitmapApi {
       throw ex;
     }
   }
+
 }

@@ -15,7 +15,7 @@ import java.util.HashMap;
 
 
 public class ProbeRequestApi {
-  String basePath = "http://192.168.1.123/v1";
+  String basePath = "http://192.168.1.123:8080/v1";
   ApiInvokerAndroid apiInvoker = ApiInvokerAndroid.getInstance();
 
   public void addHeader(String key, String value) {
@@ -34,6 +34,7 @@ public class ProbeRequestApi {
     return basePath;
   }
 
+
   /**
    * Get a list of probe requests for a map ID
    *
@@ -46,7 +47,7 @@ public class ProbeRequestApi {
 
     // verify the required parameter 'mapId' is set
     if (mapId == null) {
-       throw new ApiExceptionAndroid(400, "Missing the required parameter 'mapId' when calling probesGet");
+       throw new ApiExceptionAndroid(400, "Missing the required parameter 'mapId' when calling controllersDefaultControllerProbesGet");
     }
 
 
@@ -60,8 +61,12 @@ public class ProbeRequestApi {
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
 
+
     localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "map_id", mapId));
+
     localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "data_since", dataSince));
+
+
 
 
     String[] localVarContentTypes = {
@@ -77,7 +82,8 @@ public class ProbeRequestApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -91,6 +97,7 @@ public class ProbeRequestApi {
       throw ex;
     }
   }
+
   /**
    * Insert probe requests
    *
@@ -102,7 +109,7 @@ public class ProbeRequestApi {
 
     // verify the required parameter 'data' is set
     if (data == null) {
-       throw new ApiExceptionAndroid(400, "Missing the required parameter 'data' when calling probesPost");
+       throw new ApiExceptionAndroid(400, "Missing the required parameter 'data' when calling controllersDefaultControllerProbesPost");
     }
 
 
@@ -115,6 +122,8 @@ public class ProbeRequestApi {
     Map<String, String> localVarHeaderParams = new HashMap<String, String>();
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
+
+
 
 
 
@@ -131,7 +140,8 @@ public class ProbeRequestApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "POST", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -145,4 +155,5 @@ public class ProbeRequestApi {
       throw ex;
     }
   }
+
 }

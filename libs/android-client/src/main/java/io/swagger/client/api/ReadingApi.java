@@ -34,6 +34,7 @@ public class ReadingApi {
     return basePath;
   }
 
+
   /**
    * Get a list of readings for a map ID
    *
@@ -46,7 +47,7 @@ public class ReadingApi {
 
     // verify the required parameter 'mapId' is set
     if (mapId == null) {
-       throw new ApiExceptionAndroid(400, "Missing the required parameter 'mapId' when calling readingsGet");
+       throw new ApiExceptionAndroid(400, "Missing the required parameter 'mapId' when calling controllersDefaultControllerReadingsGet");
     }
 
 
@@ -60,8 +61,12 @@ public class ReadingApi {
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
 
+
     localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "map_id", mapId));
+
     localVarQueryParams.addAll(ApiInvokerAndroid.parameterToPairs("", "data_since", dataSince));
+
+
 
 
     String[] localVarContentTypes = {
@@ -77,7 +82,8 @@ public class ReadingApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "GET", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -91,6 +97,7 @@ public class ReadingApi {
       throw ex;
     }
   }
+
   /**
    * Insert readings
    *
@@ -102,7 +109,7 @@ public class ReadingApi {
 
     // verify the required parameter 'data' is set
     if (data == null) {
-       throw new ApiExceptionAndroid(400, "Missing the required parameter 'data' when calling readingsPost");
+       throw new ApiExceptionAndroid(400, "Missing the required parameter 'data' when calling controllersDefaultControllerReadingsPost");
     }
 
 
@@ -115,6 +122,8 @@ public class ReadingApi {
     Map<String, String> localVarHeaderParams = new HashMap<String, String>();
     // form params
     Map<String, String> localVarFormParams = new HashMap<String, String>();
+
+
 
 
 
@@ -131,7 +140,8 @@ public class ReadingApi {
       localVarPostBody = localVarBuilder.build();
     } else {
       // normal form params
-          }
+
+    }
 
     try {
       String localVarResponse = apiInvoker.invokeAPI(basePath, localVarPath, "POST", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarContentType);
@@ -145,4 +155,5 @@ public class ReadingApi {
       throw ex;
     }
   }
+
 }

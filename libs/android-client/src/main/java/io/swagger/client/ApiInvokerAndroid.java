@@ -1,49 +1,46 @@
 package io.swagger.client;
 
-import com.google.gson.JsonParseException;
-
-import org.apache.http.Consts;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.*;
+import org.apache.http.client.*;
+import org.apache.http.client.methods.*;
+import org.apache.http.conn.*;
+import org.apache.http.conn.scheme.*;
+import org.apache.http.conn.ssl.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.http.params.BasicHttpParams;
+import org.apache.http.impl.client.*;
+import org.apache.http.impl.conn.tsccm.*;
+import org.apache.http.params.*;
 import org.apache.http.util.EntityUtils;
 
-import java.io.IOException;
 import java.net.Socket;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.net.URLEncoder;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.io.IOException;
+
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
+
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
+
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+
+import com.google.gson.JsonParseException;
 
 public class ApiInvokerAndroid {
   private static ApiInvokerAndroid INSTANCE = new ApiInvokerAndroid();
@@ -60,11 +57,13 @@ public class ApiInvokerAndroid {
 
   /**
    * ISO 8601 date time format.
+   * @see https://en.wikipedia.org/wiki/ISO_8601
    */
   public static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
   /**
    * ISO 8601 date format.
+   * @see https://en.wikipedia.org/wiki/ISO_8601
    */
   public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
