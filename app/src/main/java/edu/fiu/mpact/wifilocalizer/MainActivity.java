@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
     class MetadataTask extends AsyncTask<Void, Void, List<AccessPoint>> {
         protected List<AccessPoint> doInBackground(Void... nothing) {
             try {
-                return mApApi.accessPointsGet(-1);
+                return mApApi.accessPointsGet();
             } catch (ApiExceptionAndroid apiExceptionAndroid) {
                 apiExceptionAndroid.printStackTrace();
                 return null;
@@ -154,7 +154,6 @@ public class MainActivity extends AppCompatActivity {
                 cursor.close();
 
                 return mReadingApi.readingsPost(nonUploadedReadings);
-
             } catch (ApiExceptionAndroid apiExceptionAndroid) {
                 apiExceptionAndroid.printStackTrace();
                 return null;
@@ -167,17 +166,10 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            //                        JSONArray arr = body.getArray();
-            //                        for (int i = 0; i < arr.length(); i++) {
-            //                            JSONObject obj = (JSONObject) arr.get(i);
-            //                            mDb.updateSyncStatus(obj.get("id").toString(), obj.get("status").toString());
-            //                        }
-            //
-            //                        Toast.makeText(getApplicationContext(), "Sync complete!", Toast.LENGTH_LONG).show();
-            //                    } catch (JSONException e) {
-            //                        Toast.makeText(getApplicationContext(), "Couldn't sync databases", Toast.LENGTH_SHORT).show();
-            //                        Log.e("syncUpdate", "couldn't update");
-            //                    }
+            if (data.get(1) > 0)
+                Toast.makeText(getApplicationContext(), "Could not insert some readings", Toast.LENGTH_SHORT).show();
+
+            mDb.updateSyncStatus();
         }
     }
 

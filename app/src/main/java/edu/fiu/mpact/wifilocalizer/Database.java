@@ -8,11 +8,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.util.Log;
 
-import com.google.gson.GsonBuilder;
-
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import io.swagger.client.model.Reading;
 
@@ -158,37 +159,38 @@ public class Database extends SQLiteOpenHelper {
             new String[] {"0"}, null, null, null);
     }
 
+    private String millisToIso(long timeInMilliseconds) {
+        final Date date = new Date(timeInMilliseconds);
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-DD-HH:mm:ss", Locale.US);
+        f.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return f.format(date);
+    }
+
     public List<Reading> readingsCursorToJson(Cursor cursor) {
         final List<Reading> readingList = new ArrayList<>();
 
         while (cursor.moveToNext()) {
             final Reading reading = new Reading();
-            reading.setMapId((int)cursor.getLong(cursor.getColumnIndex(Readings.ID)));
-            reading.setTimestamp();
+            final long datetime = cursor.getLong(cursor.getColumnIndex(Readings.DATETIME));
 
-            cv.put("datetime", cursor.getLong(cursor.getColumnIndex(Readings.DATETIME)));
-            cv.put("mapx", cursor.getFloat(cursor.getColumnIndex(Readings.MAP_X)));
-            cv.put("mapy", cursor.getFloat(cursor.getColumnIndex(Readings.MAP_Y)));
-            cv.put("rss", cursor.getLong(cursor.getColumnIndex(Readings.SIGNAL_STRENGTH)));
-            cv.put("ap_name", cursor.getString(cursor.getColumnIndex(Readings.AP_NAME)));
-            cv.put("mac", cursor.getString(cursor.getColumnIndex(Readings.MAC)));
-            cv.put("map", cursor.getLong(cursor.getColumnIndex(Readings.MAP_ID)));
-            cv.put("sdk", Build.VERSION.SDK_INT);
-            cv.put("manufacturer", Build.MANUFACTURER);
-            cv.put("model", Build.MODEL);
-            readingList.add(cv);
+            reading.setMapId((int) cursor.getLong(cursor.getColumnIndex(Readings.MAP_ID)));
+            reading.setTimestamp(millisToIso(datetime));
+            reading.setMapX((double) cursor.getFloat(cursor.getColumnIndex(Readings.MAP_X)));
+            reading.setMapY((double) cursor.getFloat(cursor.getColumnIndex(Readings.MAP_Y)));
+            reading.setRssi((int)cursor.getLong(cursor.getColumnIndex(Readings.SIGNAL_STRENGTH)));
+            reading.setSsid(cursor.getString(cursor.getColumnIndex(Readings.AP_NAME)));
+            reading.setMacAddress( cursor.getString(cursor.getColumnIndex(Readings.MAC)));
+            reading.setSdk(Build.VERSION.SDK_INT);
+            reading.setManufacturer(Build.MANUFACTURER);
+            reading.setModel(Build.MODEL);
         }
 
         return readingList;
     }
 
-    public void updateSyncStatus(String id, String status) {
-        Log.d("updateSyncStatus", "id = " + id + " status = " + status);
-
+    public void updateSyncStatus() {
         final ContentValues values = new ContentValues();
-        values.put(Readings.UPDATE_STATUS, status);
-
-        getWritableDatabase().update(Readings.TABLE_NAME, values, Readings.ID_COLUMN + "=?",
-            new String[] {id});
+        values.put(Readings.UPDATE_STATUS, 1);
+        getWritableDatabase().update(Readings.TABLE_NAME, values, null, null);
     }
 }
