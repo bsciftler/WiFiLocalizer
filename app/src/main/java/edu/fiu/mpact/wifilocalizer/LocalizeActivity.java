@@ -237,7 +237,6 @@ public class LocalizeActivity extends AppCompatActivity {
                         switch (item.getItemId()) {
                         case R.id.action_delete_cmenu:
                             bestguess.marker.setVisibility(View.GONE);
-                            deletePoint(bestguess.x, bestguess.y);
                             // remove from file data
                             if (mFileData.numLocations() > 0)
                                 mFileData.removeLocation(new LocalizationData.Location(bestguess.x, bestguess.y));
@@ -265,7 +264,6 @@ public class LocalizeActivity extends AppCompatActivity {
                         switch (item.getItemId()) {
                         case R.id.action_delete_cmenu:
                             secondguess.marker.setVisibility(View.GONE);
-                            deletePoint(secondguess.x, secondguess.y);
                             // remove from file data
                             if (mFileData.numLocations() > 0)
                                 mFileData.removeLocation(new LocalizationData.Location(secondguess.x, secondguess.y));
@@ -293,7 +291,6 @@ public class LocalizeActivity extends AppCompatActivity {
                         switch (item.getItemId()) {
                         case R.id.action_delete_cmenu:
                             thirdguess.marker.setVisibility(View.GONE);
-                            deletePoint(thirdguess.x, thirdguess.y);
                             // remove from file data
                             if (mFileData.numLocations() > 0)
                                 mFileData.removeLocation(new LocalizationData.Location(thirdguess.x, thirdguess.y));
@@ -318,27 +315,6 @@ public class LocalizeActivity extends AppCompatActivity {
         mAttacher.addData(secondguess);
         mAttacher.addData(thirdguess);
         mHavePlacedMarker = true;
-    }
-
-    private void deletePoint(float x, float y) {
-        Log.d("deletePoint", "trying to delete " + x + "," + y);
-
-//        Unirest.post(Utils.Constants.DELETE_URL)
-//            .field("x", x)
-//            .field("y", y)
-//            .asJsonAsync(new Callback<JsonNode>() {
-//                public void failed(UnirestException e) {
-//                    Toast.makeText(getApplicationContext(), "Couldn't delete point", Toast.LENGTH_SHORT).show();
-//                    Log.e("deletePoint", "couldn't delete; http code = " + e.getMessage());
-//                }
-//
-//                public void completed(HttpResponse<JsonNode> response) {
-//                    Toast.makeText(getApplicationContext(), "message = " + response.getStatusText(), Toast
-//                        .LENGTH_LONG).show();
-//                }
-//
-//                public void cancelled() {}
-//            });
     }
 
     /**
